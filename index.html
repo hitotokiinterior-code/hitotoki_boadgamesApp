@@ -146,37 +146,41 @@
     text-transform: uppercase;
   }
 
-  /* --- swipeable pages: each .game-page is one full-width "screen" --- */
+  /* --- swipeable pages: 3枚のカードを縦に並べ、上下スワイプでページ送り --- */
   .game-grid{
+    --card-h: 108px;
+    --card-gap: 10px;
     width:100%;
+    height: calc(var(--card-h) * 3 + var(--card-gap) * 2);
     display:flex;
-    overflow-x:auto;
-    overflow-y:hidden;
-    scroll-snap-type:x mandatory;
+    flex-direction:column;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scroll-snap-type:y mandatory;
     -webkit-overflow-scrolling:touch;
-    touch-action: pan-x; /* このエリアだけ横スワイプを許可 */
+    touch-action: pan-y; /* このエリアだけ縦スワイプを許可 */
   }
 
   .game-grid::-webkit-scrollbar{
     display:none;
   }
 
-  /* 1ページ = 画面幅いっぱい。中を2列×3行のグリッドにして最大6枚を表示 */
+  /* 1ページ = カード3枚ぶんの高さ。中を1列×3行で並べる */
   .game-page{
     flex: 0 0 100%;
-    width:100%;
+    height:100%;
     scroll-snap-align: start;
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, 108px); /* 行の高さを固定してページ間でカードサイズを揺らさない */
-    align-content: start;
-    gap: 10px;
+    display:flex;
+    flex-direction:column;
+    gap: var(--card-gap);
     padding: 2px 4px;
   }
 
 
   .game-card{
     position:relative;
+    flex: 0 0 var(--card-h);
+    height: var(--card-h);
     display:flex;
     flex-direction:column;
     justify-content:space-between;
@@ -241,26 +245,6 @@
   .page-dots .dot.active{
     background:#fff;
     transform: scale(1.2);
-  }
-
-  /* 横画面のカード帯用の位置バー（縦画面では非表示） */
-  .page-slider{
-    display:none;
-    position:relative;
-    width: min(200px, 60vw);
-    height:4px;
-    border-radius:2px;
-    background: var(--hairline);
-    margin: 6px auto 0;
-    overflow:hidden;
-  }
-  .page-slider-thumb{
-    position:absolute;
-    top:0; left:0;
-    height:100%;
-    width:22%;
-    border-radius:2px;
-    background:#fff;
   }
 
   footer{
@@ -565,82 +549,6 @@
   font-size:0.9rem;
 }
 
-/* 横画面では、全カードをトランプのような縦長・同サイズのカードにして
-   横一列に並べ、1枚ずつスワイプで選べるようにする。
-   ・.app の最大幅を外して、横向きの広い画面幅をそのまま使う
-   ・カードは中央に1枚スナップし、左右の隣のカードが少し見える「トランプをめくる」ような見た目にする
-   ・カードは高さ基準・aspect-ratioで幅を決めるので、必ず同じ大きさになる
-   ・ページ切り替えの概念がなくなるのでドットは非表示、代わりに細いスライダーバーで位置を示す
-   ※このブロックは必ずスタイルシートの最後に置くこと。CSSは同じ詳細度なら
-   「後に書かれたルールが勝つ」ため、途中に置くと後ろにある通常時の
-   .game-card や .extras のルールに上書きされてしまう。 */
-@media (orientation: landscape) and (max-height: 600px){
-  .app{
-    max-width: none;
-    width: 100%;
-    gap: 10px;
-    padding-bottom: 0;
-  }
-  .bottom-nav{
-    display:none;
-  }
-  h1{
-    margin-top: 4px;
-    font-size: clamp(1.1rem, 4vw, 1.4rem);
-  }
-  h1 .small{
-    margin-top:4px;
-  }
-  .setting-btn{
-    width:34px;
-    height:34px;
-    font-size:1.1rem;
-  }
-  .extras{
-    display:none;
-  }
-  .page-dots{
-    display:none;
-  }
-  .page-slider{
-    display:block;
-  }
-  .game-grid{
-    scroll-snap-type: x mandatory; /* ネイティブスナップに任せる。JSのsmoothスクロールで寄せるとラグが出るため */
-    --card-h: clamp(110px, 58vh, 190px);
-    --card-w: calc(var(--card-h) * 5 / 7); /* トランプカードに近い縦長比率 */
-    scroll-padding-inline: calc(50% - var(--card-w) / 2);
-  }
-  .game-page{
-    flex: 0 0 auto;
-    width:auto;
-    scroll-snap-align: none;
-    display:flex;
-    flex-direction:row;
-    align-items:center;
-    justify-content:flex-start;
-    gap: 14px;
-    padding-block: 18px; /* カードの box-shadow が overflow-y:hidden で切れないよう余白を確保 */
-    padding-inline: calc(50% - var(--card-w) / 2);
-  }
-  .game-card{
-    flex: 0 0 auto;
-    height: var(--card-h);
-    width: var(--card-w);
-    scroll-snap-align: center;
-  }
-  .game-card .title{
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .game-card .tags{
-    flex-wrap:wrap;
-  }
-  .game-card .tag{
-    white-space:nowrap;
-  }
-}
 
 </style>
 </head>
@@ -691,7 +599,6 @@
     <nav class="game-grid" id="gameGrid"></nav>
 
     <div class="page-dots" id="pageDots"></div>
-    <div class="page-slider" id="pageSlider"><div class="page-slider-thumb" id="pageSliderThumb"></div></div>
 
     <div class="extras">
       <div class="extras-heading">おまけ機能</div>
@@ -885,9 +792,6 @@
 
   const gameGrid = document.getElementById('gameGrid');
   const dotsWrap = document.getElementById('pageDots');
-  const sliderThumb = document.getElementById('pageSliderThumb');
-  const landscapeQuery = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
-  const CLONE_COUNT = GAMES.length; // 無限ループ用に前後へ複製しておくカード枚数（行き止まりを防ぐため全件分を複製）
 
   function buildCardEl(game){
     const a = document.createElement('a');
@@ -921,42 +825,19 @@
   function renderGamePages(){
     gameGrid.innerHTML = '';
 
-    if(landscapeQuery.matches){
-      // 横画面：ページ分割せず、前後にクローンを足した1本の帯にして無限ループっぽく見せる
+    // 1ページ3枚を縦に並べ、ページ単位で上下スワイプする
+    const perPage = 3;
+    const totalPages = Math.ceil(GAMES.length / perPage);
+    for(let p = 0; p < totalPages; p++){
       const pageEl = document.createElement('div');
       pageEl.className = 'game-page';
-      const beforeClones = GAMES.slice(-CLONE_COUNT);
-      const afterClones = GAMES.slice(0, CLONE_COUNT);
-      beforeClones.concat(GAMES, afterClones).forEach(game => {
+      GAMES.slice(p * perPage, p * perPage + perPage).forEach(game => {
         pageEl.appendChild(buildCardEl(game));
       });
       gameGrid.appendChild(pageEl);
-      dotsWrap.innerHTML = '';
-
-      // 最初は「本物の1枚目」（＝クローンの直後）を中央に表示した状態から始める
-      requestAnimationFrame(() => {
-        const allCards = gameGrid.querySelectorAll('.game-card');
-        const firstReal = allCards[CLONE_COUNT];
-        if(firstReal){
-          gameGrid.scrollLeft = firstReal.offsetLeft - (gameGrid.clientWidth / 2) + (firstReal.offsetWidth / 2);
-        }
-        updateSliderThumb();
-      });
-    } else {
-      // 縦画面：1ページ6枚のグリッド＋ドット（従来通り）
-      const perPage = 6;
-      const totalPages = Math.ceil(GAMES.length / perPage);
-      for(let p = 0; p < totalPages; p++){
-        const pageEl = document.createElement('div');
-        pageEl.className = 'game-page';
-        GAMES.slice(p * perPage, p * perPage + perPage).forEach(game => {
-          pageEl.appendChild(buildCardEl(game));
-        });
-        gameGrid.appendChild(pageEl);
-      }
-      renderDots(totalPages);
-      gameGrid.scrollLeft = 0;
     }
+    renderDots(totalPages);
+    gameGrid.scrollTop = 0;
   }
 
   function renderDots(count){
@@ -969,95 +850,17 @@
   }
 
   function updateActiveDot(){
-    const pageWidth = gameGrid.clientWidth;
-    if(!pageWidth) return;
-    const idx = Math.round(gameGrid.scrollLeft / pageWidth);
+    const pageHeight = gameGrid.clientHeight;
+    if(!pageHeight) return;
+    const idx = Math.round(gameGrid.scrollTop / pageHeight);
     dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   }
 
-  // クローンを含めたDOM上のインデックスから、元のGAMES配列上の実インデックスを求める
-  function realIndexOf(extendedIdx){
-    const n = GAMES.length;
-    return ((extendedIdx - CLONE_COUNT) % n + n) % n;
-  }
-
-  // 今、カード帯の中央に一番近いカードのDOM上インデックスを返す
-  function findNearestCardIndex(){
-    const cardEls = gameGrid.querySelectorAll('.game-card');
-    if(!cardEls.length) return -1;
-    const gridRect = gameGrid.getBoundingClientRect();
-    const gridCenter = gridRect.left + gridRect.width / 2;
-    let closestIdx = -1;
-    let closestDist = Infinity;
-    cardEls.forEach((card, i) => {
-      const r = card.getBoundingClientRect();
-      const cardCenter = r.left + r.width / 2;
-      const dist = Math.abs(cardCenter - gridCenter);
-      if(dist < closestDist){ closestDist = dist; closestIdx = i; }
-    });
-    return closestIdx;
-  }
-
-  // 横画面：カード帯の位置を、下の細いバーの中の白いつまみに反映する（実インデックス基準）
-  function updateSliderThumb(){
-    if(!sliderThumb || !landscapeQuery.matches) return;
-    const idx = findNearestCardIndex();
-    if(idx < 0) return;
-    const n = GAMES.length;
-    const rIdx = realIndexOf(idx);
-    const thumbPercent = 22; // .page-slider-thumb の width と合わせる
-    const ratio = n > 1 ? rIdx / (n - 1) : 0;
-    sliderThumb.style.left = (ratio * (100 - thumbPercent)) + '%';
-  }
-
-  // 横画面：スナップ自体はCSSのネイティブ scroll-snap-type に任せる（指を離した瞬間に効くのでラグがない）。
-  // JS側は「スクロールが完全に止まったのを検知して、クローン領域にいたら本物側へこっそり瞬間移動させる」
-  // ことだけを行う。アニメーションを伴わない scrollLeft の書き換えなので次のスワイプを妨げない。
-  let loopCheckTimer = null;
-  function scheduleLoopCheck(){
-    clearTimeout(loopCheckTimer);
-    loopCheckTimer = setTimeout(() => {
-      if(!landscapeQuery.matches) return;
-      const idx = findNearestCardIndex();
-      if(idx < 0) return;
-      fixLoopPosition(idx);
-    }, 120);
-  }
-
-  // クローン側で止まっていたら、見た目が同じ「本物」カードの位置へ瞬時に移す（無限ループの種明かし部分）
-  let loopFixTimer = null;
-  function fixLoopPosition(idx){
-    if(!landscapeQuery.matches) return;
-    const n = GAMES.length;
-    if(idx < CLONE_COUNT || idx >= CLONE_COUNT + n){
-      const cardEls = gameGrid.querySelectorAll('.game-card');
-      const rIdx = realIndexOf(idx);
-      const target = cardEls[CLONE_COUNT + rIdx];
-      if(target){
-        gameGrid.scrollLeft = target.offsetLeft - (gameGrid.clientWidth / 2) + (target.offsetWidth / 2);
-      }
-    }
-  }
-
   gameGrid.addEventListener('scroll', () => {
-    window.requestAnimationFrame(() => {
-      if(landscapeQuery.matches){
-        updateSliderThumb();
-        scheduleLoopCheck();
-      } else {
-        updateActiveDot();
-      }
-    });
+    window.requestAnimationFrame(updateActiveDot);
   }, { passive: true });
 
   renderGamePages();
-
-  // 縦横が切り替わったら組み直す
-  if(landscapeQuery.addEventListener){
-    landscapeQuery.addEventListener('change', renderGamePages);
-  } else if(landscapeQuery.addListener){
-    landscapeQuery.addListener(renderGamePages);
-  }
 
     const opening = document.getElementById("opening");
   const openingVideo = document.getElementById("openingVideo");
