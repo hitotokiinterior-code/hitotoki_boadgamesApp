@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>五目並べ — 15×15 連珠盤</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+  :root{
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --board-bg: #101010;
+    --grid-line: #4a4a4a;
+    --star: #6f6f6f;
+    --ivory-hi: #ffffff;
+    --ivory-mid: #f2efe6;
+    --ivory-low: #b8b3a4;
+    --ebony-hi: #4a4a4a;
+    --ebony-mid: #232323;
+    --ebony-low: #000000;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --hairline: rgba(255,255,255,0.14);
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ height:100%; overflow:hidden; touch-action: manipulation; }
+
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
+  body{
+    margin:0;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--silver);
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding: max(6px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+
+  .app{
+    width:100%;
+    max-width: 560px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+
+  header{ text-align:center; margin-top:0; }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(1.2rem, 5.5vw, 1.6rem);
+    letter-spacing: 0.06em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.54rem;
+    letter-spacing:0.36em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:4px;
+    text-transform: uppercase;
+  }
+
+  .mode-toggle-row{ display:flex; gap:8px; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.66rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 12px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+
+  .turn-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height:34px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 5px 18px;
+  }
+  .turn-stone{
+    width:30px; height:30px;
+    border-radius:50%;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5), inset 0 3px 4px rgba(255,255,255,0.5), inset 0 -4px 6px rgba(0,0,0,0.25);
+    transition: background .2s ease;
+  }
+  .turn-stone.white{ background: radial-gradient(circle at 35% 30%, var(--ivory-hi), var(--ivory-mid) 55%, var(--ivory-low)); }
+  .turn-stone.black{ background: radial-gradient(circle at 35% 30%, var(--ebony-hi), var(--ebony-mid) 55%, var(--ebony-low)); box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5), inset 0 3px 4px rgba(255,255,255,0.15), inset 0 -4px 6px rgba(0,0,0,0.6), 0 0 0 1px var(--silver-dim); }
+  .turn-stone.pulse{ animation: pop .3s ease; }
+  @keyframes pop{
+    0%{ transform: scale(0.5); opacity:0.4; }
+    60%{ transform: scale(1.15); }
+    100%{ transform: scale(1); }
+  }
+  .turn-label{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:1rem;
+    letter-spacing:0.08em;
+  }
+  .status-text{ font-size:0.7rem; color:var(--silver-dim); letter-spacing:0.06em; margin-top:2px; }
+
+  .board-frame{
+    padding: 10px;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 6px;
+    box-shadow:
+      0 18px 36px rgba(0,0,0,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.14),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+  }
+
+  .board{
+    position:relative;
+    display:grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    width: min(380px, 78vw);
+    height: min(380px, 78vw);
+    background: var(--board-bg);
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+  .point{
+    position:relative;
+    cursor:pointer;
+  }
+  .point::before{
+    content:'';
+    position:absolute;
+    top:50%; left:0;
+    width:100%; height:1px;
+    background: var(--grid-line);
+    transform: translateY(-50%);
+  }
+  .point::after{
+    content:'';
+    position:absolute;
+    left:50%; top:0;
+    height:100%; width:1px;
+    background: var(--grid-line);
+    transform: translateX(-50%);
+  }
+  .point .star{
+    position:absolute;
+    top:50%; left:50%;
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--star);
+    transform: translate(-50%,-50%);
+  }
+  .point .hover-dot{
+    position:absolute;
+    top:50%; left:50%;
+    width:60%; height:60%;
+    border-radius:50%;
+    background: rgba(255,255,255,0.16);
+    transform: translate(-50%,-50%);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .1s ease;
+  }
+  .point:hover .hover-dot{ opacity:1; }
+  .point.occupied:hover .hover-dot{ opacity:0; }
+
+  .stone{
+    position:absolute;
+    top:50%; left:50%;
+    width:82%; height:82%;
+    border-radius:50%;
+    transform: translate(-50%,-50%) scale(0.3);
+    animation: place .18s ease forwards;
+    pointer-events:none;
+  }
+  .stone.white{
+    background: radial-gradient(circle at 35% 28%, var(--ivory-hi), var(--ivory-mid) 55%, var(--ivory-low));
+    box-shadow: 0 2px 0 rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.5), inset 0 3px 4px rgba(255,255,255,0.7), inset 0 -3px 5px rgba(0,0,0,0.15);
+  }
+  .stone.black{
+    background: radial-gradient(circle at 35% 28%, var(--ebony-hi), var(--ebony-mid) 55%, var(--ebony-low));
+    box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.6), inset 0 3px 4px rgba(255,255,255,0.16), inset 0 -3px 5px rgba(0,0,0,0.5), 0 0 0 1px var(--silver-dim);
+  }
+  .stone.win{ animation: place .18s ease forwards, glow 1.1s ease-in-out .2s infinite; }
+  @keyframes place{
+    to{ transform: translate(-50%,-50%) scale(1); }
+  }
+  @keyframes glow{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+    50%{ box-shadow: 0 0 12px 5px rgba(255,255,255,0.65); }
+  }
+
+  .controls{ display:flex; gap:12px; margin-top:0; }
+  button.main-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 10px 20px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button.main-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:active{ transform: translateY(1px); }
+  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+
+  .rules{
+    width:100%;
+    max-width: 460px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size:0.76rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.9rem;
+    margin: 0 0 8px;
+    color:#fff;
+    letter-spacing: 0.05em;
+  }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.82);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 32px 34px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 300px;
+  }
+  .winner-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.3rem;
+    color:#fff;
+    margin-bottom:10px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    letter-spacing: 0.04em;
+  }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+</style>
+</head>
+<body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<div class="app">
+
+  <header>
+    <h1>五目並べ<span class="small">Gomoku · 15 × 15</span></h1>
+  </header>
+
+  <div class="mode-toggle-row" id="modeToggleRow">
+    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+  </div>
+
+  <div class="turn-wrap">
+    <div id="turnStone" class="turn-stone white"></div>
+    <div>
+      <div id="turnLabel" class="turn-label">白 の番</div>
+      <div id="statusText" class="status-text">マスを選んで石を置いてください</div>
+    </div>
+  </div>
+
+  <div class="board-frame">
+    <div id="board" class="board"></div>
+  </div>
+
+  <div class="controls">
+    <button id="newGameBtn" class="main-btn">はじめから</button>
+    <button id="rulesBtn" class="main-btn">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li>15×15の盤に、白と黒が交互に石を置いていきます</li>
+      <li>縦・横・斜め、いずれかの向きで5つ以上石を並べたら勝利です</li>
+      <li>一度置いた石は動かせません</li>
+      <li>全マスが埋まって誰も揃わなければ引き分けです</li>
+      <li>「CPU対戦」を選ぶと黒をCPUが担当します。1人でも遊べます</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">白の勝ち！</div>
+    <p id="winnerSub">5つ並びました</p>
+    <button id="againBtn" class="main-btn">次の対局へ</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SIZE = 15;
+  const STAR_POINTS = [[3,3],[3,11],[7,7],[11,3],[11,11]];
+  let grid, turn, gameOver, filledCount;
+  let vsCPU = false;
+  let cpuDifficulty = 'normal';
+  const CPU_SIDE = 'black';
+  const DIRS4 = [[0,1],[1,0],[1,1],[1,-1]];
+
+  function cpuSide(){ return vsCPU ? CPU_SIDE : null; }
+
+  function wouldWin(r, c, player){
+    grid[r][c] = player;
+    const result = checkWin(r, c, player);
+    grid[r][c] = null;
+    return !!result;
+  }
+
+  function generateCandidates(){
+    const seen = new Set();
+    const list = [];
+    let anyStone = false;
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        if(!grid[r][c]) continue;
+        anyStone = true;
+        for(let dr=-2; dr<=2; dr++){
+          for(let dc=-2; dc<=2; dc++){
+            const nr=r+dr, nc=c+dc;
+            if(nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+            if(grid[nr][nc]) continue;
+            const key = nr+'_'+nc;
+            if(!seen.has(key)){ seen.add(key); list.push([nr,nc]); }
+          }
+        }
+      }
+    }
+    if(!anyStone){
+      const mid = Math.floor(SIZE/2);
+      return [[mid, mid]];
+    }
+    return list;
+  }
+
+  function evaluateDirectionScore(r, c, dr, dc, player){
+    let nr = r+dr, nc = c+dc, fwd = 0;
+    while(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && grid[nr][nc] === player){ fwd++; nr+=dr; nc+=dc; }
+    const fwdOpen = nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && grid[nr][nc] === null;
+
+    let pr = r-dr, pc = c-dc, back = 0;
+    while(pr>=0 && pr<SIZE && pc>=0 && pc<SIZE && grid[pr][pc] === player){ back++; pr-=dr; pc-=dc; }
+    const backOpen = pr>=0 && pr<SIZE && pc>=0 && pc<SIZE && grid[pr][pc] === null;
+
+    const count = 1 + fwd + back;
+    const openEnds = (fwdOpen?1:0) + (backOpen?1:0);
+
+    if(count >= 5) return 1000000;
+    if(count === 4) return openEnds === 2 ? 500000 : (openEnds === 1 ? 10000 : 0);
+    if(count === 3) return openEnds === 2 ? 5000 : (openEnds === 1 ? 200 : 0);
+    if(count === 2) return openEnds === 2 ? 100 : (openEnds === 1 ? 15 : 0);
+    return openEnds === 2 ? 5 : 1;
+  }
+
+  function evaluatePlacement(r, c, player){
+    let total = 0;
+    for(const [dr,dc] of DIRS4){ total += evaluateDirectionScore(r, c, dr, dc, player); }
+    return total;
+  }
+
+  function scoreMove(r, c){
+    const offense = evaluatePlacement(r, c, CPU_SIDE);
+    const defense = evaluatePlacement(r, c, 'white');
+    return offense + defense * 0.9;
+  }
+
+  function cpuChooseMove(){
+    const candidates = generateCandidates();
+
+    for(const [r,c] of candidates){
+      if(wouldWin(r, c, CPU_SIDE)) return [r,c];
+    }
+    for(const [r,c] of candidates){
+      if(wouldWin(r, c, 'white')) return [r,c];
+    }
+
+    const scored = candidates.map(([r,c]) => ({ r, c, score: scoreMove(r,c) }));
+    scored.sort((a,b) => b.score - a.score);
+
+    if(cpuDifficulty !== 'master' || scored.length <= 1){
+      return [scored[0].r, scored[0].c];
+    }
+
+    const topN = scored.slice(0, Math.min(8, scored.length));
+    let best = topN[0], bestNet = -Infinity;
+    for(const cand of topN){
+      grid[cand.r][cand.c] = CPU_SIDE;
+      const oppCandidates = generateCandidates();
+      let oppBest = 0;
+      for(const [r2,c2] of oppCandidates){
+        const s = scoreMove2(r2, c2);
+        if(s > oppBest) oppBest = s;
+      }
+      grid[cand.r][cand.c] = null;
+      const net = cand.score - oppBest * 0.5;
+      if(net > bestNet){ bestNet = net; best = cand; }
+    }
+    return [best.r, best.c];
+  }
+
+  function scoreMove2(r, c){
+    const offense = evaluatePlacement(r, c, 'white');
+    const defense = evaluatePlacement(r, c, CPU_SIDE);
+    return offense + defense * 0.9;
+  }
+
+  function cpuTakeTurn(){
+    if(gameOver || !vsCPU || turn !== CPU_SIDE) return;
+    const [r,c] = cpuChooseMove();
+    placeStone(r,c);
+  }
+
+  function resetAll(){
+    grid = Array.from({length:SIZE}, () => Array(SIZE).fill(null));
+    turn = 'white';
+    gameOver = false;
+    filledCount = 0;
+    document.getElementById('winnerOverlay').classList.remove('show');
+    renderBoard();
+    updateTurnUI(false);
+  }
+
+  function renderBoard(){
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        const point = document.createElement('div');
+        point.className = 'point';
+        if(STAR_POINTS.some(([sr,sc]) => sr===r && sc===c)){
+          const star = document.createElement('div');
+          star.className = 'star';
+          point.appendChild(star);
+        }
+        const hoverDot = document.createElement('div');
+        hoverDot.className = 'hover-dot';
+        point.appendChild(hoverDot);
+        point.addEventListener('click', () => {
+          if(vsCPU && turn === CPU_SIDE) return;
+          placeStone(r,c);
+        });
+        boardEl.appendChild(point);
+      }
+    }
+  }
+
+  function updateTurnUI(pulse){
+    const stone = document.getElementById('turnStone');
+    const label = document.getElementById('turnLabel');
+    stone.className = 'turn-stone ' + turn + (pulse ? ' pulse' : '');
+    if(pulse){ void stone.offsetWidth; stone.classList.add('pulse'); }
+    label.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
+    const isCpuTurn = vsCPU && turn === CPU_SIDE;
+    if(gameOver){
+      document.getElementById('statusText').textContent = '対局終了';
+    } else if(isCpuTurn){
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + 'が考え中…';
+    } else {
+      document.getElementById('statusText').textContent = 'マスを選んで石を置いてください';
+    }
+
+    if(!gameOver && isCpuTurn){
+      setTimeout(cpuTakeTurn, 500);
+    }
+  }
+
+  function placeStone(r,c){
+    if(gameOver || grid[r][c]) return;
+    grid[r][c] = turn;
+    filledCount++;
+
+    const points = document.getElementById('board').children;
+    const point = points[r * SIZE + c];
+    point.classList.add('occupied');
+    const stoneEl = document.createElement('div');
+    stoneEl.className = 'stone ' + turn;
+    point.appendChild(stoneEl);
+
+    const win = checkWin(r,c,turn);
+    if(win){
+      win.forEach(([wr,wc]) => {
+        const p = points[wr * SIZE + wc];
+        const s = p.querySelector('.stone');
+        if(s) s.classList.add('win');
+      });
+      gameOver = true;
+      showWinner(turn, false);
+      updateTurnUI(false);
+      return;
+    }
+
+    if(filledCount >= SIZE*SIZE){
+      gameOver = true;
+      showWinner(null, true);
+      updateTurnUI(false);
+      return;
+    }
+
+    turn = turn === 'white' ? 'black' : 'white';
+    updateTurnUI(true);
+  }
+
+  function checkWin(r, c, player){
+    const dirs = [
+      [[0,1],[0,-1]],
+      [[1,0],[-1,0]],
+      [[1,1],[-1,-1]],
+      [[1,-1],[-1,1]],
+    ];
+    for(const pair of dirs){
+      let line = [[r,c]];
+      for(const [dr,dc] of pair){
+        let nr=r+dr, nc=c+dc;
+        while(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && grid[nr][nc] === player){
+          line.push([nr,nc]);
+          nr+=dr; nc+=dc;
+        }
+      }
+      if(line.length >= 5) return line;
+    }
+    return null;
+  }
+
+  function showWinner(winner, draw){
+    const overlay = document.getElementById('winnerOverlay');
+    const text = document.getElementById('winnerText');
+    const sub = document.getElementById('winnerSub');
+    if(draw){
+      text.textContent = '引き分け';
+      sub.textContent = '盤面が埋まりました';
+    } else {
+      const dotColor = winner === 'white' ? 'var(--ivory-mid)' : 'var(--ebony-mid)';
+      text.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + dotColor + ';box-shadow:0 0 0 1px var(--silver-dim);"></span>' + (winner === 'white' ? '白' : '黒') + 'の勝ち！';
+      sub.textContent = '5つ並びました';
+    }
+    overlay.classList.add('show');
+  }
+
+  function setMode(newVsCPU, newDifficulty){
+    if(vsCPU === newVsCPU && cpuDifficulty === newDifficulty) return;
+    vsCPU = newVsCPU;
+    cpuDifficulty = newDifficulty;
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
+    resetAll();
+  }
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
+  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
+
+  document.getElementById('newGameBtn').addEventListener('click', resetAll);
+  document.getElementById('againBtn').addEventListener('click', resetAll);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  resetAll();
+})();
+</script>
+</body>
+</html>

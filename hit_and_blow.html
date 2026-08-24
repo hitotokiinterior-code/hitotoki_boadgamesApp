@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ヒット＆ブロー — 3桁の暗証番号解読</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
+
+  :root{
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --void: #060606;
+    --void-rim: #2a2a2a;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --white-ink: #f2efe6;
+    --hairline: rgba(255,255,255,0.14);
+    --hit: #f2efe6;
+    --blow: #6f6f6f;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
+  body{
+    margin:0;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--silver);
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+
+  .app{
+    width:100%;
+    max-width: 480px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+
+  header{ text-align:center; margin-top:0; }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(1.2rem, 5.5vw, 1.6rem);
+    letter-spacing: 0.06em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.55rem;
+    letter-spacing:0.36em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:4px;
+    text-transform: uppercase;
+  }
+
+  .turn-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height: 36px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 6px 20px;
+    width: 100%;
+    max-width: 380px;
+    justify-content:center;
+  }
+
+  .mode-toggle-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.66rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 11px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+  .back-link{
+    position:absolute;
+    top:12px; left:14px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.66rem;
+    letter-spacing:0.05em;
+    color:var(--silver-dim);
+    background:none;
+    border:none;
+    cursor:pointer;
+    z-index:2;
+    padding:2px;
+  }
+  .back-link:hover{ color:#fff; }
+  .seal{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size: 0.9rem;
+    color: #17130c;
+    background: var(--white-ink);
+    padding: 8px 18px;
+    border-radius: 3px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
+    letter-spacing: 0.15em;
+    transition: background .25s ease, color .25s ease;
+  }
+  .seal.gote{ background:#1c1c1c; color:var(--white-ink); box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4), inset 0 0 0 1px var(--silver-dim); }
+  .seal.pulse{ animation: stamp .35s ease; }
+  @keyframes stamp{
+    0%{ transform: scale(1.4); opacity:0; }
+    60%{ transform: scale(0.96); opacity:1; }
+    100%{ transform: scale(1); }
+  }
+  .status-text{ font-size:0.72rem; color:var(--silver-dim); letter-spacing:0.05em; text-align:center; }
+
+  /* --- card panel (shared by mode select / setup / handoff / game) --- */
+  .panel{
+    position:relative;
+    width:100%;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 6px;
+    padding: 18px 20px;
+    box-shadow:
+      0 16px 32px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+
+  /* --- decorative safe combination dial --- */
+  .safe-dial{
+    position:absolute;
+    top:10px; right:10px;
+    width:44px; height:44px;
+    z-index:2;
+    pointer-events:none;
+  }
+  .safe-dial-ticks{
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:
+      repeating-conic-gradient(from 0deg, rgba(255,255,255,0.6) 0deg 1.5deg, transparent 1.5deg 15deg);
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.6),
+      inset 0 0 0 2px rgba(255,255,255,0.15),
+      inset 0 0 6px rgba(0,0,0,0.5);
+    transition: transform 0.45s cubic-bezier(.3,1.6,.6,1);
+  }
+  .safe-dial-knob{
+    position:absolute;
+    top:50%; left:50%;
+    width:58%; height:58%;
+    transform: translate(-50%,-50%);
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #4a4a4a, #141414 70%);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.2),
+      inset 0 -2px 4px rgba(0,0,0,0.6);
+  }
+  .safe-dial-pointer{
+    position:absolute;
+    top:-3px; left:50%;
+    width:0; height:0;
+    border-left:4px solid transparent;
+    border-right:4px solid transparent;
+    border-bottom:7px solid #f2efe6;
+    transform: translateX(-50%);
+    z-index:3;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
+  }
+  .panel-title{
+    font-family:'Kaisei Decol', serif;
+    font-size: 1.05rem;
+    color:#fff;
+    letter-spacing:0.06em;
+    text-align:center;
+  }
+  .panel-sub{
+    font-size:0.75rem;
+    color:var(--silver-dim);
+    text-align:center;
+    line-height:1.7;
+    max-width: 320px;
+  }
+
+  /* --- digit dial inputs --- */
+  .dial-row{
+    display:flex;
+    gap:10px;
+  }
+  .dial{
+    width: 42px; height: 50px;
+    background: var(--void);
+    border-radius: 4px;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), inset 0 0 0 1px var(--void-rim);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .keypad{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 220px;
+  }
+  .keypad-btn{
+    height: 34px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--silver-dim);
+    color: #fff;
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size: 0.9rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .1s ease, transform .1s ease;
+  }
+  .keypad-btn:active{ background: rgba(255,255,255,0.18); transform: scale(0.95); }
+  .keypad-btn.blank{ visibility:hidden; pointer-events:none; }
+  .keypad-btn.backspace{ font-size: 1rem; color: var(--silver-dim); }
+  .dial input{
+    width:100%; height:100%;
+    background: transparent;
+    border: none;
+    text-align:center;
+    font-family:'Jost', sans-serif;
+    font-size: 1.7rem;
+    font-weight:600;
+    color: #fff;
+    caret-color: var(--silver-dim);
+  }
+  .dial input:focus{ outline: none; }
+  .dial.filled{ box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.35); }
+  .dial-row.shake{ animation: shake .4s ease; }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-6px); }
+    40%{ transform: translateX(6px); }
+    60%{ transform: translateX(-4px); }
+    80%{ transform: translateX(4px); }
+  }
+
+  .inline-error{
+    font-size:0.7rem;
+    color:#e8b4b4;
+    letter-spacing:0.04em;
+    min-height: 1.2em;
+    text-align:center;
+  }
+
+  .lock-icon{
+    width:40px; height:40px;
+    opacity:0.8;
+  }
+
+  button.main-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 11px 24px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button.main-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:active{ transform: translateY(1px); }
+  button.main-btn:disabled{ opacity:0.3; cursor:default; }
+  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+
+  .controls{ display:flex; gap:12px; margin-top:2px; }
+
+  /* --- guess history --- */
+  .history-wrap{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .history-cols{
+    width:100%;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .history-col{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 8px;
+    min-height: 70px;
+  }
+  .history-col h3{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.75rem;
+    margin:0 0 8px;
+    color:#fff;
+    letter-spacing:0.08em;
+    text-align:center;
+  }
+  .history-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    max-height: 140px;
+    overflow-y:auto;
+  }
+  .history-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-family:'Jost', sans-serif;
+    font-size:0.85rem;
+    letter-spacing:0.15em;
+    color:#fff;
+    background: rgba(255,255,255,0.03);
+    border-radius:3px;
+    padding: 5px 8px;
+  }
+  .history-item .badges{
+    display:flex;
+    gap:6px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    letter-spacing:0;
+    font-size:0.68rem;
+  }
+  .badge{
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid var(--silver-dim);
+  }
+  .badge.hit{ color:#fff; border-color:#fff; }
+  .badge.blow{ color:var(--silver-dim); }
+  .empty-hint{ color:var(--silver-dim); font-size:0.7rem; text-align:center; padding: 12px 0; }
+
+  .guess-area{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+
+  .rules{
+    width:100%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size:0.76rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.9rem;
+    margin: 0 0 8px;
+    color:#fff;
+    letter-spacing: 0.05em;
+  }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.85);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 32px 34px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 320px;
+  }
+  .winner-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.3rem;
+    color:#fff;
+    margin-bottom:10px;
+    letter-spacing: 0.04em;
+  }
+  .winner-card .code-reveal{
+    font-family:'Jost', sans-serif;
+    font-size:1.3rem;
+    letter-spacing:0.3em;
+    color:#fff;
+    margin-bottom: 14px;
+  }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<div class="app">
+
+  <header>
+    <h1>ヒット＆ブロー<span class="small">Code Breaker · 3 Digits</span></h1>
+  </header>
+
+  <!-- MODE SELECT SCREEN -->
+  <div id="modeScreen" class="panel">
+    <div class="panel-title">対局モードを選択</div>
+    <div class="panel-sub">対戦形式を選んでください。CPU対戦を選ぶと先攻・後攻も選べます。</div>
+    <div class="mode-toggle-row" id="modeToggleRow">
+      <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+      <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+      <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+    </div>
+    <div class="mode-toggle-row hidden" id="sideToggleRow">
+      <button class="mode-toggle-btn active" id="sideSenteBtn">先行で対戦</button>
+      <button class="mode-toggle-btn" id="sideGoteBtn">後攻で対戦</button>
+    </div>
+    <button class="main-btn" id="modeStartBtn">ゲーム開始</button>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen" class="panel hidden">
+    <button class="back-link" id="setupBackBtn">← モード選択</button>
+    <div class="safe-dial" id="setupSafeDial">
+      <div class="safe-dial-ticks" id="setupSafeDialTicks"></div>
+      <div class="safe-dial-knob"></div>
+      <div class="safe-dial-pointer"></div>
+    </div>
+    <div class="panel-title" id="setupTitle">白の暗証番号を設定してください</div>
+    <div class="panel-sub">0〜9の中から重複しない3桁を決めてください。相手には見えません。</div>
+    <div class="dial-row" id="setupDialRow">
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="0"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="1"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="2"></div>
+    </div>
+    <div class="keypad" id="setupKeypad"></div>
+    <div class="inline-error" id="setupError"></div>
+    <button class="main-btn" id="setupConfirmBtn">決定</button>
+  </div>
+
+  <!-- HANDOFF SCREEN -->
+  <div id="handoffScreen" class="panel hidden">
+    <div class="panel-title" id="handoffTitle">設定が完了しました</div>
+    <div class="panel-sub" id="handoffSub">端末を後手（黒）に渡してください。準備ができたら進めます。</div>
+    <button class="main-btn" id="handoffBtn">次へ進む</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:16px;">
+    <div class="turn-wrap">
+      <div id="seal" class="seal">白 の番</div>
+    </div>
+    <div class="status-text" id="statusText">相手の3桁を予想してください</div>
+
+    <div class="guess-area panel" id="guessArea">
+      <div class="safe-dial" id="guessSafeDial">
+        <div class="safe-dial-ticks" id="guessSafeDialTicks"></div>
+        <div class="safe-dial-knob"></div>
+        <div class="safe-dial-pointer"></div>
+      </div>
+      <div class="dial-row" id="guessDialRow">
+        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="0"></div>
+        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="1"></div>
+        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="2"></div>
+      </div>
+      <div class="keypad" id="guessKeypad"></div>
+      <div class="inline-error" id="guessError"></div>
+      <button class="main-btn" id="guessSubmitBtn">予想する</button>
+    </div>
+
+    <div class="history-wrap">
+      <div class="history-cols">
+        <div class="history-col">
+          <h3>白の予想</h3>
+          <div class="history-list" id="senteHistory"><div class="empty-hint">まだありません</div></div>
+        </div>
+        <div class="history-col">
+          <h3>黒の予想</h3>
+          <div class="history-list" id="goteHistory"><div class="empty-hint">まだありません</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="newGameBtn" class="main-btn">はじめから</button>
+    <button id="rulesBtn" class="main-btn">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li>2人がそれぞれ0〜9から重複しない3桁の暗証番号を設定します</li>
+      <li>交互に相手の番号を予想し、3桁の数字を入力します</li>
+      <li><b>HIT</b>：数字も桁も合っている数（例：正解と同じ位置の一致数）</li>
+      <li><b>BLOW</b>：数字は合っているが桁が違う数</li>
+      <li>先に3 HIT（完全一致）を出した方の勝ちです</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">白の勝ち！</div>
+    <div class="code-reveal" id="codeReveal">0 1 2</div>
+    <p id="winnerSub">相手の暗証番号を解読しました</p>
+    <button id="againBtn" class="main-btn">もう一度</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  let secrets, guesses, turn, phase, settingFor;
+  let vsCPU = false;
+  let cpuDifficulty = 'normal';
+  let humanSide = 'sente';
+  let cpuCandidates = [];
+  let cpuMovesMade = 0;
+
+  function cpuSide(){
+    if(!vsCPU) return null;
+    return humanSide === 'sente' ? 'gote' : 'sente';
+  }
+
+  function allPossibleCodes(){
+    const codes = [];
+    for(let a=0;a<10;a++){
+      for(let b=0;b<10;b++){
+        for(let c=0;c<10;c++){
+          if(a!==b && b!==c && a!==c) codes.push([a,b,c]);
+        }
+      }
+    }
+    return codes;
+  }
+
+  function randomCode(){
+    const codes = allPossibleCodes();
+    return codes[Math.floor(Math.random()*codes.length)];
+  }
+
+  function resetAll(){
+    secrets = { sente: null, gote: null };
+    guesses = { sente: [], gote: [] };
+    turn = 'sente';
+    phase = 'setup';
+    cpuCandidates = allPossibleCodes();
+    dialRotation.setupDialRow = 0;
+    dialRotation.guessDialRow = 0;
+    ['setupSafeDialTicks','guessSafeDialTicks'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.transform = 'rotate(0deg)';
+    });
+    cpuMovesMade = 0;
+    document.getElementById('winnerOverlay').classList.remove('show');
+    document.getElementById('senteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
+    document.getElementById('goteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
+
+    if(vsCPU){
+      secrets[cpuSide()] = randomCode();
+      showSetupFor(humanSide);
+    } else {
+      showSetupFor('sente');
+    }
+    show('setupScreen');
+  }
+
+  function show(id){
+    ['modeScreen','setupScreen','handoffScreen','gameScreen'].forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== id);
+    });
+  }
+
+  function goToModeSelect(){
+    document.getElementById('winnerOverlay').classList.remove('show');
+    show('modeScreen');
+  }
+
+  function showSetupFor(who){
+    settingFor = who;
+    document.getElementById('setupTitle').textContent = (who === 'sente' ? '白' : '黒') + 'の暗証番号を設定してください';
+    clearDials('setupDialRow');
+    document.getElementById('setupError').textContent = '';
+    show('setupScreen');
+    focusFirstDial('setupDialRow');
+  }
+
+  function clearDials(rowId){
+    document.querySelectorAll('#' + rowId + ' input').forEach(inp => { inp.value = ''; inp.closest('.dial').classList.remove('filled'); });
+  }
+
+  function focusFirstDial(rowId){
+    const first = document.querySelector('#' + rowId + ' input[data-idx="0"]');
+    if(first) setTimeout(() => first.focus(), 50);
+  }
+
+  function setupDialNav(rowId){
+    const inputs = Array.from(document.querySelectorAll('#' + rowId + ' input'));
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/[^0-9]/g, '').slice(0,1);
+        inp.closest('.dial').classList.toggle('filled', inp.value !== '');
+        if(inp.value && i < inputs.length - 1) inputs[i+1].focus();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if(e.key === 'Backspace' && !inp.value && i > 0){
+          inputs[i-1].focus();
+        }
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          if(rowId === 'setupDialRow') document.getElementById('setupConfirmBtn').click();
+          else document.getElementById('guessSubmitBtn').click();
+        }
+      });
+    });
+  }
+
+  function buildKeypad(containerId, rowId){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const keys = ['1','2','3','4','5','6','7','8','9','','0','back'];
+    keys.forEach(key => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      if(key === ''){
+        btn.className = 'keypad-btn blank';
+      } else if(key === 'back'){
+        btn.className = 'keypad-btn backspace';
+        btn.textContent = '⌫';
+        btn.setAttribute('aria-label', '1文字消す');
+        btn.addEventListener('click', () => keypadBackspace(rowId));
+      } else {
+        btn.className = 'keypad-btn';
+        btn.textContent = key;
+        btn.addEventListener('click', () => keypadDigit(rowId, key));
+      }
+      container.appendChild(btn);
+    });
+  }
+
+  const dialRotation = { setupDialRow: 0, guessDialRow: 0 };
+
+  function spinSafeDial(rowId, delta){
+    const ticksId = rowId === 'setupDialRow' ? 'setupSafeDialTicks' : 'guessSafeDialTicks';
+    dialRotation[rowId] += delta;
+    const el = document.getElementById(ticksId);
+    if(el) el.style.transform = 'rotate(' + dialRotation[rowId] + 'deg)';
+  }
+
+  function keypadDigit(rowId, digit){
+    const inputs = Array.from(document.querySelectorAll('#' + rowId + ' input'));
+    const idx = inputs.findIndex(inp => inp.value === '');
+    if(idx === -1) return;
+    inputs[idx].value = digit;
+    inputs[idx].dispatchEvent(new Event('input'));
+    spinSafeDial(rowId, 55 + Number(digit) * 7);
+  }
+
+  function keypadBackspace(rowId){
+    const inputs = Array.from(document.querySelectorAll('#' + rowId + ' input'));
+    let idx = -1;
+    for(let i = inputs.length - 1; i >= 0; i--){
+      if(inputs[i].value !== ''){ idx = i; break; }
+    }
+    if(idx === -1) return;
+    inputs[idx].value = '';
+    inputs[idx].dispatchEvent(new Event('input'));
+    spinSafeDial(rowId, -40);
+  }
+
+  function readDials(rowId){
+    return Array.from(document.querySelectorAll('#' + rowId + ' input')).map(inp => inp.value);
+  }
+
+  function validateDigits(values){
+    if(values.some(v => v === '')) return { ok:false, msg:'3桁すべて入力してください' };
+    if(new Set(values).size !== values.length) return { ok:false, msg:'重複しない数字を入力してください' };
+    return { ok:true };
+  }
+
+  function shakeRow(rowId){
+    const row = document.getElementById(rowId);
+    row.classList.remove('shake');
+    void row.offsetWidth;
+    row.classList.add('shake');
+  }
+
+  document.getElementById('setupConfirmBtn').addEventListener('click', () => {
+    const values = readDials('setupDialRow');
+    const check = validateDigits(values);
+    if(!check.ok){
+      document.getElementById('setupError').textContent = check.msg;
+      shakeRow('setupDialRow');
+      return;
+    }
+    secrets[settingFor] = values.map(Number);
+
+    if(vsCPU){
+      document.getElementById('handoffTitle').textContent = '設定が完了しました';
+      document.getElementById('handoffSub').textContent = 'CPUとの対局を開始します。';
+      show('handoffScreen');
+      document.getElementById('handoffBtn').onclick = startGame;
+      return;
+    }
+
+    if(settingFor === 'sente'){
+      document.getElementById('handoffTitle').textContent = '白の設定が完了しました';
+      document.getElementById('handoffSub').textContent = '端末を後手（黒）に渡してください。準備ができたら進めます。';
+      show('handoffScreen');
+      document.getElementById('handoffBtn').onclick = () => showSetupFor('gote');
+    } else {
+      document.getElementById('handoffTitle').textContent = '両者の設定が完了しました';
+      document.getElementById('handoffSub').textContent = '端末を先手（白）に渡してください。準備ができたら対局を開始します。';
+      show('handoffScreen');
+      document.getElementById('handoffBtn').onclick = startGame;
+    }
+  });
+
+  function startGame(){
+    phase = 'playing';
+    turn = 'sente';
+    show('gameScreen');
+    updateTurnUI(false);
+    if(vsCPU && turn === cpuSide()){
+      triggerCpuTurn();
+    }
+  }
+
+  function updateTurnUI(pulse){
+    const seal = document.getElementById('seal');
+    seal.className = 'seal' + (turn === 'gote' ? ' gote' : '') + (pulse ? ' pulse' : '');
+    if(pulse){ void seal.offsetWidth; seal.classList.add('pulse'); }
+    seal.textContent = (turn === 'sente' ? '白' : '黒') + ' の番';
+
+    const isCpuTurn = vsCPU && turn === cpuSide();
+    document.getElementById('guessSubmitBtn').disabled = isCpuTurn;
+    document.querySelectorAll('#guessDialRow input').forEach(inp => { inp.disabled = isCpuTurn; });
+
+    if(isCpuTurn){
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + 'が考え中…';
+    } else {
+      document.getElementById('statusText').textContent = '相手の3桁を予想してください（相手：' + (turn === 'sente' ? '黒' : '白') + '）';
+      clearDials('guessDialRow');
+      document.getElementById('guessError').textContent = '';
+      focusFirstDial('guessDialRow');
+    }
+  }
+
+  function cpuChooseGuess(){
+    if(cpuCandidates.length === 0) cpuCandidates = allPossibleCodes();
+    if(cpuDifficulty !== 'master'){
+      return cpuCandidates[Math.floor(Math.random() * cpuCandidates.length)];
+    }
+    let bestGuess = cpuCandidates[0];
+    let bestWorst = Infinity;
+    for(const guess of cpuCandidates){
+      const buckets = new Map();
+      for(const cand of cpuCandidates){
+        const r = computeHitBlow(guess, cand);
+        const key = r.hit + '-' + r.blow;
+        buckets.set(key, (buckets.get(key) || 0) + 1);
+      }
+      const worst = Math.max(...buckets.values());
+      if(worst < bestWorst){ bestWorst = worst; bestGuess = guess; }
+    }
+    return bestGuess;
+  }
+
+  function triggerCpuTurn(){
+    updateTurnUI(false);
+    setTimeout(cpuTakeTurn, cpuMovesMade === 0 ? 1500 : 700);
+  }
+
+  function cpuTakeTurn(){
+    if(phase !== 'playing' || !vsCPU || turn !== cpuSide()) return;
+    const guess = cpuChooseGuess();
+    const humanSecret = secrets[humanSide];
+    const result = computeHitBlow(guess, humanSecret);
+    guesses[turn].push({ guess, result });
+    renderHistory(turn);
+
+    cpuCandidates = cpuCandidates.filter(c => {
+      const r = computeHitBlow(guess, c);
+      return r.hit === result.hit && r.blow === result.blow;
+    });
+    cpuMovesMade++;
+
+    if(result.hit === 3){
+      phase = 'over';
+      showWinner(turn, humanSecret);
+      return;
+    }
+
+    turn = humanSide;
+    updateTurnUI(true);
+  }
+
+  function computeHitBlow(guess, secret){
+    let hit = 0;
+    const gLeft = [], sLeft = [];
+    for(let i=0;i<3;i++){
+      if(guess[i] === secret[i]) hit++;
+      else { gLeft.push(guess[i]); sLeft.push(secret[i]); }
+    }
+    let blow = 0;
+    const used = Array(sLeft.length).fill(false);
+    gLeft.forEach(g => {
+      const idx = sLeft.findIndex((s, i) => !used[i] && s === g);
+      if(idx !== -1){ used[idx] = true; blow++; }
+    });
+    return { hit, blow };
+  }
+
+  document.getElementById('guessSubmitBtn').addEventListener('click', () => {
+    if(phase !== 'playing') return;
+    if(vsCPU && turn === cpuSide()) return;
+    const values = readDials('guessDialRow');
+    const check = validateDigits(values);
+    if(!check.ok){
+      document.getElementById('guessError').textContent = check.msg;
+      shakeRow('guessDialRow');
+      return;
+    }
+    const guess = values.map(Number);
+    const opponent = turn === 'sente' ? 'gote' : 'sente';
+    const result = computeHitBlow(guess, secrets[opponent]);
+    guesses[turn].push({ guess, result });
+    renderHistory(turn);
+
+    if(result.hit === 3){
+      phase = 'over';
+      showWinner(turn, secrets[opponent]);
+      return;
+    }
+
+    turn = opponent;
+    updateTurnUI(true);
+
+    if(vsCPU && turn === cpuSide()){
+      triggerCpuTurn();
+    }
+  });
+
+  function renderHistory(who){
+    const el = document.getElementById(who === 'sente' ? 'senteHistory' : 'goteHistory');
+    const list = guesses[who];
+    el.innerHTML = '';
+    for(let i = list.length - 1; i >= 0; i--){
+      const item = list[i];
+      const row = document.createElement('div');
+      row.className = 'history-item';
+      const num = document.createElement('span');
+      num.textContent = item.guess.join(' ');
+      const badges = document.createElement('span');
+      badges.className = 'badges';
+      const hitBadge = document.createElement('span');
+      hitBadge.className = 'badge hit';
+      hitBadge.textContent = 'HIT ' + item.result.hit;
+      const blowBadge = document.createElement('span');
+      blowBadge.className = 'badge blow';
+      blowBadge.textContent = 'BLOW ' + item.result.blow;
+      badges.appendChild(hitBadge);
+      badges.appendChild(blowBadge);
+      row.appendChild(num);
+      row.appendChild(badges);
+      el.appendChild(row);
+    }
+  }
+
+  function showWinner(winner, revealedCode){
+    const overlay = document.getElementById('winnerOverlay');
+    document.getElementById('winnerText').textContent = (winner === 'sente' ? '白' : '黒') + 'の勝ち！';
+    document.getElementById('codeReveal').textContent = revealedCode.join('  ');
+    document.getElementById('winnerSub').textContent = '相手の暗証番号を解読しました';
+    overlay.classList.add('show');
+  }
+
+  document.getElementById('newGameBtn').addEventListener('click', goToModeSelect);
+  document.getElementById('againBtn').addEventListener('click', goToModeSelect);
+  document.getElementById('setupBackBtn').addEventListener('click', goToModeSelect);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  function setMode(newVsCPU, newDifficulty){
+    vsCPU = newVsCPU;
+    cpuDifficulty = newDifficulty;
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
+    document.getElementById('sideToggleRow').classList.toggle('hidden', !vsCPU);
+  }
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
+  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
+
+  document.getElementById('sideSenteBtn').addEventListener('click', () => {
+    if(humanSide === 'sente') return;
+    humanSide = 'sente';
+    document.getElementById('sideSenteBtn').classList.add('active');
+    document.getElementById('sideGoteBtn').classList.remove('active');
+  });
+  document.getElementById('sideGoteBtn').addEventListener('click', () => {
+    if(humanSide === 'gote') return;
+    humanSide = 'gote';
+    document.getElementById('sideGoteBtn').classList.add('active');
+    document.getElementById('sideSenteBtn').classList.remove('active');
+  });
+
+  document.getElementById('modeStartBtn').addEventListener('click', () => {
+    resetAll();
+  });
+
+  setupDialNav('setupDialRow');
+  setupDialNav('guessDialRow');
+  buildKeypad('setupKeypad', 'setupDialRow');
+  buildKeypad('guessKeypad', 'guessDialRow');
+
+  show('modeScreen');
+})();
+</script>
+</body>
+</html>

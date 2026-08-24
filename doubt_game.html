@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ダウト — ブラフカードデュエル</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
+
+  :root{
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --ivory-hi: #ffffff;
+    --ivory-mid: #f2efe6;
+    --ivory-low: #cfc9b8;
+    --card-back-hi: #3a3a3a;
+    --card-back-low: #0a0a0a;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --hairline: rgba(255,255,255,0.14);
+    --ink: #17130c;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ height:100%; overflow:hidden; touch-action: manipulation; }
+
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
+  body{
+    margin:0;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--silver);
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+
+  .app{
+    width:100%;
+    max-width: 480px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+
+  .mode-toggle-row{ display:flex; gap:8px; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 14px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+
+  header{ text-align:center; margin-top:2px; }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(1.4rem, 6vw, 1.8rem);
+    letter-spacing: 0.06em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.58rem;
+    letter-spacing:0.36em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:8px;
+    text-transform: uppercase;
+  }
+
+  .score-row{ display:flex; gap:24px; font-size:0.75rem; letter-spacing: 0.06em; }
+  .score-pill{ display:flex; align-items:center; gap:8px; color: var(--silver); }
+  .score-pill .dot{ width:12px; height:12px; border-radius:50%; }
+  .score-pill .dot.white{ background: var(--ivory-mid); box-shadow: 0 0 0 1px var(--silver-dim); }
+  .score-pill .dot.black{ background: #232323; box-shadow: 0 0 0 1px var(--silver-dim); }
+  .score-pill b{ font-family:'Kaisei Decol', serif; color:#fff; font-size:0.95rem; }
+
+  .declared-banner{
+    width:100%;
+    max-width: 380px;
+    text-align:center;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 10px 12px;
+  }
+  .declared-banner .label{ font-size:0.66rem; color:var(--silver-dim); letter-spacing:0.1em; }
+  .declared-banner .rank{
+    font-family:'Kaisei Decol', serif;
+    font-size:1.15rem;
+    color:#fff;
+    letter-spacing:0.1em;
+    margin-top:2px;
+  }
+
+  .panel{
+    width:100%;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 6px;
+    padding: 24px 22px;
+    box-shadow:
+      0 16px 32px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .panel-title{
+    font-family:'Kaisei Decol', serif;
+    font-size: 1rem;
+    color:#fff;
+    letter-spacing:0.06em;
+    text-align:center;
+  }
+  .panel-sub{
+    font-size:0.75rem;
+    color:var(--silver-dim);
+    text-align:center;
+    line-height:1.7;
+    max-width: 320px;
+  }
+
+  .seal{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--ivory-mid);
+    padding: 8px 18px;
+    border-radius: 3px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
+    letter-spacing: 0.15em;
+  }
+  .seal.gote{ background:#1c1c1c; color:var(--ivory-mid); box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4), inset 0 0 0 1px var(--silver-dim); }
+
+  .last-play-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:0.75rem;
+    color: var(--silver-dim);
+  }
+  .last-play-row .backs{ display:flex; gap:4px; }
+  .card-back-mini{
+    width:22px; height:30px;
+    border-radius:3px;
+    background: repeating-linear-gradient(135deg, var(--card-back-hi) 0 5px, var(--card-back-low) 5px 10px);
+    box-shadow: 0 0 0 1px var(--silver-dim);
+  }
+
+  .hand-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+  }
+  .hand-card{
+    width:58px; height:82px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, var(--ivory-hi), var(--ivory-low));
+    color:#141414;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.82rem;
+    cursor:pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.8);
+    transition: transform .12s ease, box-shadow .12s ease;
+    user-select:none;
+    text-align:center;
+    padding: 4px;
+  }
+  .hand-card.selected{
+    transform: translateY(-10px);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.3), 0 14px 18px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.8), 0 0 0 2px #fff;
+  }
+  .hand-card.joker{ font-style:italic; }
+
+  .selection-status{ font-size:0.72rem; color:var(--silver-dim); letter-spacing:0.04em; }
+
+  .action-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  button.main-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 11px 22px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button.main-btn:hover:not(:disabled){ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:active:not(:disabled){ transform: translateY(1px); }
+  button.main-btn:disabled{ opacity:0.3; cursor:default; }
+  button.doubt-btn{ border-color:#fff; }
+  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+
+  .controls{ display:flex; gap:12px; margin-top:2px; }
+
+  .status-text{ font-size:0.75rem; color:var(--silver-dim); letter-spacing:0.05em; text-align:center; }
+
+  .reveal-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .reveal-card{
+    width:52px; height:74px;
+    border-radius:5px;
+    background: linear-gradient(180deg, var(--ivory-hi), var(--ivory-low));
+    color:#141414;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.72rem;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 5px 8px rgba(0,0,0,0.4);
+    animation: flipReveal .4s ease both;
+  }
+  @keyframes flipReveal{
+    from{ transform: rotateY(90deg); opacity:0; }
+    to{ transform: rotateY(0deg); opacity:1; }
+  }
+
+  .rules{
+    width:100%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size:0.75rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.9rem;
+    margin: 0 0 8px;
+    color:#fff;
+    letter-spacing: 0.05em;
+  }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.87);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+    overflow-y:auto;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 30px 30px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 340px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  .winner-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.25rem;
+    color:#fff;
+    letter-spacing: 0.04em;
+  }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0; letter-spacing:0.04em; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<div class="app">
+
+  <header>
+    <h1>ダウト<span class="small">Bluff Card Duel</span></h1>
+  </header>
+
+  <div class="mode-toggle-row" id="modeToggleRow">
+    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+  </div>
+
+  <div class="score-row">
+    <div class="score-pill"><span class="dot white"></span>白 <b id="whiteWins">0</b> 勝</div>
+    <div class="score-pill"><span class="dot black"></span>黒 <b id="blackWins">0</b> 勝</div>
+  </div>
+
+  <div class="declared-banner">
+    <div class="label">指定カード</div>
+    <div class="rank" id="declaredRankLabel">－</div>
+  </div>
+
+  <!-- HANDOFF SCREEN -->
+  <div id="handoffScreen" class="panel hidden">
+    <div class="panel-title" id="handoffTitle">端末を渡してください</div>
+    <div class="panel-sub" id="handoffSub"></div>
+    <button class="main-btn" id="handoffBtn">自分の手札を見る</button>
+  </div>
+
+  <!-- CPU THINKING SCREEN -->
+  <div id="cpuThinkingScreen" class="panel hidden">
+    <div class="panel-title">CPU（黒）の番です</div>
+    <div class="panel-sub" id="cpuThinkingSub">CPUが考え中…</div>
+  </div>
+
+  <!-- PLAY SCREEN -->
+  <div id="playScreen" class="panel hidden">
+    <div class="seal" id="turnSeal">白 の番</div>
+
+    <div class="last-play-row hidden" id="lastPlayRow">
+      <span>直前のプレイ：</span>
+      <div class="backs" id="lastPlayBacks"></div>
+      <span id="lastPlayCount"></span>
+    </div>
+
+    <div class="status-text" id="statusText">手札からカードを選んで出してください</div>
+
+    <div class="hand-grid" id="handGrid"></div>
+    <div class="selection-status" id="selectionStatus">0枚選択中</div>
+
+    <div class="action-row">
+      <button class="main-btn" id="playBtn" disabled>選んだカードを出す</button>
+      <button class="main-btn doubt-btn hidden" id="doubtBtn">ダウト！</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="newGameBtn" class="main-btn">はじめから</button>
+    <button id="rulesBtn" class="main-btn">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li>山札はナイト×4・クイーン×4・キング×4・ジョーカー×2の全14枚。各自5枚配られます</li>
+      <li>フェイズの最初に「ナイト・クイーン・キング」のいずれかが指定カードとしてランダムに公開されます</li>
+      <li>自分の番では、手札から1枚以上を選んで伏せて出します。指定カードである必要はなく、嘘を混ぜても構いません</li>
+      <li>相手の番では、「ダウト」を宣言するか、自分も手札から伏せて出すかを選べます</li>
+      <li>ダウトすると直前のプレイが公開されます。全て指定カード（ジョーカーは常に本物扱い）なら宣言した側の負け、1枚でも違えば宣言した側の勝ちです</li>
+      <li>ターン数に制限はありません。どちらかの手札がなくなるまで、あるいはダウトが宣言されるまで続きます</li>
+      <li>CPU対戦を選ぶと黒をCPUが担当します</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">白の勝ち！</div>
+    <div class="reveal-row" id="revealRow"></div>
+    <p id="winnerSub"></p>
+    <button id="nextGameBtn" class="main-btn">次のゲームへ</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const RANK_LABEL = { knight:'ナイト', queen:'クイーン', king:'キング', joker:'ジョーカー' };
+  const CALLABLE_RANKS = ['knight','queen','king'];
+
+  let wins, hands, declaredRank, turnIndex, lastPlay, phase, selected, currentReveal;
+  let vsCPU = false;
+  const CPU_SIDE = 'black';
+  const UNSEEN_COUNT = 4; // cards never dealt to either hand out of the 14-card deck
+
+  function resetScore(){
+    wins = { white:0, black:0 };
+    updateScoreUI();
+    startPhase();
+  }
+
+  function buildDeck(){
+    const d = [];
+    for(let i=0;i<4;i++){ d.push('knight'); d.push('queen'); d.push('king'); }
+    d.push('joker'); d.push('joker');
+    for(let i = d.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [d[i], d[j]] = [d[j], d[i]];
+    }
+    return d;
+  }
+
+  function startPhase(){
+    const deck = buildDeck();
+    hands = { white: deck.slice(0,5), black: deck.slice(5,10) };
+    declaredRank = CALLABLE_RANKS[Math.floor(Math.random()*3)];
+    turnIndex = 0;
+    lastPlay = null;
+    phase = 'playing';
+    selected = [];
+    document.getElementById('declaredRankLabel').textContent = RANK_LABEL[declaredRank];
+    document.getElementById('winnerOverlay').classList.remove('show');
+    goToHandoff();
+  }
+
+  function currentTurnPlayer(){ return turnIndex % 2 === 0 ? 'white' : 'black'; }
+
+  function updateScoreUI(){
+    document.getElementById('whiteWins').textContent = wins.white;
+    document.getElementById('blackWins').textContent = wins.black;
+  }
+
+  function goToHandoff(){
+    document.getElementById('playScreen').classList.add('hidden');
+    document.getElementById('handoffScreen').classList.add('hidden');
+    document.getElementById('cpuThinkingScreen').classList.add('hidden');
+
+    const who = currentTurnPlayer();
+
+    if(vsCPU && who === CPU_SIDE){
+      document.getElementById('cpuThinkingScreen').classList.remove('hidden');
+      setTimeout(cpuTakeTurn, 900);
+      return;
+    }
+
+    if(vsCPU && who !== CPU_SIDE){
+      // solo human play: no need to hide the hand between their own turns
+      document.getElementById('playScreen').classList.remove('hidden');
+      renderPlayScreen();
+      return;
+    }
+
+    document.getElementById('handoffScreen').classList.remove('hidden');
+    document.getElementById('handoffTitle').textContent = '端末を' + (who === 'white' ? '白' : '黒') + 'に渡してください';
+    const canDoubt = turnIndex > 0;
+    document.getElementById('handoffSub').textContent = canDoubt
+      ? '準備ができたら手札を確認してください。ダウトすることもできます。'
+      : '準備ができたら手札を確認してください。最初の番なのでカードを出します。';
+  }
+
+  document.getElementById('handoffBtn').addEventListener('click', () => {
+    document.getElementById('handoffScreen').classList.add('hidden');
+    document.getElementById('playScreen').classList.remove('hidden');
+    renderPlayScreen();
+  });
+
+  function renderPlayScreen(){
+    const who = currentTurnPlayer();
+    selected = [];
+    const seal = document.getElementById('turnSeal');
+    seal.className = 'seal' + (who === 'black' ? ' gote' : '');
+    seal.textContent = (who === 'white' ? '白' : '黒') + ' の番';
+
+    const lastRow = document.getElementById('lastPlayRow');
+    if(lastPlay){
+      lastRow.classList.remove('hidden');
+      const backs = document.getElementById('lastPlayBacks');
+      backs.innerHTML = '';
+      for(let i=0;i<lastPlay.cards.length;i++){
+        const b = document.createElement('div');
+        b.className = 'card-back-mini';
+        backs.appendChild(b);
+      }
+      document.getElementById('lastPlayCount').textContent = lastPlay.cards.length + '枚';
+    } else {
+      lastRow.classList.add('hidden');
+    }
+
+    document.getElementById('statusText').textContent = turnIndex === 0
+      ? '手札からカードを選んで出してください（最初の番）'
+      : '手札から出すか、ダウトするか選んでください';
+
+    document.getElementById('doubtBtn').classList.toggle('hidden', turnIndex === 0);
+    renderHand(who);
+    updateSelectionUI();
+  }
+
+  function renderHand(who){
+    const grid = document.getElementById('handGrid');
+    grid.innerHTML = '';
+    hands[who].forEach((rank, idx) => {
+      const card = document.createElement('div');
+      card.className = 'hand-card' + (rank === 'joker' ? ' joker' : '');
+      card.textContent = RANK_LABEL[rank];
+      card.dataset.idx = idx;
+      card.addEventListener('click', () => {
+        const i = selected.indexOf(idx);
+        if(i === -1) selected.push(idx); else selected.splice(i,1);
+        card.classList.toggle('selected');
+        updateSelectionUI();
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  function updateSelectionUI(){
+    document.getElementById('selectionStatus').textContent = selected.length + '枚選択中';
+    document.getElementById('playBtn').disabled = selected.length === 0;
+  }
+
+  function performPlay(who, chosenIdxUnsorted){
+    const chosenIdx = [...chosenIdxUnsorted].sort((a,b) => b-a);
+    const cards = chosenIdx.map(i => hands[who][i]);
+    chosenIdx.forEach(i => hands[who].splice(i,1));
+    lastPlay = { who, cards };
+    turnIndex++;
+    goToHandoff();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', () => {
+    if(phase !== 'playing' || selected.length === 0) return;
+    if(vsCPU && currentTurnPlayer() === CPU_SIDE) return;
+    performPlay(currentTurnPlayer(), selected);
+  });
+
+  document.getElementById('doubtBtn').addEventListener('click', () => {
+    if(phase !== 'playing' || turnIndex === 0 || !lastPlay) return;
+    if(vsCPU && currentTurnPlayer() === CPU_SIDE) return;
+    resolveDoubt();
+  });
+
+  function countSafeCards(cardArr){
+    return cardArr.filter(c => c === declaredRank || c === 'joker').length;
+  }
+
+  function cpuTakeTurn(){
+    if(phase !== 'playing' || !vsCPU || currentTurnPlayer() !== CPU_SIDE) return;
+
+    const myHand = hands[CPU_SIDE];
+    const canDoubt = turnIndex > 0 && lastPlay;
+    let shouldDoubt = false;
+
+    if(myHand.length === 0){
+      shouldDoubt = true;
+    } else if(canDoubt){
+      const mySafe = countSafeCards(myHand);
+      const remainingSafeTotal = Math.max(0, 6 - mySafe);
+      const opponentHandSize = hands.white.length;
+      const lastCount = lastPlay.cards.length;
+
+      if(lastCount > remainingSafeTotal){
+        shouldDoubt = true;
+      } else {
+        const estimatedSafeInOpponentHand = remainingSafeTotal * (opponentHandSize / Math.max(1, opponentHandSize + UNSEEN_COUNT));
+        const truthfulMargin = estimatedSafeInOpponentHand - (lastCount - 1) * 0.9;
+        shouldDoubt = truthfulMargin < lastCount * 0.5;
+        if(Math.random() < 0.12) shouldDoubt = !shouldDoubt;
+      }
+    }
+
+    if(shouldDoubt){
+      resolveDoubt();
+      return;
+    }
+
+    const indexed = myHand.map((c, i) => ({ c, i }));
+    const safeIdx = indexed.filter(x => x.c === declaredRank || x.c === 'joker').map(x => x.i);
+    const chosenIdx = [];
+
+    if(safeIdx.length > 0){
+      const count = 1 + Math.floor(Math.random() * Math.min(3, safeIdx.length));
+      for(let k=0;k<count;k++) chosenIdx.push(safeIdx[k]);
+    } else {
+      const count = Math.min(myHand.length, 1 + Math.floor(Math.random() * 2));
+      const shuffledIdx = myHand.map((c,i) => i).sort(() => Math.random() - 0.5);
+      for(let k=0;k<count;k++) chosenIdx.push(shuffledIdx[k]);
+    }
+
+    performPlay(CPU_SIDE, chosenIdx);
+  }
+
+  function isTruthful(cards){
+    return cards.every(c => c === declaredRank || c === 'joker');
+  }
+
+  function resolveDoubt(){
+    phase = 'over';
+    const doubter = currentTurnPlayer();
+    const bluffer = lastPlay.who;
+    const truthful = isTruthful(lastPlay.cards);
+    const winner = truthful ? bluffer : doubter;
+    if(winner) wins[winner]++;
+    updateScoreUI();
+    showResolution(winner, doubter, bluffer, truthful);
+  }
+
+  function showResolution(winner, doubter, bluffer, truthful){
+    document.getElementById('playScreen').classList.add('hidden');
+    document.getElementById('handoffScreen').classList.add('hidden');
+
+    document.getElementById('winnerText').textContent = (winner === 'white' ? '白' : '黒') + 'の勝ち！';
+
+    const revealRow = document.getElementById('revealRow');
+    revealRow.innerHTML = '';
+    lastPlay.cards.forEach(rank => {
+      const c = document.createElement('div');
+      c.className = 'reveal-card';
+      c.textContent = RANK_LABEL[rank];
+      revealRow.appendChild(c);
+    });
+
+    const blufferLabel = bluffer === 'white' ? '白' : '黒';
+    const doubterLabel = doubter === 'white' ? '白' : '黒';
+    let msg;
+    if(truthful){
+      msg = blufferLabel + 'は本当に指定カード（' + RANK_LABEL[declaredRank] + '）を出していました。' + doubterLabel + 'の誤審です。';
+    } else {
+      msg = blufferLabel + 'のカードは指定カード（' + RANK_LABEL[declaredRank] + '）ではありませんでした。' + doubterLabel + 'がフェイクを見破りました。';
+    }
+    document.getElementById('winnerSub').textContent = msg;
+
+    document.getElementById('winnerOverlay').classList.add('show');
+  }
+
+  document.getElementById('nextGameBtn').addEventListener('click', startPhase);
+  document.getElementById('newGameBtn').addEventListener('click', resetScore);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => {
+    if(!vsCPU) return;
+    vsCPU = false;
+    document.getElementById('modeTwoPlayerBtn').classList.add('active');
+    document.getElementById('modeCPUBtn').classList.remove('active');
+    resetScore();
+  });
+  document.getElementById('modeCPUBtn').addEventListener('click', () => {
+    if(vsCPU) return;
+    vsCPU = true;
+    document.getElementById('modeCPUBtn').classList.add('active');
+    document.getElementById('modeTwoPlayerBtn').classList.remove('active');
+    resetScore();
+  });
+
+  resetScore();
+})();
+</script>
+</body>
+</html>

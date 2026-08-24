@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>積み木カウント — オーバーしたら負け</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
+
+  :root{
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --void: #0a0a0a;
+    --ivory-hi: #ffffff;
+    --ivory-mid: #f2efe6;
+    --ivory-low: #b8b3a4;
+    --ebony-hi: #4a4a4a;
+    --ebony-mid: #232323;
+    --ebony-low: #000000;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --hairline: rgba(255,255,255,0.14);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--silver);
+    display:flex;
+    justify-content:center;
+    padding: 18px 12px 40px;
+  }
+
+  .app{
+    width:100%;
+    max-width: 480px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+
+  header{ text-align:center; margin-top:2px; }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(1.4rem, 6vw, 1.8rem);
+    letter-spacing: 0.06em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.58rem;
+    letter-spacing:0.36em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:8px;
+    text-transform: uppercase;
+  }
+
+  .turn-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height: 44px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 8px 22px;
+    width:100%;
+    max-width: 380px;
+    justify-content:center;
+  }
+  .seal{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size: 0.9rem;
+    color: #17130c;
+    background: var(--ivory-mid);
+    padding: 8px 18px;
+    border-radius: 3px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
+    letter-spacing: 0.15em;
+    transition: background .25s ease, color .25s ease;
+  }
+  .seal.gote{ background:#1c1c1c; color:var(--ivory-mid); box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4), inset 0 0 0 1px var(--silver-dim); }
+  .seal.pulse{ animation: stamp .35s ease; }
+  @keyframes stamp{
+    0%{ transform: scale(1.4); opacity:0; }
+    60%{ transform: scale(0.96); opacity:1; }
+    100%{ transform: scale(1); }
+  }
+  .status-text{ font-size:0.72rem; color:var(--silver-dim); letter-spacing:0.05em; text-align:center; }
+
+  .panel{
+    width:100%;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 6px;
+    padding: 26px 24px;
+    box-shadow:
+      0 16px 32px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+  .panel-title{
+    font-family:'Kaisei Decol', serif;
+    font-size: 1.05rem;
+    color:#fff;
+    letter-spacing:0.06em;
+    text-align:center;
+  }
+  .panel-sub{
+    font-size:0.75rem;
+    color:var(--silver-dim);
+    text-align:center;
+    line-height:1.7;
+    max-width: 320px;
+  }
+
+  .toggle-row{ display:flex; gap:10px; }
+  .toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.08em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 10px 20px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .toggle-btn.active{
+    background:#fff;
+    color:#141414;
+    border-color:#fff;
+  }
+
+  .target-row{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    font-size:0.8rem;
+    color: var(--silver-dim);
+    letter-spacing:0.05em;
+  }
+  .target-row .value{
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:1.4rem;
+    color:#fff;
+  }
+
+  /* --- tower visualization --- */
+  .tower-wrap{
+    position:relative;
+    display:flex;
+    flex-direction:column-reverse;
+    gap:3px;
+    padding: 10px;
+    background: var(--void);
+    border-radius: 4px;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.7);
+    min-height: 60px;
+    width: 100%;
+    max-width: 200px;
+    align-items:center;
+  }
+  .block{
+    width: 90%;
+    height: 16px;
+    border-radius:2px;
+    animation: blockIn .18s ease both;
+    flex-shrink:0;
+  }
+  .block.white{ background: linear-gradient(180deg, var(--ivory-hi), var(--ivory-low)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.6); }
+  .block.black{ background: linear-gradient(180deg, var(--ebony-hi), var(--ebony-low)); box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), 0 0 0 1px var(--silver-dim); }
+  .target-marker{
+    position:absolute;
+    left: 6px; right: 6px;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--silver) 0 6px, transparent 6px 12px);
+  }
+  @keyframes blockIn{
+    from{ transform: scaleX(0.4); opacity:0; }
+    to{ transform: scaleX(1); opacity:1; }
+  }
+
+  .total-display{
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:2.4rem;
+    color:#fff;
+  }
+
+  .add-row{ display:flex; gap:12px; }
+  .add-btn{
+    width:64px; height:64px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #2c2c2c, #0a0a0a 75%);
+    color:#fff;
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:1.3rem;
+    border: 1px solid var(--silver-dim);
+    cursor:pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
+    transition: transform .1s ease, border-color .15s ease;
+  }
+  .add-btn:hover{ transform: translateY(-2px); border-color:#fff; }
+  .add-btn:active{ transform: translateY(1px); }
+
+  .log-wrap{
+    width:100%;
+    max-width: 380px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 10px 14px;
+    max-height: 120px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column-reverse;
+    gap:4px;
+  }
+  .log-item{
+    font-size:0.75rem;
+    color: var(--silver);
+    display:flex;
+    justify-content:space-between;
+  }
+  .log-item .who{ color:#fff; font-weight:700; }
+  .log-empty{ color:var(--silver-dim); font-size:0.72rem; text-align:center; }
+
+  .controls{ display:flex; gap:12px; margin-top:2px; }
+  button.main-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 10px 20px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button.main-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:active{ transform: translateY(1px); }
+  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+
+  .rules{
+    width:100%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size:0.76rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.9rem;
+    margin: 0 0 8px;
+    color:#fff;
+    letter-spacing: 0.05em;
+  }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.85);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 32px 34px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 300px;
+  }
+  .winner-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.3rem;
+    color:#fff;
+    margin-bottom:10px;
+    letter-spacing: 0.04em;
+  }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 4px 0; letter-spacing:0.04em; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>積み木カウント<span class="small">Overflow Counting Duel</span></h1>
+  </header>
+
+  <!-- SETUP SCREEN -->
+  <div id="setupScreen" class="panel">
+    <div class="panel-title">目標の数字をどうしますか？</div>
+    <div class="panel-sub">目標は12〜15の中からランダムで決まります。見えるようにするか、隠したままにするか選んでください。</div>
+    <div class="toggle-row">
+      <button class="toggle-btn active" id="visibleBtn">見える</button>
+      <button class="toggle-btn" id="hiddenBtn">隠す</button>
+    </div>
+    <button class="main-btn" id="startBtn">スタート</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:16px;">
+    <div class="turn-wrap">
+      <div id="seal" class="seal">白 の番</div>
+    </div>
+
+    <div class="target-row">
+      目標：<span class="value" id="targetValue">？</span>
+    </div>
+
+    <div style="display:flex; gap:24px; align-items:flex-end;">
+      <div class="tower-wrap" id="towerWrap"></div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <div class="status-text">現在の合計</div>
+        <div class="total-display" id="totalDisplay">0</div>
+      </div>
+    </div>
+
+    <div class="status-text" id="statusText">1〜3の数字を選んで積み上げてください</div>
+
+    <div class="add-row">
+      <button class="add-btn" data-n="1">+1</button>
+      <button class="add-btn" data-n="2">+2</button>
+      <button class="add-btn" data-n="3">+3</button>
+    </div>
+
+    <div class="log-wrap" id="logWrap"><div class="log-empty">まだ手はありません</div></div>
+  </div>
+
+  <div class="controls">
+    <button id="newGameBtn" class="main-btn">はじめから</button>
+    <button id="rulesBtn" class="main-btn">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li>ゲーム開始時に12〜15のいずれかが目標としてランダムに決まります</li>
+      <li>白と黒が交互に1・2・3のいずれかを選び、合計に積み上げていきます</li>
+      <li>自分の番で合計が目標を超えてしまったら、その人の負けです</li>
+      <li>目標は「見える」設定にすると常に表示され、「隠す」設定にすると超えるまでわかりません</li>
+      <li>隠していても、対局が終わると目標の数字が公開されます</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">白の勝ち！</div>
+    <p id="winnerSub"></p>
+    <p id="winnerTarget"></p>
+    <button id="againBtn" class="main-btn" style="margin-top:14px;">もう一度</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  let target, total, turn, gameOver, hideTarget, log;
+
+  function showSetup(){
+    document.getElementById('setupScreen').classList.remove('hidden');
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('winnerOverlay').classList.remove('show');
+  }
+
+  function resetAll(){
+    hideTarget = document.getElementById('hiddenBtn').classList.contains('active');
+    showSetup();
+  }
+
+  document.getElementById('visibleBtn').addEventListener('click', () => {
+    document.getElementById('visibleBtn').classList.add('active');
+    document.getElementById('hiddenBtn').classList.remove('active');
+  });
+  document.getElementById('hiddenBtn').addEventListener('click', () => {
+    document.getElementById('hiddenBtn').classList.add('active');
+    document.getElementById('visibleBtn').classList.remove('active');
+  });
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    hideTarget = document.getElementById('hiddenBtn').classList.contains('active');
+    startGame();
+  });
+
+  function startGame(){
+    target = Math.floor(Math.random() * 4) + 12; // 12-15
+    total = 0;
+    turn = 'white';
+    gameOver = false;
+    log = [];
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    document.getElementById('targetValue').textContent = hideTarget ? '？' : target;
+    document.getElementById('logWrap').innerHTML = '<div class="log-empty">まだ手はありません</div>';
+    renderTower();
+    updateTurnUI(false);
+  }
+
+  function renderTower(){
+    const wrap = document.getElementById('towerWrap');
+    wrap.innerHTML = '';
+
+    for(let i = 1; i <= total; i++){
+      const b = document.createElement('div');
+      b.className = 'block ' + blockOwnerAt(i);
+      wrap.appendChild(b);
+    }
+
+    document.getElementById('totalDisplay').textContent = total;
+    positionMarker();
+  }
+
+  function positionMarker(){
+    const existing = document.getElementById('targetMarker');
+    if(existing) existing.remove();
+    if(hideTarget && !gameOver) return;
+
+    const wrap = document.getElementById('towerWrap');
+    const marker = document.createElement('div');
+    marker.id = 'targetMarker';
+    marker.className = 'target-marker';
+    const blockUnit = 19; // 16px block + 3px gap
+    marker.style.bottom = (10 + target * blockUnit - 1.5) + 'px';
+    wrap.appendChild(marker);
+  }
+
+  function blockOwnerAt(i){
+    // determine which player placed the block at running-total position i
+    let owner = null;
+    for(const entry of log){
+      if(i > entry.from && i <= entry.to){ owner = entry.who; break; }
+    }
+    return owner || 'white';
+  }
+
+  function updateTurnUI(pulse){
+    const seal = document.getElementById('seal');
+    seal.className = 'seal' + (turn === 'black' ? ' gote' : '') + (pulse ? ' pulse' : '');
+    if(pulse){ void seal.offsetWidth; seal.classList.add('pulse'); }
+    seal.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
+    document.getElementById('statusText').textContent = gameOver ? '対局終了' : '1〜3の数字を選んで積み上げてください';
+  }
+
+  document.querySelectorAll('.add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(gameOver) return;
+      const n = parseInt(btn.dataset.n, 10);
+      const from = total;
+      total += n;
+      log.push({ who: turn, n, from, to: total });
+      addLogItem(turn, n, total);
+      renderTower();
+
+      if(total > target){
+        gameOver = true;
+        document.getElementById('targetValue').textContent = target;
+        showWinner(turn === 'white' ? 'black' : 'white', turn);
+        updateTurnUI(false);
+        return;
+      }
+
+      turn = turn === 'white' ? 'black' : 'white';
+      updateTurnUI(true);
+    });
+  });
+
+  function addLogItem(who, n, runningTotal){
+    const wrap = document.getElementById('logWrap');
+    if(wrap.querySelector('.log-empty')) wrap.innerHTML = '';
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    const left = document.createElement('span');
+    left.innerHTML = '<span class="who">' + (who === 'white' ? '白' : '黒') + '</span> +' + n;
+    const right = document.createElement('span');
+    right.textContent = '合計 ' + runningTotal;
+    item.appendChild(left);
+    item.appendChild(right);
+    wrap.insertBefore(item, wrap.firstChild);
+  }
+
+  function showWinner(winner, loser){
+    document.getElementById('winnerText').textContent = (winner === 'white' ? '白' : '黒') + 'の勝ち！';
+    document.getElementById('winnerSub').textContent = (loser === 'white' ? '白' : '黒') + 'が目標(' + target + ')を超えました（合計 ' + total + '）';
+    document.getElementById('winnerTarget').textContent = '目標の数字は ' + target + ' でした';
+    document.getElementById('winnerOverlay').classList.add('show');
+  }
+
+  document.getElementById('againBtn').addEventListener('click', startGame);
+  document.getElementById('newGameBtn').addEventListener('click', resetAll);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  resetAll();
+})();
+</script>
+</body>
+</html>

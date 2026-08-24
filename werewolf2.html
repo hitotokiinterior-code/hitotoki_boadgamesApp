@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>2人人狼 — 追放か共存か</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+  :root{
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --ivory-hi: #ffffff;
+    --ivory-mid: #f2efe6;
+    --ivory-low: #cfc9b8;
+    --card-back-hi: #3a3a3a;
+    --card-back-low: #0a0a0a;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --hairline: rgba(255,255,255,0.14);
+    --ink: #17130c;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--silver);
+    display:flex;
+    justify-content:center;
+    padding: 18px 12px 40px;
+  }
+
+  .app{
+    width:100%;
+    max-width: 480px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+
+  header{ text-align:center; margin-top:2px; }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(1.4rem, 6vw, 1.8rem);
+    letter-spacing: 0.06em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.58rem;
+    letter-spacing:0.36em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:8px;
+    text-transform: uppercase;
+  }
+
+  .score-row{ display:flex; gap:24px; font-size:0.75rem; letter-spacing: 0.06em; }
+  .score-pill{ display:flex; align-items:center; gap:8px; color: var(--silver); }
+  .score-pill .dot{ width:12px; height:12px; border-radius:50%; }
+  .score-pill .dot.white{ background: var(--ivory-mid); box-shadow: 0 0 0 1px var(--silver-dim); }
+  .score-pill .dot.black{ background: #232323; box-shadow: 0 0 0 1px var(--silver-dim); }
+  .score-pill b{ font-family:'Kaisei Decol', serif; color:#fff; font-size:0.95rem; }
+
+  .panel{
+    width:100%;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 6px;
+    padding: 26px 22px;
+    box-shadow:
+      0 16px 32px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .panel-title{ font-family:'Kaisei Decol', serif; font-size: 1.05rem; color:#fff; letter-spacing:0.06em; text-align:center; }
+  .panel-sub{ font-size:0.75rem; color:var(--silver-dim); text-align:center; line-height:1.7; max-width: 320px; }
+
+  .role-tag{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size: 0.9rem;
+    padding: 8px 18px;
+    border-radius: 3px;
+    letter-spacing: 0.15em;
+  }
+  .role-tag.white{ background: var(--ivory-mid); color: var(--ink); }
+  .role-tag.black{ background:#1c1c1c; color: var(--ivory-mid); box-shadow: inset 0 0 0 1px var(--silver-dim); }
+
+  .fan-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .card-back{
+    width:56px; height:78px;
+    border-radius:5px;
+    background: repeating-linear-gradient(135deg, var(--card-back-hi) 0 6px, var(--card-back-low) 6px 12px);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 5px 10px rgba(0,0,0,0.5), inset 0 0 0 1px var(--silver-dim);
+    cursor:pointer;
+    transition: transform .12s ease;
+  }
+  .card-back:hover{ transform: translateY(-4px); }
+  .card-face{
+    width:56px; height:78px;
+    border-radius:5px;
+    background: linear-gradient(180deg, var(--ivory-hi), var(--ivory-low));
+    color:#141414;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.85rem;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.4);
+    animation: flipIn .35s ease both;
+  }
+  @keyframes flipIn{
+    from{ transform: rotateY(90deg); opacity:0; }
+    to{ transform: rotateY(0deg); opacity:1; }
+  }
+
+  .revealed-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .revealed-label{ font-size:0.68rem; color:var(--silver-dim); text-align:center; margin-top:4px; }
+
+  .info-block{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .info-block .heading{ font-size:0.72rem; color:var(--silver-dim); letter-spacing:0.06em; }
+
+  .action-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  button.main-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 11px 22px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button.main-btn:hover:not(:disabled){ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:active:not(:disabled){ transform: translateY(1px); }
+  button.main-btn:disabled{ opacity:0.3; cursor:default; }
+  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+
+  .controls{ display:flex; gap:12px; margin-top:2px; }
+
+  .rules{
+    width:100%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size:0.75rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{ font-family:'Kaisei Decol', serif; font-weight:500; font-size:0.9rem; margin: 0 0 8px; color:#fff; letter-spacing: 0.05em; }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.87);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+    overflow-y:auto;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 30px 30px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 340px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  .winner-card .big{ font-family:'Kaisei Decol', serif; font-weight:700; font-size:1.25rem; color:#fff; letter-spacing: 0.04em; }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0; letter-spacing:0.04em; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>2人人狼<span class="small">Coexist or Banish</span></h1>
+  </header>
+
+  <div class="score-row">
+    <div class="score-pill"><span class="dot white"></span>白 <b id="whiteWins">0</b> 勝</div>
+    <div class="score-pill"><span class="dot black"></span>黒 <b id="blackWins">0</b> 勝</div>
+  </div>
+
+  <!-- ROLE ANNOUNCE -->
+  <div id="roleScreen" class="panel hidden">
+    <div class="panel-title">今回の親</div>
+    <div class="role-tag" id="parentTag">白</div>
+    <div class="panel-sub">村人3枚・狼2枚の計5枚から、まず子が1枚選びます。親はその後で自分の1枚と、参考になる2枚を引きます。</div>
+    <button class="main-btn" id="roleContinueBtn">はじめる</button>
+  </div>
+
+  <!-- HANDOFF -->
+  <div id="handoffScreen" class="panel hidden">
+    <div class="panel-title" id="handoffTitle">端末を渡してください</div>
+    <div class="panel-sub" id="handoffSub"></div>
+    <button class="main-btn" id="handoffBtn">カードを見る</button>
+  </div>
+
+  <!-- CHILD DRAW -->
+  <div id="childDrawScreen" class="panel hidden">
+    <div class="panel-title">子（<span id="childLabel"></span>）のカードを選んでください</div>
+    <div class="panel-sub">5枚の中から1枚、自分の正体となるカードを引きます。中身は自分だけが確認します。</div>
+    <div class="fan-row" id="childFan"></div>
+  </div>
+
+  <!-- PARENT DRAW SELF -->
+  <div id="parentSelfScreen" class="panel hidden">
+    <div class="panel-title">親（<span id="parentLabelSelf"></span>）の1枚を選んでください</div>
+    <div class="panel-sub">残り4枚の中から、自分の正体となるカードを1枚引きます。</div>
+    <div class="fan-row" id="parentSelfFan"></div>
+  </div>
+
+  <!-- PARENT PEEK -->
+  <div id="parentPeekScreen" class="panel hidden">
+    <div class="panel-title">参考カードを<span id="peekRemaining">2</span>枚引いてください</div>
+    <div class="panel-sub">残りのカードから2枚引いて中身を確認できます（自分の推理の参考にしてください）。</div>
+    <div class="fan-row" id="parentPeekFan"></div>
+    <div class="revealed-row" id="peekRevealedRow"></div>
+  </div>
+
+  <!-- PARENT DECISION -->
+  <div id="decisionScreen" class="panel hidden">
+    <div class="panel-title">親の判断</div>
+    <div class="info-block">
+      <div class="heading">あなた自身のカード</div>
+      <div class="revealed-row" id="ownCardRow"></div>
+    </div>
+    <div class="info-block">
+      <div class="heading">参考に引いた2枚</div>
+      <div class="revealed-row" id="peekCardRow"></div>
+    </div>
+    <div class="panel-sub">子と自分の正体が「同じ種族」だと思えば共存、「違う種族」だと思えば追放を選んでください。</div>
+    <div class="action-row">
+      <button class="main-btn" id="coexistBtn">共存する</button>
+      <button class="main-btn" id="banishBtn">追放する</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="newGameBtn" class="main-btn">スコアをリセット</button>
+    <button id="rulesBtn" class="main-btn">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li>山札は村人3枚・狼2枚の計5枚。ラウンドごとに親と子（もう一方）の役割が交代します</li>
+      <li>まず子が5枚の中から1枚を引き、自分の正体（村人か狼）を確認します（親には見えません）</li>
+      <li>次に親が残り4枚から自分の正体を1枚引き、さらに残りから参考用に2枚引いて中身を確認します（1枚は誰にも見られず山に残ります）</li>
+      <li>親は「自分の正体」と「参考の2枚」から推理し、子と自分が同じ種族だと思えば<b>共存</b>、違う種族だと思えば<b>追放</b>を選びます</li>
+      <li>正体が違っていて追放を選んだ、または正体が同じで共存を選んだ場合＝親の推理が的中し、親の勝ち</li>
+      <li>逆に推理を外した場合は、子（もう一方のプレイヤー）の勝ちです</li>
+      <li>次のラウンドでは親子の役割を交代して続けます</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">白の勝ち！</div>
+    <div class="revealed-row" id="finalRevealRow"></div>
+    <p id="winnerSub"></p>
+    <button id="nextRoundBtn" class="main-btn">次のラウンドへ</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const LABEL = { villager:'村人', wolf:'狼' };
+
+  let wins, deck, pool, childCard, parentCard, peekCards, parentIsWhite, tempRevealed;
+
+  function resetScore(){
+    wins = { white:0, black:0 };
+    parentIsWhite = true;
+    updateScoreUI();
+    startRound();
+  }
+
+  function updateScoreUI(){
+    document.getElementById('whiteWins').textContent = wins.white;
+    document.getElementById('blackWins').textContent = wins.black;
+  }
+
+  function shuffledDeck(){
+    const d = ['villager','villager','villager','wolf','wolf'];
+    for(let i = d.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [d[i], d[j]] = [d[j], d[i]];
+    }
+    return d;
+  }
+
+  function showOnly(id){
+    ['roleScreen','handoffScreen','childDrawScreen','parentSelfScreen','parentPeekScreen','decisionScreen'].forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== id);
+    });
+  }
+
+  function parentName(){ return parentIsWhite ? 'white' : 'black'; }
+  function childName(){ return parentIsWhite ? 'black' : 'white'; }
+  function labelOf(who){ return who === 'white' ? '白' : '黒'; }
+
+  function startRound(){
+    deck = shuffledDeck();
+    pool = [0,1,2,3,4];
+    childCard = null;
+    parentCard = null;
+    peekCards = [];
+    document.getElementById('winnerOverlay').classList.remove('show');
+
+    document.getElementById('parentTag').textContent = labelOf(parentName());
+    document.getElementById('parentTag').className = 'role-tag ' + parentName();
+    showOnly('roleScreen');
+  }
+
+  document.getElementById('roleContinueBtn').addEventListener('click', () => {
+    goHandoff(childName(), '子', () => renderChildDraw());
+  });
+
+  function goHandoff(who, roleLabel, onReady){
+    document.getElementById('handoffTitle').textContent = '端末を' + labelOf(who) + 'に渡してください';
+    document.getElementById('handoffSub').textContent = roleLabel + '（' + labelOf(who) + '）の番です。準備ができたらカードを確認してください。';
+    document.getElementById('handoffBtn').onclick = () => {
+      showOnly(null); // hide all first
+      onReady();
+    };
+    showOnly('handoffScreen');
+  }
+
+  function renderChildDraw(){
+    document.getElementById('childLabel').textContent = labelOf(childName());
+    const fan = document.getElementById('childFan');
+    fan.innerHTML = '';
+    pool.forEach(idx => {
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      back.addEventListener('click', () => {
+        childCard = deck[idx];
+        pool = pool.filter(p => p !== idx);
+        showChildReveal();
+      }, { once:true });
+      fan.appendChild(back);
+    });
+    showOnly('childDrawScreen');
+  }
+
+  function showChildReveal(){
+    const fan = document.getElementById('childFan');
+    fan.innerHTML = '';
+    const face = document.createElement('div');
+    face.className = 'card-face';
+    face.textContent = LABEL[childCard];
+    fan.appendChild(face);
+    const btn = document.createElement('button');
+    btn.className = 'main-btn';
+    btn.style.marginTop = '14px';
+    btn.textContent = '確認したので次へ';
+    btn.addEventListener('click', () => {
+      goHandoff(parentName(), '親', () => renderParentSelfDraw());
+    });
+    document.getElementById('childDrawScreen').appendChild(btn);
+  }
+
+  function renderParentSelfDraw(){
+    document.getElementById('parentLabelSelf').textContent = labelOf(parentName());
+    const fan = document.getElementById('parentSelfFan');
+    fan.innerHTML = '';
+    pool.forEach(idx => {
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      back.addEventListener('click', () => {
+        parentCard = deck[idx];
+        pool = pool.filter(p => p !== idx);
+        showParentSelfReveal();
+      }, { once:true });
+      fan.appendChild(back);
+    });
+    showOnly('parentSelfScreen');
+  }
+
+  function showParentSelfReveal(){
+    const fan = document.getElementById('parentSelfFan');
+    fan.innerHTML = '';
+    const face = document.createElement('div');
+    face.className = 'card-face';
+    face.textContent = LABEL[parentCard];
+    fan.appendChild(face);
+    const btn = document.createElement('button');
+    btn.className = 'main-btn';
+    btn.style.marginTop = '14px';
+    btn.textContent = '参考カードを引く';
+    btn.addEventListener('click', renderParentPeek);
+    document.getElementById('parentSelfScreen').appendChild(btn);
+  }
+
+  function renderParentPeek(){
+    tempRevealed = [];
+    document.getElementById('peekRemaining').textContent = 2 - peekCards.length;
+    renderPeekFan();
+    showOnly('parentPeekScreen');
+  }
+
+  function renderPeekFan(){
+    const fan = document.getElementById('parentPeekFan');
+    fan.innerHTML = '';
+    pool.forEach(idx => {
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      back.addEventListener('click', () => {
+        peekCards.push(deck[idx]);
+        pool = pool.filter(p => p !== idx);
+        renderPeekRevealed();
+        if(peekCards.length >= 2){
+          setTimeout(showDecisionScreen, 500);
+        } else {
+          document.getElementById('peekRemaining').textContent = 2 - peekCards.length;
+          renderPeekFan();
+        }
+      }, { once:true });
+      fan.appendChild(back);
+    });
+  }
+
+  function renderPeekRevealed(){
+    const row = document.getElementById('peekRevealedRow');
+    row.innerHTML = '';
+    peekCards.forEach(c => {
+      const face = document.createElement('div');
+      face.className = 'card-face';
+      face.textContent = LABEL[c];
+      row.appendChild(face);
+    });
+  }
+
+  function showDecisionScreen(){
+    const ownRow = document.getElementById('ownCardRow');
+    ownRow.innerHTML = '';
+    const ownFace = document.createElement('div');
+    ownFace.className = 'card-face';
+    ownFace.textContent = LABEL[parentCard];
+    ownRow.appendChild(ownFace);
+
+    const peekRow = document.getElementById('peekCardRow');
+    peekRow.innerHTML = '';
+    peekCards.forEach(c => {
+      const face = document.createElement('div');
+      face.className = 'card-face';
+      face.textContent = LABEL[c];
+      peekRow.appendChild(face);
+    });
+
+    showOnly('decisionScreen');
+  }
+
+  function resolveRound(decision){
+    const sameSpecies = (childCard === parentCard);
+    const correct = (sameSpecies && decision === 'coexist') || (!sameSpecies && decision === 'banish');
+    const winner = correct ? parentName() : childName();
+    wins[winner]++;
+    updateScoreUI();
+
+    document.getElementById('winnerText').textContent = labelOf(winner) + 'の勝ち！';
+
+    const revealRow = document.getElementById('finalRevealRow');
+    revealRow.innerHTML = '';
+    [{ role:'子（' + labelOf(childName()) + '）', card:childCard }, { role:'親（' + labelOf(parentName()) + '）', card:parentCard }].forEach(entry => {
+      const wrap = document.createElement('div');
+      wrap.style.display = 'flex';
+      wrap.style.flexDirection = 'column';
+      wrap.style.alignItems = 'center';
+      wrap.style.gap = '4px';
+      const face = document.createElement('div');
+      face.className = 'card-face';
+      face.textContent = LABEL[entry.card];
+      const label = document.createElement('div');
+      label.style.fontSize = '0.65rem';
+      label.style.color = 'var(--silver-dim)';
+      label.textContent = entry.role;
+      wrap.appendChild(face);
+      wrap.appendChild(label);
+      revealRow.appendChild(wrap);
+    });
+
+    const sub = sameSpecies
+      ? '2人とも「' + LABEL[childCard] + '」で正体は同じでした。親は「' + (decision === 'coexist' ? '共存' : '追放') + '」を選びました。'
+      : '子は「' + LABEL[childCard] + '」、親は「' + LABEL[parentCard] + '」で正体は違いました。親は「' + (decision === 'coexist' ? '共存' : '追放') + '」を選びました。';
+    document.getElementById('winnerSub').textContent = sub;
+
+    document.getElementById('winnerOverlay').classList.add('show');
+  }
+
+  document.getElementById('coexistBtn').addEventListener('click', () => resolveRound('coexist'));
+  document.getElementById('banishBtn').addEventListener('click', () => resolveRound('banish'));
+
+  document.getElementById('nextRoundBtn').addEventListener('click', () => {
+    parentIsWhite = !parentIsWhite;
+    startRound();
+  });
+  document.getElementById('newGameBtn').addEventListener('click', resetScore);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  resetScore();
+})();
+</script>
+</body>
+</html>
