@@ -209,7 +209,7 @@
     0%{ opacity:0.2; transform: translateX(-3px); }
     100%{ opacity:1; transform: translateX(0); }
   }
-  .status-text{ font-size:0.72rem; color:var(--gold-dim); letter-spacing:0.05em; text-align:center; }
+  .status-text{ display:none; }
   .status-text .bolt{ color:var(--gold-bright); }
 
   /* --- card panel (shared by mode select / setup / handoff / game) --- */
@@ -310,7 +310,7 @@
     font-size:0.7rem;
     color:#e8b4b4;
     letter-spacing:0.04em;
-    min-height: 1.2em;
+    min-height: 0;
     text-align:center;
   }
 
@@ -345,7 +345,7 @@
     width:100%;
     display:flex;
     flex-direction:column;
-    gap:10px;
+    gap:6px;
     overflow-y:auto;
     flex:1;
     min-height:0;
@@ -357,13 +357,13 @@
     gap: 10px;
   }
   .history-col{
-    padding: 6px 2px;
+    padding: 4px 2px;
   }
   .history-col h3{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
     font-size:0.72rem;
-    margin:0 0 8px;
+    margin:0 0 4px;
     color:var(--cream);
     letter-spacing:0.04em;
     display:flex;
@@ -379,15 +379,15 @@
     font-size:0.6rem;
     color:var(--gold-dim);
     letter-spacing:0.04em;
-    padding: 0 2px 6px;
+    padding: 0 2px 3px;
     border-bottom: 1px solid var(--hairline);
-    margin-bottom:6px;
+    margin-bottom:4px;
   }
   .history-col-head span:nth-child(3), .history-col-head span:nth-child(4){ text-align:center; }
   .history-list{
     display:flex;
     flex-direction:column;
-    gap:8px;
+    gap:4px;
   }
   .history-list.expanded{
     max-height: 260px;
@@ -417,14 +417,14 @@
   .hdigit{
     flex:1;
     min-width:0;
-    aspect-ratio: 1;
+    aspect-ratio: 5 / 3;
     display:flex; align-items:center; justify-content:center;
     background: var(--void);
     border: 1px solid var(--gold-dim);
     border-radius: 3px;
     font-family:'Jost', sans-serif;
     font-weight:600;
-    font-size:0.78rem;
+    font-size:0.76rem;
     color: var(--cream);
   }
   .history-result{
@@ -434,7 +434,7 @@
     text-align:center;
   }
   .history-result.hit-val{ color: var(--cream); }
-  .empty-hint{ color:var(--gold-dim); font-size:0.7rem; text-align:center; padding: 12px 0; grid-column: 1/-1; }
+  .empty-hint{ color:var(--gold-dim); font-size:0.7rem; text-align:center; padding: 8px 0; grid-column: 1/-1; }
 
 
   .guess-area{
@@ -565,7 +565,7 @@
   </div>
 
   <!-- GAME SCREEN -->
-  <div id="gameScreen" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:14px; min-height:0; flex:1;">
+  <div id="gameScreen" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; min-height:0; flex:1;">
     <div class="status-bar">
       <div class="mode-badge" id="modeBadge">2人対戦</div>
       <div id="seal" class="seal">白の番</div>
