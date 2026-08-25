@@ -388,9 +388,20 @@
     display:flex;
     flex-direction:column;
     gap:8px;
-    max-height: 190px;
+  }
+  .history-list.expanded{
+    max-height: 260px;
     overflow-y:auto;
   }
+  .history-toggle{
+    text-align:center;
+    font-size:0.64rem;
+    letter-spacing:0.05em;
+    color: var(--gold-dim);
+    padding: 4px 0 0;
+    cursor:pointer;
+  }
+  .history-toggle:hover{ color: var(--gold-bright); }
   .history-item{
     display:grid;
     grid-template-columns: 18px 1fr 30px 30px;
@@ -510,6 +521,7 @@
       <div class="menu-dropdown hidden" id="menuDropdown">
         <button type="button" id="menuNewGameBtn">はじめから</button>
         <button type="button" id="menuRulesBtn">遊び方</button>
+        <button type="button" id="menuModeSelectBtn">モード選択</button>
       </div>
     </div>
   </header>
@@ -528,6 +540,7 @@
       <button class="mode-toggle-btn" id="sideGoteBtn">後攻で対戦</button>
     </div>
     <button class="main-btn" id="modeStartBtn">ゲーム開始</button>
+    <button class="main-btn" id="modeRulesBtn">遊び方</button>
   </div>
 
   <!-- SETUP SCREEN -->
@@ -585,12 +598,6 @@
     <button class="main-btn" id="guessSubmitBtn">予想する</button>
   </div>
 
-  <div class="controls">
-    <button id="newGameBtn" class="main-btn">はじめから</button>
-    <button id="rulesBtn" class="main-btn">遊び方</button>
-    <button id="modeSelectBtn" class="main-btn">モード選択</button>
-  </div>
-
   <div id="rules" class="rules">
     <h2>遊び方</h2>
     <ul>
@@ -616,6 +623,7 @@
 <script>
 (function(){
   let secrets, guesses, turn, phase, settingFor;
+  let historyExpanded = { sente: false, gote: false };
   let vsCPU = false;
   let cpuDifficulty = 'normal';
   let humanSide = 'sente';
@@ -647,6 +655,7 @@
   function resetAll(){
     secrets = { sente: null, gote: null };
     guesses = { sente: [], gote: [] };
+    historyExpanded = { sente: false, gote: false };
     turn = 'sente';
     phase = 'setup';
     cpuCandidates = allPossibleCodes();
@@ -963,11 +972,14 @@
     const el = document.getElementById(who === 'sente' ? 'senteHistory' : 'goteHistory');
     const list = guesses[who];
     el.innerHTML = '';
+    el.classList.toggle('expanded', !!historyExpanded[who]);
     if(list.length === 0){
       el.innerHTML = '<div class="empty-hint">まだありません</div>';
       return;
     }
-    for(let i = list.length - 1; i >= 0; i--){
+    const showCount = historyExpanded[who] ? list.length : Math.min(3, list.length);
+    for(let n = 0; n < showCount; n++){
+      const i = list.length - 1 - n;
       const item = list[i];
       const row = document.createElement('div');
       row.className = 'history-item';
@@ -999,6 +1011,16 @@
       row.appendChild(blowVal);
       el.appendChild(row);
     }
+    if(list.length > 3){
+      const toggle = document.createElement('div');
+      toggle.className = 'history-toggle';
+      toggle.textContent = historyExpanded[who] ? '▲ 折りたたむ' : '▼ すべて表示（' + list.length + '件）';
+      toggle.addEventListener('click', () => {
+        historyExpanded[who] = !historyExpanded[who];
+        renderHistory(who);
+      });
+      el.appendChild(toggle);
+    }
   }
 
   function showWinner(winner, revealedCode){
@@ -1009,10 +1031,8 @@
     overlay.classList.add('show');
   }
 
-  document.getElementById('newGameBtn').addEventListener('click', goToModeSelect);
   document.getElementById('againBtn').addEventListener('click', goToModeSelect);
-  document.getElementById('modeSelectBtn').addEventListener('click', goToModeSelect);
-  document.getElementById('rulesBtn').addEventListener('click', () => {
+  document.getElementById('modeRulesBtn').addEventListener('click', () => {
     document.getElementById('rules').classList.toggle('open');
   });
 
@@ -1034,6 +1054,10 @@
   document.getElementById('menuRulesBtn').addEventListener('click', () => {
     menuDropdown.classList.add('hidden');
     document.getElementById('rules').classList.toggle('open');
+  });
+  document.getElementById('menuModeSelectBtn').addEventListener('click', () => {
+    menuDropdown.classList.add('hidden');
+    goToModeSelect();
   });
 
   function setMode(newVsCPU, newDifficulty){
