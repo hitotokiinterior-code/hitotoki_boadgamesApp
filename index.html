@@ -57,6 +57,193 @@
     align-items:center;
     gap:28px;
   }
+
+  /* --- タイマー：発車標風。カードを左右半分に分け、右半分は常に「現在の設定
+     ／カウントダウン」を表示。左半分は普段カバーで隠れている設定画面（プリセット・±）。
+     カバーは常にどちらか半分だけを覆うトグル式で、右へずらすと設定側が開き、
+     左へ戻す（設定側を再び覆う）と、その瞬間にタイマーがスタートする --- */
+  .timer-card{
+    position:relative;
+    width:100%;
+    height:96px;
+    border-radius:10px;
+    overflow:hidden;
+    border: 1px solid var(--hairline);
+    background: linear-gradient(160deg, #1c1c1c, #0a0a0a 60%, #020202);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  }
+
+  /* 左半分：設定画面（プリセット・±）。普段はカバーの下に隠れている */
+  .timer-settings{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:50%;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:8px;
+    padding: 0 14px;
+  }
+  .timer-presets{
+    display:flex;
+    gap:5px;
+  }
+  .preset-btn{
+    padding:5px 7px;
+    border-radius:5px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--silver-dim);
+    color: var(--silver);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.64rem;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .preset-btn.active{
+    background:#fff;
+    color:#141414;
+    border-color:#fff;
+  }
+  .timer-stepper{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .step-btn{
+    width:28px; height:28px;
+    flex: 0 0 28px;
+    border-radius:50%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--silver-dim);
+    color: var(--silver);
+    font-family:'Jost', sans-serif;
+    font-size:0.95rem;
+    line-height:1;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .step-btn:active{ background:#fff; color:#141414; border-color:#fff; }
+  .step-value{
+    min-width:38px;
+    text-align:center;
+    font-family:'Jost', sans-serif;
+    font-size:0.95rem;
+    color:#fff;
+    letter-spacing:0.02em;
+  }
+  .step-value .unit{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.58rem;
+    color: var(--silver-dim);
+    margin-left:2px;
+  }
+
+  /* 右半分：常に見えている現在時刻／カウントダウン表示 */
+  .timer-display{
+    position:absolute;
+    left:50%; top:0; bottom:0;
+    width:50%;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:2px;
+    padding: 0 16px;
+  }
+  .timer-display-label{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.58rem;
+    letter-spacing:0.24em;
+    color: var(--silver-dim);
+    text-transform:uppercase;
+  }
+  .timer-display-value{
+    font-family:'Kaisei Decol', serif;
+    font-size:1.5rem;
+    line-height:1.15;
+    color:#fff;
+    letter-spacing:0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-display-value .unit{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.75rem;
+    color: var(--silver-dim);
+    margin-left:3px;
+  }
+  .timer-display-sub{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.56rem;
+    letter-spacing:0.03em;
+    color: var(--silver-dim);
+  }
+  .timer-display.finished{
+    animation: timerFlash 0.6s ease 3;
+  }
+  @keyframes timerFlash{
+    0%, 100%{ background: transparent; }
+    50%{ background: rgba(200,168,90,0.18); }
+  }
+
+  /* タイマー動作中だけ現れる「止める」ボタン。押すと即座に時計表示へ戻る */
+  .timer-stop-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:22px; height:22px;
+    border-radius:50%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--silver-dim);
+    color: var(--silver);
+    font-size:0.5rem;
+    line-height:1;
+    cursor:pointer;
+    z-index:5;
+    transition: all .15s ease;
+  }
+  .timer-display.running .timer-stop-btn{
+    display:flex;
+  }
+  .timer-stop-btn:active{
+    background:#fff;
+    color:#141414;
+    border-color:#fff;
+  }
+
+  /* カバー本体：幅は半分固定。左端(設定を覆う)⇔右端(表示を覆う)の間をドラッグで往復する */
+  .timer-cover{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(160deg, #232016, #141210 55%, #030302);
+    border-right: 1px solid var(--hairline);
+    cursor:grab;
+    touch-action: pan-y; /* 縦スクロールは邪魔しない。横方向はJSでドラッグ検知 */
+    user-select:none;
+    transition: transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  .timer-cover.dragging{
+    transition:none;
+  }
+  .timer-cover .grip{
+    display:flex;
+    gap:4px;
+  }
+  .timer-cover .grip span{
+    width:3px; height:3px;
+    border-radius:50%;
+    background: var(--silver-dim);
+    opacity:0.7;
+  }
+
   .view-placeholder{
     width:100%;
     min-height: 240px;
@@ -146,7 +333,7 @@
     text-transform: uppercase;
   }
 
-  /* --- swipeable pages: 3枚のカードを縦に並べ、上下スワイプでページ送り --- */
+  /* --- swipeable list: 全カードを1本の縦リストにして、なめらかに連続スクロール --- */
   .game-grid{
     --card-h: 108px;
     --card-gap: 10px;
@@ -154,26 +341,16 @@
     height: calc(var(--card-h) * 3 + var(--card-gap) * 2);
     display:flex;
     flex-direction:column;
+    gap: var(--card-gap);
     overflow-y:auto;
     overflow-x:hidden;
-    scroll-snap-type:y mandatory;
     -webkit-overflow-scrolling:touch;
     touch-action: pan-y; /* このエリアだけ縦スワイプを許可 */
+    padding: 2px 4px;
   }
 
   .game-grid::-webkit-scrollbar{
     display:none;
-  }
-
-  /* 1ページ = カード3枚ぶんの高さ。中を1列×3行で並べる */
-  .game-page{
-    flex: 0 0 100%;
-    height:100%;
-    scroll-snap-align: start;
-    display:flex;
-    flex-direction:column;
-    gap: var(--card-gap);
-    padding: 2px 4px;
   }
 
 
@@ -228,24 +405,7 @@
   .game-card .tag.cpu{ color:#dcd6c0; border-color: rgba(220,214,192,0.35); }
   .game-card .tag.master{ color:#fff; border-color: rgba(255,255,255,0.5); }
 
-  /* ページ位置を示すインジケーター（丸ではなく細いバー） */
-  /* ページ位置を示すドット */
-  .page-dots{
-    display:flex;
-    justify-content:center;
-    gap:6px;
-    margin-top:4px;
-  }
-  .page-dots .dot{
-    width:6px; height:6px;
-    border-radius:50%;
-    background: var(--hairline);
-    transition: background .15s ease, transform .15s ease;
-  }
-  .page-dots .dot.active{
-    background:#fff;
-    transform: scale(1.2);
-  }
+
 
   footer{
     font-size:0.68rem;
@@ -300,12 +460,15 @@
   50%{ opacity:0.2; }
 }
 
-  /* --- bonus tools --- */
+  /* --- bonus tools（設定メニュー内、リンク一覧の下に配置） --- */
   .extras{
     width:100%;
     display:flex;
     flex-direction:column;
     gap:12px;
+    margin-top:28px;
+    padding-top:24px;
+    border-top:1px solid var(--hairline);
   }
   .extras-heading{
     font-size:0.62rem;
@@ -484,6 +647,10 @@
 
   padding:40px 25px;
 
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  touch-action: pan-y; /* このパネルの中だけ縦スワイプ（スクロール）を許可 */
+
   transition:0.35s ease;
 
 }
@@ -593,39 +760,65 @@
     </a>
   </div>
 
+  <div class="extras">
+    <div class="extras-heading">おまけ機能</div>
+
+    <div class="icon-toggle-row">
+      <div class="tool-toggle" id="diceToggle" title="サイコロを振る">🎲</div>
+      <div class="tool-toggle" id="coinToggle" title="コイントスする">🪙</div>
+    </div>
+
+    <div class="tool-panel" id="dicePanel">
+      <div class="count-row" id="diceCountRow"></div>
+      <div class="dice-row" id="diceRow"></div>
+      <div class="dice-sum" id="diceSum"></div>
+      <button class="tool-btn" id="diceRollBtn">振る</button>
+    </div>
+
+    <div class="tool-panel" id="coinPanel">
+      <div class="coin-wrap">
+        <div class="coin" id="coin">
+          <div class="coin-face heads">表</div>
+          <div class="coin-face tails">裏</div>
+        </div>
+      </div>
+      <div class="coin-result" id="coinResult">投げてみましょう</div>
+      <button class="tool-btn" id="coinFlipBtn">投げる</button>
+    </div>
+  </div>
+
 </div>
   
   <div class="view-content" id="homeView">
-    <nav class="game-grid" id="gameGrid"></nav>
 
-    <div class="page-dots" id="pageDots"></div>
-
-    <div class="extras">
-      <div class="extras-heading">おまけ機能</div>
-
-      <div class="icon-toggle-row">
-        <div class="tool-toggle" id="diceToggle" title="サイコロを振る">🎲</div>
-        <div class="tool-toggle" id="coinToggle" title="コイントスする">🪙</div>
-      </div>
-
-      <div class="tool-panel" id="dicePanel">
-        <div class="count-row" id="diceCountRow"></div>
-        <div class="dice-row" id="diceRow"></div>
-        <div class="dice-sum" id="diceSum"></div>
-        <button class="tool-btn" id="diceRollBtn">振る</button>
-      </div>
-
-      <div class="tool-panel" id="coinPanel">
-        <div class="coin-wrap">
-          <div class="coin" id="coin">
-            <div class="coin-face heads">表</div>
-            <div class="coin-face tails">裏</div>
-          </div>
+    <div class="timer-card" id="timerCard">
+      <div class="timer-settings">
+        <div class="timer-presets" id="timerPresets">
+          <button class="preset-btn" data-min="5">5分</button>
+          <button class="preset-btn active" data-min="10">10分</button>
+          <button class="preset-btn" data-min="15">15分</button>
         </div>
-        <div class="coin-result" id="coinResult">投げてみましょう</div>
-        <button class="tool-btn" id="coinFlipBtn">投げる</button>
+        <div class="timer-stepper">
+          <button class="step-btn" id="timerStepMinus">−</button>
+          <div class="step-value" id="timerStepValue">10<span class="unit">分</span></div>
+          <button class="step-btn" id="timerStepPlus">＋</button>
+        </div>
+      </div>
+
+      <div class="timer-display" id="timerDisplay">
+        <div class="timer-display-label" id="timerDisplayLabel">NEXT STOP</div>
+        <div class="timer-display-value" id="timerDisplayValue">10<span class="unit">分</span></div>
+        <div class="timer-display-sub" id="timerDisplaySub">スライドして時間を設定</div>
+        <button class="timer-stop-btn" id="timerStopBtn" title="タイマーを止めて時計に戻す">■</button>
+      </div>
+
+      <div class="timer-cover" id="timerCover">
+        <div class="grip"><span></span><span></span><span></span></div>
       </div>
     </div>
+
+
+    <nav class="game-grid" id="gameGrid"></nav>
   </div>
 
   <div class="view-content" id="recordsView" style="display:none;">
@@ -791,7 +984,6 @@
   ];
 
   const gameGrid = document.getElementById('gameGrid');
-  const dotsWrap = document.getElementById('pageDots');
 
   function buildCardEl(game){
     const a = document.createElement('a');
@@ -824,43 +1016,15 @@
 
   function renderGamePages(){
     gameGrid.innerHTML = '';
-
-    // 1ページ3枚を縦に並べ、ページ単位で上下スワイプする
-    const perPage = 3;
-    const totalPages = Math.ceil(GAMES.length / perPage);
-    for(let p = 0; p < totalPages; p++){
-      const pageEl = document.createElement('div');
-      pageEl.className = 'game-page';
-      GAMES.slice(p * perPage, p * perPage + perPage).forEach(game => {
-        pageEl.appendChild(buildCardEl(game));
-      });
-      gameGrid.appendChild(pageEl);
-    }
-    renderDots(totalPages);
+    // ページ分けはせず、全カードを1本の縦リストとして並べる（引っかかりのない連続スクロール）
+    GAMES.forEach(game => {
+      gameGrid.appendChild(buildCardEl(game));
+    });
     gameGrid.scrollTop = 0;
   }
 
-  function renderDots(count){
-    dotsWrap.innerHTML = '';
-    for(let i = 0; i < count; i++){
-      const dot = document.createElement('div');
-      dot.className = 'dot' + (i === 0 ? ' active' : '');
-      dotsWrap.appendChild(dot);
-    }
-  }
-
-  function updateActiveDot(){
-    const pageHeight = gameGrid.clientHeight;
-    if(!pageHeight) return;
-    const idx = Math.round(gameGrid.scrollTop / pageHeight);
-    dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-  }
-
-  gameGrid.addEventListener('scroll', () => {
-    window.requestAnimationFrame(updateActiveDot);
-  }, { passive: true });
-
   renderGamePages();
+
 
     const opening = document.getElementById("opening");
   const openingVideo = document.getElementById("openingVideo");
@@ -927,6 +1091,224 @@ function switchView(viewId){
 navButtons.forEach(btn => {
   btn.addEventListener('click', () => switchView(btn.dataset.view));
 });
+
+// --- タイマー：発車標風。カードは左右半分に分かれていて、右半分は常に
+//     「現在の設定／カウントダウン」を表示。左半分の設定画面（プリセット・±）は
+//     普段カバーで隠れていて、カバーを右へスライドすると現れる。
+//     カバーを左（元の位置＝設定側を覆う）に戻すと、その瞬間にタイマーがスタートする。
+//     動作中にもう一度右へスライドするとキャンセルして編集モードに戻る。 ---
+// --- タイマー：発車標風。カードは左右半分に分かれていて、右半分は常に見えるエリア。
+//     触っていない時は現在時刻の時計として動作し、左半分の設定画面（プリセット・±）は
+//     普段カバーで隠れていて、カバーを右へスライドすると現れる。
+//     カバーを左（元の位置＝設定側を覆う）に戻すと、その瞬間にタイマーがスタートする。
+//     動作中は右上に「止める」ボタンが現れ、押すと即座に時計表示へ戻る。
+//     また、動作中にもう一度右へスライドしてもキャンセルして編集モードに戻る。 ---
+(function initTimer(){
+  const card = document.getElementById('timerCard');
+  const cover = document.getElementById('timerCover');
+  const label = document.getElementById('timerDisplayLabel');
+  const valueEl = document.getElementById('timerDisplayValue');
+  const subEl = document.getElementById('timerDisplaySub');
+  const displayEl = document.getElementById('timerDisplay');
+  const stopBtn = document.getElementById('timerStopBtn');
+  const presetsWrap = document.getElementById('timerPresets');
+  const stepValueEl = document.getElementById('timerStepValue');
+  const stepMinusBtn = document.getElementById('timerStepMinus');
+  const stepPlusBtn = document.getElementById('timerStepPlus');
+  if(!card || !cover) return;
+
+  const MIN_MINUTES = 1;
+  const MAX_MINUTES = 60;
+  let selectedMinutes = 10;   // 現在プリセット/±で選ばれている時間
+  let remainingSeconds = 0;   // カウントダウン中の残り秒数
+  // 'clock'（触っていない時＝時計として動作） | 'open'（カバーが開いて設定編集中） | 'running'（カウントダウン中） | 'finished'（0になった直後の演出中）
+  let state = 'clock';
+
+  let dragStartX = 0;
+  let dragOffset = 0;
+  let maxOffset = 0;
+  let dragging = false;
+  let stateAtDragStart = 'clock';
+  let isOpenPos = false; // カバーが今「右（表示側を覆う位置）」にあるか
+
+  function setState(next){
+    state = next;
+    displayEl.classList.toggle('running', state === 'running');
+  }
+
+  function calcMaxOffset(){
+    // カバー幅ぶん（＝カード幅の半分）だけ右へ動かせば、ちょうど反対側を覆う
+    maxOffset = Math.max(0, card.clientWidth - cover.getBoundingClientRect().width);
+  }
+
+  function setCoverX(px){
+    cover.style.transform = `translateX(${px}px)`;
+  }
+
+  function formatClock(){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    label.textContent = 'ただいま';
+    valueEl.innerHTML = `${hh}:${mm}<span class="unit">:${ss}</span>`;
+    subEl.textContent = 'スライドしてタイマー設定';
+  }
+
+  function formatRunning(){
+    label.textContent = 'NEXT STOP';
+    const m = Math.floor(remainingSeconds / 60);
+    const s = remainingSeconds % 60;
+    valueEl.innerHTML = `${m}:${String(s).padStart(2,'0')}`;
+    subEl.textContent = 'スライドで中止';
+  }
+
+  function formatFinished(){
+    label.textContent = 'ARRIVED';
+    valueEl.innerHTML = `0:00`;
+    subEl.textContent = 'まもなく時計表示に戻ります';
+  }
+
+  function updatePresetButtons(){
+    presetsWrap.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.classList.toggle('active', Number(btn.dataset.min) === selectedMinutes);
+    });
+  }
+
+  function updateStepValue(){
+    stepValueEl.innerHTML = `${selectedMinutes}<span class="unit">分</span>`;
+  }
+
+  function setSelectedMinutes(min){
+    selectedMinutes = Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, min));
+    updatePresetButtons();
+    updateStepValue();
+  }
+
+  function startTimer(){
+    remainingSeconds = selectedMinutes * 60;
+    displayEl.classList.remove('finished');
+    setState('running');
+    formatRunning();
+  }
+
+  // 「止める」ボタン：動作中のタイマーを即座に打ち切って時計表示に戻す
+  function stopManually(){
+    if(state !== 'running') return;
+    displayEl.classList.remove('finished');
+    setState('clock');
+    formatClock();
+  }
+
+  // カバーを開いてのキャンセル：設定編集モードに戻る（時計には戻らない）
+  function cancelTimer(){
+    displayEl.classList.remove('finished');
+    setState('open');
+  }
+
+  // 1秒ごとのティック。今の状態に応じて「時計を進める」か「カウントダウンする」かだけを行う
+  setInterval(() => {
+    if(state === 'running'){
+      remainingSeconds--;
+      if(remainingSeconds <= 0){
+        setState('finished');
+        displayEl.classList.add('finished');
+        formatFinished();
+        if(navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
+        // 少し余韻を置いてから、時計表示に戻す
+        setTimeout(() => {
+          displayEl.classList.remove('finished');
+          setState('clock');
+          formatClock();
+        }, 2400);
+        return;
+      }
+      formatRunning();
+    } else if(state === 'clock'){
+      formatClock();
+    }
+    // 'open' と 'finished' の間は何もしない（'open' は隠れていて見えず、'finished' は演出中のため）
+  }, 1000);
+
+  stopBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    stopManually();
+  });
+
+  // --- ドラッグ操作 ---
+  function onPointerDown(e){
+    calcMaxOffset();
+    dragging = true;
+    stateAtDragStart = state;
+    dragStartX = (e.touches ? e.touches[0].clientX : e.clientX);
+    dragOffset = isOpenPos ? maxOffset : 0;
+    cover.classList.add('dragging');
+    cover.setPointerCapture && e.pointerId != null && cover.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e){
+    if(!dragging) return;
+    const x = (e.touches ? e.touches[0].clientX : e.clientX);
+    const delta = x - dragStartX;
+    let next = (isOpenPos ? maxOffset : 0) + delta;
+    next = Math.min(maxOffset, Math.max(0, next));
+    dragOffset = next;
+    setCoverX(next);
+  }
+
+  function onPointerUp(){
+    if(!dragging) return;
+    dragging = false;
+    cover.classList.remove('dragging');
+
+    const movedToOpenSide = dragOffset > maxOffset * 0.5;
+
+    if(movedToOpenSide){
+      // カバーが右（表示側）へ → 設定側が開いて編集できる状態。動いていたタイマーはキャンセル
+      setCoverX(maxOffset);
+      isOpenPos = true;
+      if(stateAtDragStart === 'running'){
+        cancelTimer();
+      } else {
+        setState('open');
+      }
+    } else {
+      // カバーが左（設定側）へ戻った
+      setCoverX(0);
+      isOpenPos = false;
+      if(stateAtDragStart === 'open'){
+        // 「開」→「閉」に戻した瞬間だけスタートする
+        startTimer();
+      }
+      // それ以外（もともと閉じていた／動作中だった）は何もしない
+    }
+  }
+
+  cover.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  // 一部ブラウザ向けのタッチイベントフォールバック
+  cover.addEventListener('touchstart', onPointerDown, { passive:true });
+  window.addEventListener('touchmove', onPointerMove, { passive:true });
+  window.addEventListener('touchend', onPointerUp);
+
+  window.addEventListener('resize', () => {
+    calcMaxOffset();
+    if(isOpenPos) setCoverX(maxOffset);
+  });
+
+  presetsWrap.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => setSelectedMinutes(Number(btn.dataset.min)));
+  });
+  stepMinusBtn.addEventListener('click', () => setSelectedMinutes(selectedMinutes - 1));
+  stepPlusBtn.addEventListener('click', () => setSelectedMinutes(selectedMinutes + 1));
+
+  calcMaxOffset();
+  updatePresetButtons();
+  updateStepValue();
+  formatClock();
+})();
+
 })();
 </script>
 </body>
