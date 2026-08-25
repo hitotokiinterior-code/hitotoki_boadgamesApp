@@ -268,7 +268,7 @@
     max-width: 340px;
   }
   .keypad-btn{
-    height: 50px;
+    height: 47px;
     border-radius: 6px;
     background: rgba(205,168,105,0.04);
     border: 1px solid var(--gold-dim);
@@ -390,8 +390,10 @@
     gap:4px;
   }
   .history-list.expanded{
-    max-height: 260px;
+    max-height: 210px;
     overflow-y:auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .history-toggle{
     text-align:center;
@@ -510,7 +512,7 @@
 <div class="app">
 
   <header>
-    <a href="index.html" class="home-icon-btn" aria-label="ホームへ戻る">
+    <a href="index.html" class="home-icon-btn" id="homeBtn" aria-label="ホームへ戻る">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-5h2v5a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V10"/></svg>
     </a>
     <h1>ヒット＆ブロー</h1>
@@ -595,7 +597,7 @@
 
     <div class="keypad" id="guessKeypad"></div>
     <div class="inline-error" id="guessError"></div>
-    <button class="main-btn" id="guessSubmitBtn">予想する</button>
+    <button class="main-btn" id="guessSubmitBtn" style="margin-top:-5px;">予想する</button>
   </div>
 
   <div id="rules" class="rules">
@@ -1030,6 +1032,12 @@
     document.getElementById('winnerSub').textContent = '相手の暗証番号を解読しました';
     overlay.classList.add('show');
   }
+
+  document.getElementById('homeBtn').addEventListener('click', (e) => {
+    if((phase === 'setup' || phase === 'playing') && !confirm('ゲームを終了してホームに戻ります。よろしいですか？')){
+      e.preventDefault();
+    }
+  });
 
   document.getElementById('againBtn').addEventListener('click', goToModeSelect);
   document.getElementById('modeRulesBtn').addEventListener('click', () => {
