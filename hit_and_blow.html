@@ -184,21 +184,6 @@
     transition: all .15s ease;
   }
   .mode-toggle-btn.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
-  .back-link{
-    position:absolute;
-    top:12px; left:14px;
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-weight:700;
-    font-size:0.66rem;
-    letter-spacing:0.05em;
-    color:var(--gold-dim);
-    background:none;
-    border:none;
-    cursor:pointer;
-    z-index:2;
-    padding:2px;
-  }
-  .back-link:hover{ color:var(--gold-bright); }
   .seal{
     display:flex;
     align-items:center;
@@ -352,18 +337,8 @@
   button.main-btn:disabled{ opacity:0.3; cursor:default; }
   button:focus-visible{ outline: 1px solid var(--gold-bright); outline-offset: 3px; }
 
-  .controls{ display:flex; gap:12px; margin-top:2px; }
-
-  .ad-area{
-    width:100%;
-    border: 1px dashed var(--gold-dim);
-    border-radius: 6px;
-    padding: 14px;
-    text-align:center;
-    font-size:0.68rem;
-    letter-spacing:0.1em;
-    color: var(--gold-dim);
-  }
+  .controls{ display:flex; gap:10px; margin-top:2px; flex-wrap:wrap; justify-content:center; }
+  .controls .main-btn{ padding: 10px 16px; font-size:0.72rem; }
 
   /* --- guess history --- */
   .history-wrap{
@@ -557,7 +532,6 @@
 
   <!-- SETUP SCREEN -->
   <div id="setupScreen" class="panel hidden">
-    <button class="back-link" id="setupBackBtn">← モード選択</button>
     <div class="panel-title" id="setupTitle">白の暗証番号を設定してください</div>
     <div class="panel-sub">0〜9の中から重複しない3桁を決めてください。相手には見えません。</div>
     <div class="dial-row" id="setupDialRow">
@@ -614,9 +588,8 @@
   <div class="controls">
     <button id="newGameBtn" class="main-btn">はじめから</button>
     <button id="rulesBtn" class="main-btn">遊び方</button>
+    <button id="modeSelectBtn" class="main-btn">モード選択</button>
   </div>
-
-  <div class="ad-area">広告エリア</div>
 
   <div id="rules" class="rules">
     <h2>遊び方</h2>
@@ -1038,7 +1011,7 @@
 
   document.getElementById('newGameBtn').addEventListener('click', goToModeSelect);
   document.getElementById('againBtn').addEventListener('click', goToModeSelect);
-  document.getElementById('setupBackBtn').addEventListener('click', goToModeSelect);
+  document.getElementById('modeSelectBtn').addEventListener('click', goToModeSelect);
   document.getElementById('rulesBtn').addEventListener('click', () => {
     document.getElementById('rules').classList.toggle('open');
   });
