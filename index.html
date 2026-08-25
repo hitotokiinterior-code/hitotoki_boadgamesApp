@@ -80,7 +80,7 @@
     width:50%;
     display:flex;
     flex-direction:column;
-    align-items:flex-start;
+    align-items:center;
     justify-content:center;
     gap:8px;
     padding: 0 14px;
@@ -109,27 +109,31 @@
   .timer-stepper{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:6px;
   }
   .step-btn{
-    width:28px; height:28px;
-    flex: 0 0 28px;
+    width:26px; height:26px;
+    flex: 0 0 26px;
     border-radius:50%;
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--silver-dim);
     color: var(--silver);
     font-family:'Jost', sans-serif;
-    font-size:0.95rem;
+    font-size:0.92rem;
     line-height:1;
     cursor:pointer;
     transition: all .15s ease;
   }
   .step-btn:active{ background:#fff; color:#141414; border-color:#fff; }
+  .step-btn.reset-btn{
+    font-size:0.8rem;
+    color: var(--silver-dim);
+  }
   .step-value{
-    min-width:38px;
+    min-width:34px;
     text-align:center;
     font-family:'Jost', sans-serif;
-    font-size:0.95rem;
+    font-size:0.92rem;
     color:#fff;
     letter-spacing:0.02em;
   }
@@ -147,10 +151,11 @@
     width:50%;
     display:flex;
     flex-direction:column;
-    align-items:flex-start;
+    align-items:center;
     justify-content:center;
     gap:2px;
     padding: 0 16px;
+    text-align:center;
   }
   .timer-display-label{
     font-family:'Zen Kaku Gothic New', sans-serif;
@@ -795,13 +800,14 @@
       <div class="timer-settings">
         <div class="timer-presets" id="timerPresets">
           <button class="preset-btn" data-min="5">5分</button>
-          <button class="preset-btn active" data-min="10">10分</button>
+          <button class="preset-btn" data-min="10">10分</button>
           <button class="preset-btn" data-min="15">15分</button>
         </div>
         <div class="timer-stepper">
           <button class="step-btn" id="timerStepMinus">−</button>
-          <div class="step-value" id="timerStepValue">10<span class="unit">分</span></div>
+          <div class="step-value" id="timerStepValue">0<span class="unit">分</span></div>
           <button class="step-btn" id="timerStepPlus">＋</button>
+          <button class="step-btn reset-btn" id="timerResetBtn" title="0分にリセット">↺</button>
         </div>
       </div>
 
@@ -1115,11 +1121,12 @@ navButtons.forEach(btn => {
   const stepValueEl = document.getElementById('timerStepValue');
   const stepMinusBtn = document.getElementById('timerStepMinus');
   const stepPlusBtn = document.getElementById('timerStepPlus');
+  const resetBtn = document.getElementById('timerResetBtn');
   if(!card || !cover) return;
 
-  const MIN_MINUTES = 1;
+  const MIN_MINUTES = 0;
   const MAX_MINUTES = 60;
-  let selectedMinutes = 10;   // 現在プリセット/±で選ばれている時間
+  let selectedMinutes = 0;    // 現在設定されている時間（プリセットは押すたびに加算していく）
   let remainingSeconds = 0;   // カウントダウン中の残り秒数
   // 'clock'（触っていない時＝時計として動作） | 'open'（カバーが開いて設定編集中） | 'running'（カウントダウン中） | 'finished'（0になった直後の演出中）
   let state = 'clock';
@@ -1149,13 +1156,13 @@ navButtons.forEach(btn => {
     const now = new Date();
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    label.textContent = 'ただいま';
-    valueEl.innerHTML = `${hh}:${mm}<span class="unit">:${ss}</span>`;
+    label.style.display = 'none';
+    valueEl.innerHTML = `${hh}:${mm}`;
     subEl.textContent = 'スライドしてタイマー設定';
   }
 
   function formatRunning(){
+    label.style.display = '';
     label.textContent = 'NEXT STOP';
     const m = Math.floor(remainingSeconds / 60);
     const s = remainingSeconds % 60;
@@ -1164,15 +1171,10 @@ navButtons.forEach(btn => {
   }
 
   function formatFinished(){
+    label.style.display = '';
     label.textContent = 'ARRIVED';
     valueEl.innerHTML = `0:00`;
     subEl.textContent = 'まもなく時計表示に戻ります';
-  }
-
-  function updatePresetButtons(){
-    presetsWrap.querySelectorAll('.preset-btn').forEach(btn => {
-      btn.classList.toggle('active', Number(btn.dataset.min) === selectedMinutes);
-    });
   }
 
   function updateStepValue(){
@@ -1181,7 +1183,6 @@ navButtons.forEach(btn => {
 
   function setSelectedMinutes(min){
     selectedMinutes = Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, min));
-    updatePresetButtons();
     updateStepValue();
   }
 
@@ -1277,8 +1278,13 @@ navButtons.forEach(btn => {
       setCoverX(0);
       isOpenPos = false;
       if(stateAtDragStart === 'open'){
-        // 「開」→「閉」に戻した瞬間だけスタートする
-        startTimer();
+        // 「開」→「閉」に戻した瞬間だけスタートする（0分のままなら何もせず時計に戻る）
+        if(selectedMinutes > 0){
+          startTimer();
+        } else {
+          setState('clock');
+          formatClock();
+        }
       }
       // それ以外（もともと閉じていた／動作中だった）は何もしない
     }
@@ -1297,14 +1303,15 @@ navButtons.forEach(btn => {
     if(isOpenPos) setCoverX(maxOffset);
   });
 
+  // プリセットは押すたびに現在値へ加算する（5分→10分→15分…と積み上げていく）
   presetsWrap.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => setSelectedMinutes(Number(btn.dataset.min)));
+    btn.addEventListener('click', () => setSelectedMinutes(selectedMinutes + Number(btn.dataset.min)));
   });
   stepMinusBtn.addEventListener('click', () => setSelectedMinutes(selectedMinutes - 1));
   stepPlusBtn.addEventListener('click', () => setSelectedMinutes(selectedMinutes + 1));
+  resetBtn.addEventListener('click', () => setSelectedMinutes(0));
 
   calcMaxOffset();
-  updatePresetButtons();
   updateStepValue();
   formatClock();
 })();
