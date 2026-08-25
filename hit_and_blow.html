@@ -8,17 +8,20 @@
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
 
   :root{
-    --frame-hi: #2a2a2a;
-    --frame-mid: #141414;
-    --frame-low: #030303;
-    --void: #060606;
-    --void-rim: #2a2a2a;
-    --silver: #cfcfcf;
-    --silver-dim: #6f6f6f;
-    --white-ink: #f2efe6;
-    --hairline: rgba(255,255,255,0.14);
-    --hit: #f2efe6;
-    --blow: #6f6f6f;
+    --frame-hi: #262019;
+    --frame-mid: #14100b;
+    --frame-low: #050402;
+    --void: #0c0a07;
+    --void-rim: #4a3a22;
+    --gold: #cda869;
+    --gold-bright: #e6c88a;
+    --gold-dim: #8a7350;
+    --cream: #f0e6d2;
+    --cream-box: #ece1c8;
+    --ink: #1a140b;
+    --hairline: rgba(205,168,105,0.28);
+    --hit: #f0e6d2;
+    --blow: #a4895c;
   }
 
   *{ box-sizing:border-box; }
@@ -29,25 +32,63 @@
     touch-action: manipulation;
   }
 
-  .home-btn{
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 100;
+  .home-icon-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px; height:34px;
+    color: var(--cream);
+    text-decoration:none;
+    flex-shrink:0;
+    transition: color .15s ease, opacity .15s ease;
+  }
+  .home-icon-btn:hover{ color: var(--gold-bright); }
+  .home-icon-btn svg{ width:20px; height:20px; }
+
+  .menu-icon-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:34px; height:34px;
+    color: var(--cream);
+    background:none;
+    border:none;
+    cursor:pointer;
+    flex-shrink:0;
+    transition: color .15s ease;
+  }
+  .menu-icon-btn:hover{ color: var(--gold-bright); }
+  .menu-icon-btn svg{ width:20px; height:20px; }
+
+  .menu-dropdown{
+    position:absolute;
+    top:40px; right:0;
+    z-index:30;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-low));
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+    display:flex;
+    flex-direction:column;
+    min-width: 150px;
+    overflow:hidden;
+  }
+  .menu-dropdown.hidden{ display:none; }
+  .menu-dropdown button{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
-    font-size:0.7rem;
+    font-size:0.76rem;
     letter-spacing:0.06em;
-    color: #fff;
-    background: rgba(255,255,255,0.14);
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 3px;
-    padding: 7px 12px;
-    text-decoration:none;
-    backdrop-filter: blur(4px);
-    transition: background .15s ease, color .15s ease, border-color .15s ease;
+    color: var(--cream);
+    background:none;
+    border:none;
+    border-bottom: 1px solid var(--hairline);
+    text-align:left;
+    padding: 11px 14px;
+    cursor:pointer;
   }
-  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+  .menu-dropdown button:last-child{ border-bottom:none; }
+  .menu-dropdown button:hover{ background: rgba(205,168,105,0.1); color: var(--gold-bright); }
 
   body{
     margin:0;
@@ -59,9 +100,9 @@
     -webkit-user-select: none;
     user-select: none;
     background:
-      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+      radial-gradient(ellipse at 50% -10%, #1a1610 0%, #0a0806 55%, #000000 100%);
     font-family:'Zen Kaku Gothic New', sans-serif;
-    color: var(--silver);
+    color: var(--gold);
     display:flex;
     justify-content:center;
     align-items:flex-start;
@@ -77,37 +118,55 @@
     gap:10px;
   }
 
-  header{ text-align:center; margin-top:0; }
+  header{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--hairline);
+    position:relative;
+  }
+  .header-menu-wrap{ position:relative; }
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
-    font-size: clamp(1.2rem, 5.5vw, 1.6rem);
-    letter-spacing: 0.06em;
+    font-size: clamp(1.15rem, 5vw, 1.45rem);
+    letter-spacing: 0.08em;
     margin:0;
-    color:#fff;
-    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+    color:var(--cream);
+    text-shadow: 0 2px 10px rgba(205,168,105,0.16);
   }
   h1 .small{
     display:block;
     font-size:0.55rem;
     letter-spacing:0.36em;
     font-weight:500;
-    color:var(--silver-dim);
+    color:var(--gold-dim);
     margin-top:4px;
     text-transform: uppercase;
   }
 
-  .turn-wrap{
+  .status-bar{
     display:flex;
     align-items:center;
+    justify-content:space-between;
     gap:10px;
-    min-height: 36px;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
-    padding: 6px 20px;
+    padding: 10px 4px;
     width: 100%;
-    max-width: 380px;
-    justify-content:center;
+  }
+  .mode-badge{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.68rem;
+    letter-spacing:0.04em;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
+    padding: 6px 10px;
+    white-space:nowrap;
   }
 
   .mode-toggle-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
@@ -116,15 +175,15 @@
     font-weight:700;
     font-size:0.66rem;
     letter-spacing:0.06em;
-    color: var(--silver);
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--silver-dim);
+    color: var(--gold);
+    background: rgba(205,168,105,0.04);
+    border: 1px solid var(--gold-dim);
     border-radius:3px;
     padding: 6px 11px;
     cursor:pointer;
     transition: all .15s ease;
   }
-  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+  .mode-toggle-btn.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
   .back-link{
     position:absolute;
     top:12px; left:14px;
@@ -132,34 +191,41 @@
     font-weight:700;
     font-size:0.66rem;
     letter-spacing:0.05em;
-    color:var(--silver-dim);
+    color:var(--gold-dim);
     background:none;
     border:none;
     cursor:pointer;
     z-index:2;
     padding:2px;
   }
-  .back-link:hover{ color:#fff; }
+  .back-link:hover{ color:var(--gold-bright); }
   .seal{
-    font-family:'Kaisei Decol', serif;
-    font-weight:500;
-    font-size: 0.9rem;
-    color: #17130c;
-    background: var(--white-ink);
-    padding: 8px 18px;
-    border-radius: 3px;
-    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
-    letter-spacing: 0.15em;
-    transition: background .25s ease, color .25s ease;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size: 0.78rem;
+    color: var(--cream);
+    letter-spacing: 0.04em;
+    white-space:nowrap;
+    transition: color .2s ease;
   }
-  .seal.gote{ background:#1c1c1c; color:var(--white-ink); box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4), inset 0 0 0 1px var(--silver-dim); }
-  .seal.pulse{ animation: stamp .35s ease; }
-  @keyframes stamp{
-    0%{ transform: scale(1.4); opacity:0; }
-    60%{ transform: scale(0.96); opacity:1; }
-    100%{ transform: scale(1); }
+  .seal::before{
+    content:'◆';
+    color: var(--gold-bright);
+    font-size:0.7rem;
+    transition: color .2s ease;
   }
-  .status-text{ font-size:0.72rem; color:var(--silver-dim); letter-spacing:0.05em; text-align:center; }
+  .seal.gote{ color: var(--cream); }
+  .seal.gote::before{ color:#c4645a; }
+  .seal.pulse{ animation: sealPulse .3s ease; }
+  @keyframes sealPulse{
+    0%{ opacity:0.2; transform: translateX(-3px); }
+    100%{ opacity:1; transform: translateX(0); }
+  }
+  .status-text{ font-size:0.72rem; color:var(--gold-dim); letter-spacing:0.05em; text-align:center; }
+  .status-text .bolt{ color:var(--gold-bright); }
 
   /* --- card panel (shared by mode select / setup / handoff / game) --- */
   .panel{
@@ -170,65 +236,24 @@
     padding: 18px 20px;
     box-shadow:
       0 16px 32px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(255,255,255,0.12),
-      inset 0 0 0 1px rgba(255,255,255,0.05);
+      inset 0 1px 0 rgba(205,168,105,0.12),
+      inset 0 0 0 1px rgba(205,168,105,0.08);
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:12px;
   }
 
-  /* --- decorative safe combination dial --- */
-  .safe-dial{
-    position:absolute;
-    top:10px; right:10px;
-    width:44px; height:44px;
-    z-index:2;
-    pointer-events:none;
-  }
-  .safe-dial-ticks{
-    position:absolute; inset:0;
-    border-radius:50%;
-    background:
-      repeating-conic-gradient(from 0deg, rgba(255,255,255,0.6) 0deg 1.5deg, transparent 1.5deg 15deg);
-    box-shadow:
-      0 3px 6px rgba(0,0,0,0.6),
-      inset 0 0 0 2px rgba(255,255,255,0.15),
-      inset 0 0 6px rgba(0,0,0,0.5);
-    transition: transform 0.45s cubic-bezier(.3,1.6,.6,1);
-  }
-  .safe-dial-knob{
-    position:absolute;
-    top:50%; left:50%;
-    width:58%; height:58%;
-    transform: translate(-50%,-50%);
-    border-radius:50%;
-    background: radial-gradient(circle at 35% 30%, #4a4a4a, #141414 70%);
-    box-shadow:
-      inset 0 2px 3px rgba(255,255,255,0.2),
-      inset 0 -2px 4px rgba(0,0,0,0.6);
-  }
-  .safe-dial-pointer{
-    position:absolute;
-    top:-3px; left:50%;
-    width:0; height:0;
-    border-left:4px solid transparent;
-    border-right:4px solid transparent;
-    border-bottom:7px solid #f2efe6;
-    transform: translateX(-50%);
-    z-index:3;
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
-  }
   .panel-title{
     font-family:'Kaisei Decol', serif;
     font-size: 1.05rem;
-    color:#fff;
+    color:var(--cream);
     letter-spacing:0.06em;
     text-align:center;
   }
   .panel-sub{
     font-size:0.75rem;
-    color:var(--silver-dim);
+    color:var(--gold-dim);
     text-align:center;
     line-height:1.7;
     max-width: 320px;
@@ -238,51 +263,55 @@
   .dial-row{
     display:flex;
     gap:10px;
+    width:100%;
+    max-width: 380px;
   }
   .dial{
-    width: 42px; height: 50px;
-    background: var(--void);
-    border-radius: 4px;
-    box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), inset 0 0 0 1px var(--void-rim);
+    flex:1;
+    height: 76px;
+    background: var(--cream-box);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.12), inset 0 0 0 2px var(--gold-dim);
     display:flex; align-items:center; justify-content:center;
+    transition: box-shadow .15s ease;
   }
   .keypad{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    gap: 8px;
     width: 100%;
-    max-width: 220px;
+    max-width: 340px;
   }
   .keypad-btn{
-    height: 34px;
-    border-radius: 4px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--silver-dim);
-    color: #fff;
+    height: 50px;
+    border-radius: 6px;
+    background: rgba(205,168,105,0.04);
+    border: 1px solid var(--gold-dim);
+    color: var(--cream);
     font-family:'Jost', sans-serif;
     font-weight:600;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background .1s ease, transform .1s ease;
+    transition: background .1s ease, transform .1s ease, border-color .1s ease;
   }
-  .keypad-btn:active{ background: rgba(255,255,255,0.18); transform: scale(0.95); }
+  .keypad-btn:active{ background: rgba(205,168,105,0.2); border-color: var(--gold-bright); transform: scale(0.95); }
   .keypad-btn.blank{ visibility:hidden; pointer-events:none; }
-  .keypad-btn.backspace{ font-size: 1rem; color: var(--silver-dim); }
+  .keypad-btn.backspace{ font-size: 1.1rem; color: var(--gold-dim); }
   .dial input{
     width:100%; height:100%;
     background: transparent;
     border: none;
     text-align:center;
     font-family:'Jost', sans-serif;
-    font-size: 1.7rem;
-    font-weight:600;
-    color: #fff;
-    caret-color: var(--silver-dim);
+    font-size: 2.1rem;
+    font-weight:700;
+    color: var(--ink);
+    caret-color: var(--gold-dim);
   }
   .dial input:focus{ outline: none; }
-  .dial.filled{ box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.35); }
+  .dial.filled{ box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 -3px 0 rgba(0,0,0,0.12), inset 0 0 0 2px var(--gold-bright); }
   .dial-row.shake{ animation: shake .4s ease; }
   @keyframes shake{
     0%,100%{ transform: translateX(0); }
@@ -310,20 +339,31 @@
     font-weight:700;
     font-size:0.78rem;
     letter-spacing:0.1em;
-    color:#fff;
+    color:var(--cream);
     background: transparent;
-    border: 1px solid var(--silver-dim);
+    border: 1px solid var(--gold-dim);
     border-radius:2px;
     padding: 11px 24px;
     cursor:pointer;
     transition: background .15s ease, border-color .15s ease;
   }
-  button.main-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:hover{ background: rgba(205,168,105,0.08); border-color:var(--gold-bright); }
   button.main-btn:active{ transform: translateY(1px); }
   button.main-btn:disabled{ opacity:0.3; cursor:default; }
-  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+  button:focus-visible{ outline: 1px solid var(--gold-bright); outline-offset: 3px; }
 
   .controls{ display:flex; gap:12px; margin-top:2px; }
+
+  .ad-area{
+    width:100%;
+    border: 1px dashed var(--gold-dim);
+    border-radius: 6px;
+    padding: 14px;
+    text-align:center;
+    font-size:0.68rem;
+    letter-spacing:0.1em;
+    color: var(--gold-dim);
+  }
 
   /* --- guess history --- */
   .history-wrap{
@@ -331,6 +371,9 @@
     display:flex;
     flex-direction:column;
     gap:10px;
+    overflow-y:auto;
+    flex:1;
+    min-height:0;
   }
   .history-cols{
     width:100%;
@@ -339,55 +382,74 @@
     gap: 10px;
   }
   .history-col{
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--hairline);
-    border-radius: 4px;
-    padding: 8px;
-    min-height: 70px;
+    padding: 6px 2px;
   }
   .history-col h3{
-    font-family:'Kaisei Decol', serif;
-    font-weight:500;
-    font-size:0.75rem;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.72rem;
     margin:0 0 8px;
-    color:#fff;
-    letter-spacing:0.08em;
-    text-align:center;
+    color:var(--cream);
+    letter-spacing:0.04em;
+    display:flex;
+    align-items:center;
+    gap:5px;
   }
+  .history-col h3::before{ content:'◆'; font-size:0.62rem; color:var(--gold-bright); }
+  .history-col.gote h3::before{ color:#c4645a; }
+  .history-col-head{
+    display:grid;
+    grid-template-columns: 18px 1fr 30px 30px;
+    gap:4px;
+    font-size:0.6rem;
+    color:var(--gold-dim);
+    letter-spacing:0.04em;
+    padding: 0 2px 6px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom:6px;
+  }
+  .history-col-head span:nth-child(3), .history-col-head span:nth-child(4){ text-align:center; }
   .history-list{
     display:flex;
     flex-direction:column;
-    gap:6px;
-    max-height: 140px;
+    gap:8px;
+    max-height: 190px;
     overflow-y:auto;
   }
   .history-item{
-    display:flex;
+    display:grid;
+    grid-template-columns: 18px 1fr 30px 30px;
+    gap:4px;
     align-items:center;
-    justify-content:space-between;
+  }
+  .history-num{
     font-family:'Jost', sans-serif;
-    font-size:0.85rem;
-    letter-spacing:0.15em;
-    color:#fff;
-    background: rgba(255,255,255,0.03);
-    border-radius:3px;
-    padding: 5px 8px;
+    font-size:0.64rem;
+    color: var(--gold-dim);
   }
-  .history-item .badges{
-    display:flex;
-    gap:6px;
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    letter-spacing:0;
-    font-size:0.68rem;
+  .history-digits{ display:flex; gap:4px; }
+  .hdigit{
+    flex:1;
+    min-width:0;
+    aspect-ratio: 1;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--void);
+    border: 1px solid var(--gold-dim);
+    border-radius: 3px;
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:0.78rem;
+    color: var(--cream);
   }
-  .badge{
-    padding: 2px 6px;
-    border-radius: 10px;
-    border: 1px solid var(--silver-dim);
+  .history-result{
+    font-family:'Jost', sans-serif;
+    font-size:0.7rem;
+    color: var(--gold-dim);
+    text-align:center;
   }
-  .badge.hit{ color:#fff; border-color:#fff; }
-  .badge.blow{ color:var(--silver-dim); }
-  .empty-hint{ color:var(--silver-dim); font-size:0.7rem; text-align:center; padding: 12px 0; }
+  .history-result.hit-val{ color: var(--cream); }
+  .empty-hint{ color:var(--gold-dim); font-size:0.7rem; text-align:center; padding: 12px 0; grid-column: 1/-1; }
+
 
   .guess-area{
     width:100%;
@@ -400,7 +462,7 @@
   .rules{
     width:100%;
     max-width: 420px;
-    background: rgba(255,255,255,0.03);
+    background: rgba(205,168,105,0.04);
     border: 1px solid var(--hairline);
     border-radius: 4px;
     padding: 14px 18px;
@@ -415,7 +477,7 @@
     font-weight:500;
     font-size:0.9rem;
     margin: 0 0 8px;
-    color:#fff;
+    color:var(--cream);
     letter-spacing: 0.05em;
   }
   .rules ul{ margin:4px 0; padding-left:1.1em; }
@@ -442,7 +504,7 @@
     font-family:'Kaisei Decol', serif;
     font-weight:700;
     font-size:1.3rem;
-    color:#fff;
+    color:var(--cream);
     margin-bottom:10px;
     letter-spacing: 0.04em;
   }
@@ -450,20 +512,31 @@
     font-family:'Jost', sans-serif;
     font-size:1.3rem;
     letter-spacing:0.3em;
-    color:#fff;
+    color:var(--cream);
     margin-bottom: 14px;
   }
-  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+  .winner-card p{ color:var(--gold-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
 
   .hidden{ display:none !important; }
 </style>
 </head>
 <body>
-<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
 <div class="app">
 
   <header>
-    <h1>ヒット＆ブロー<span class="small">Code Breaker · 3 Digits</span></h1>
+    <a href="index.html" class="home-icon-btn" aria-label="ホームへ戻る">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-5h2v5a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V10"/></svg>
+    </a>
+    <h1>ヒット＆ブロー</h1>
+    <div class="header-menu-wrap">
+      <button class="menu-icon-btn" id="menuBtn" aria-label="メニュー">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="menu-dropdown hidden" id="menuDropdown">
+        <button type="button" id="menuNewGameBtn">はじめから</button>
+        <button type="button" id="menuRulesBtn">遊び方</button>
+      </div>
+    </div>
   </header>
 
   <!-- MODE SELECT SCREEN -->
@@ -485,11 +558,6 @@
   <!-- SETUP SCREEN -->
   <div id="setupScreen" class="panel hidden">
     <button class="back-link" id="setupBackBtn">← モード選択</button>
-    <div class="safe-dial" id="setupSafeDial">
-      <div class="safe-dial-ticks" id="setupSafeDialTicks"></div>
-      <div class="safe-dial-knob"></div>
-      <div class="safe-dial-pointer"></div>
-    </div>
     <div class="panel-title" id="setupTitle">白の暗証番号を設定してください</div>
     <div class="panel-sub">0〜9の中から重複しない3桁を決めてください。相手には見えません。</div>
     <div class="dial-row" id="setupDialRow">
@@ -510,46 +578,45 @@
   </div>
 
   <!-- GAME SCREEN -->
-  <div id="gameScreen" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:16px;">
-    <div class="turn-wrap">
-      <div id="seal" class="seal">白 の番</div>
+  <div id="gameScreen" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:14px; min-height:0; flex:1;">
+    <div class="status-bar">
+      <div class="mode-badge" id="modeBadge">2人対戦</div>
+      <div id="seal" class="seal">白の番</div>
+    </div>
+
+    <div class="dial-row" id="guessDialRow">
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="0"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="1"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="2"></div>
     </div>
     <div class="status-text" id="statusText">相手の3桁を予想してください</div>
-
-    <div class="guess-area panel" id="guessArea">
-      <div class="safe-dial" id="guessSafeDial">
-        <div class="safe-dial-ticks" id="guessSafeDialTicks"></div>
-        <div class="safe-dial-knob"></div>
-        <div class="safe-dial-pointer"></div>
-      </div>
-      <div class="dial-row" id="guessDialRow">
-        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="0"></div>
-        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="1"></div>
-        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="2"></div>
-      </div>
-      <div class="keypad" id="guessKeypad"></div>
-      <div class="inline-error" id="guessError"></div>
-      <button class="main-btn" id="guessSubmitBtn">予想する</button>
-    </div>
 
     <div class="history-wrap">
       <div class="history-cols">
         <div class="history-col">
-          <h3>白の予想</h3>
+          <h3 id="senteHistoryLabel">白の予想</h3>
+          <div class="history-col-head"><span></span><span>数字</span><span>HIT</span><span>BLOW</span></div>
           <div class="history-list" id="senteHistory"><div class="empty-hint">まだありません</div></div>
         </div>
-        <div class="history-col">
-          <h3>黒の予想</h3>
+        <div class="history-col gote">
+          <h3 id="goteHistoryLabel">黒の予想</h3>
+          <div class="history-col-head"><span></span><span>数字</span><span>HIT</span><span>BLOW</span></div>
           <div class="history-list" id="goteHistory"><div class="empty-hint">まだありません</div></div>
         </div>
       </div>
     </div>
+
+    <div class="keypad" id="guessKeypad"></div>
+    <div class="inline-error" id="guessError"></div>
+    <button class="main-btn" id="guessSubmitBtn">予想する</button>
   </div>
 
   <div class="controls">
     <button id="newGameBtn" class="main-btn">はじめから</button>
     <button id="rulesBtn" class="main-btn">遊び方</button>
   </div>
+
+  <div class="ad-area">広告エリア</div>
 
   <div id="rules" class="rules">
     <h2>遊び方</h2>
@@ -610,12 +677,6 @@
     turn = 'sente';
     phase = 'setup';
     cpuCandidates = allPossibleCodes();
-    dialRotation.setupDialRow = 0;
-    dialRotation.guessDialRow = 0;
-    ['setupSafeDialTicks','guessSafeDialTicks'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.style.transform = 'rotate(0deg)';
-    });
     cpuMovesMade = 0;
     document.getElementById('winnerOverlay').classList.remove('show');
     document.getElementById('senteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
@@ -703,22 +764,12 @@
     });
   }
 
-  const dialRotation = { setupDialRow: 0, guessDialRow: 0 };
-
-  function spinSafeDial(rowId, delta){
-    const ticksId = rowId === 'setupDialRow' ? 'setupSafeDialTicks' : 'guessSafeDialTicks';
-    dialRotation[rowId] += delta;
-    const el = document.getElementById(ticksId);
-    if(el) el.style.transform = 'rotate(' + dialRotation[rowId] + 'deg)';
-  }
-
   function keypadDigit(rowId, digit){
     const inputs = Array.from(document.querySelectorAll('#' + rowId + ' input'));
     const idx = inputs.findIndex(inp => inp.value === '');
     if(idx === -1) return;
     inputs[idx].value = digit;
     inputs[idx].dispatchEvent(new Event('input'));
-    spinSafeDial(rowId, 55 + Number(digit) * 7);
   }
 
   function keypadBackspace(rowId){
@@ -730,7 +781,6 @@
     if(idx === -1) return;
     inputs[idx].value = '';
     inputs[idx].dispatchEvent(new Event('input'));
-    spinSafeDial(rowId, -40);
   }
 
   function readDials(rowId){
@@ -784,6 +834,7 @@
   function startGame(){
     phase = 'playing';
     turn = 'sente';
+    updateModeLabels();
     show('gameScreen');
     updateTurnUI(false);
     if(vsCPU && turn === cpuSide()){
@@ -791,20 +842,49 @@
     }
   }
 
+  function updateModeLabels(){
+    const badge = document.getElementById('modeBadge');
+    const senteLabel = document.getElementById('senteHistoryLabel');
+    const goteLabel = document.getElementById('goteHistoryLabel');
+    if(!vsCPU){
+      badge.textContent = '対戦：2人対戦';
+      senteLabel.textContent = '白の予想';
+      goteLabel.textContent = '黒の予想';
+      return;
+    }
+    badge.textContent = '対戦：' + (cpuDifficulty === 'master' ? '達人CPU' : 'CPU');
+    const youLabel = 'あなたの入力';
+    const cpuLabel = '相手（CPU）の入力';
+    if(humanSide === 'sente'){
+      senteLabel.textContent = youLabel;
+      goteLabel.textContent = cpuLabel;
+    } else {
+      senteLabel.textContent = cpuLabel;
+      goteLabel.textContent = youLabel;
+    }
+  }
+
   function updateTurnUI(pulse){
     const seal = document.getElementById('seal');
     seal.className = 'seal' + (turn === 'gote' ? ' gote' : '') + (pulse ? ' pulse' : '');
     if(pulse){ void seal.offsetWidth; seal.classList.add('pulse'); }
-    seal.textContent = (turn === 'sente' ? '白' : '黒') + ' の番';
 
     const isCpuTurn = vsCPU && turn === cpuSide();
+    if(vsCPU){
+      seal.textContent = isCpuTurn ? (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + 'のターン' : 'あなたのターン';
+    } else {
+      seal.textContent = (turn === 'sente' ? '白' : '黒') + 'の番';
+    }
+
     document.getElementById('guessSubmitBtn').disabled = isCpuTurn;
     document.querySelectorAll('#guessDialRow input').forEach(inp => { inp.disabled = isCpuTurn; });
 
     if(isCpuTurn){
       document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + 'が考え中…';
     } else {
-      document.getElementById('statusText').textContent = '相手の3桁を予想してください（相手：' + (turn === 'sente' ? '黒' : '白') + '）';
+      document.getElementById('statusText').textContent = vsCPU
+        ? '相手の3桁を予想してください'
+        : '相手の3桁を予想してください（相手：' + (turn === 'sente' ? '黒' : '白') + '）';
       clearDials('guessDialRow');
       document.getElementById('guessError').textContent = '';
       focusFirstDial('guessDialRow');
@@ -910,24 +990,40 @@
     const el = document.getElementById(who === 'sente' ? 'senteHistory' : 'goteHistory');
     const list = guesses[who];
     el.innerHTML = '';
+    if(list.length === 0){
+      el.innerHTML = '<div class="empty-hint">まだありません</div>';
+      return;
+    }
     for(let i = list.length - 1; i >= 0; i--){
       const item = list[i];
       const row = document.createElement('div');
       row.className = 'history-item';
+
       const num = document.createElement('span');
-      num.textContent = item.guess.join(' ');
-      const badges = document.createElement('span');
-      badges.className = 'badges';
-      const hitBadge = document.createElement('span');
-      hitBadge.className = 'badge hit';
-      hitBadge.textContent = 'HIT ' + item.result.hit;
-      const blowBadge = document.createElement('span');
-      blowBadge.className = 'badge blow';
-      blowBadge.textContent = 'BLOW ' + item.result.blow;
-      badges.appendChild(hitBadge);
-      badges.appendChild(blowBadge);
+      num.className = 'history-num';
+      num.textContent = String(i + 1).padStart(2, '0');
+
+      const digits = document.createElement('span');
+      digits.className = 'history-digits';
+      item.guess.forEach(d => {
+        const box = document.createElement('span');
+        box.className = 'hdigit';
+        box.textContent = d;
+        digits.appendChild(box);
+      });
+
+      const hitVal = document.createElement('span');
+      hitVal.className = 'history-result hit-val';
+      hitVal.textContent = item.result.hit + 'H';
+
+      const blowVal = document.createElement('span');
+      blowVal.className = 'history-result';
+      blowVal.textContent = item.result.blow + 'B';
+
       row.appendChild(num);
-      row.appendChild(badges);
+      row.appendChild(digits);
+      row.appendChild(hitVal);
+      row.appendChild(blowVal);
       el.appendChild(row);
     }
   }
@@ -944,6 +1040,26 @@
   document.getElementById('againBtn').addEventListener('click', goToModeSelect);
   document.getElementById('setupBackBtn').addEventListener('click', goToModeSelect);
   document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  const menuBtn = document.getElementById('menuBtn');
+  const menuDropdown = document.getElementById('menuDropdown');
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuDropdown.classList.toggle('hidden');
+  });
+  document.addEventListener('click', (e) => {
+    if(!menuDropdown.classList.contains('hidden') && !menuDropdown.contains(e.target) && e.target !== menuBtn){
+      menuDropdown.classList.add('hidden');
+    }
+  });
+  document.getElementById('menuNewGameBtn').addEventListener('click', () => {
+    menuDropdown.classList.add('hidden');
+    goToModeSelect();
+  });
+  document.getElementById('menuRulesBtn').addEventListener('click', () => {
+    menuDropdown.classList.add('hidden');
     document.getElementById('rules').classList.toggle('open');
   });
 
