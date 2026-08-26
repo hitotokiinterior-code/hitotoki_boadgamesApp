@@ -730,6 +730,34 @@
   cursor:pointer;
 }
 
+/* メニューパネル内の「GAME」見出し：ホーム画面用のマイナスマージンを打ち消して
+   パネル内の余白に合わせる */
+.menu-section-label{
+  margin-top:0;
+  margin-bottom:0;
+}
+
+.menu-game-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 4px;
+  border-bottom:1px solid var(--hairline);
+  color:#fff;
+  text-decoration:none;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-size:0.82rem;
+  letter-spacing:0.04em;
+  transition: color .15s ease;
+}
+.menu-game-item:hover{
+  color: var(--silver-dim);
+}
+.menu-game-item .arrow{
+  color: var(--silver-dim);
+  font-size:0.9rem;
+}
+
 .setting-menu{
   display:flex;
   flex-direction:column;
@@ -850,11 +878,9 @@
     ×
   </button>
 
-  <h2>メニュー</h2>
+  <div class="section-label menu-section-label">GAME</div>
 
-  <div class="view-placeholder">
-    <div class="desc">準備中です。</div>
-  </div>
+  <div class="setting-menu" id="menuGameList"></div>
 
 </div>
   
@@ -1144,17 +1170,35 @@ closeBtn.addEventListener("click",()=>{
 
 });  
 
-// メニューパネル（☰：左からスライドイン。中身は未定のプレースホルダー）
+// メニューパネル（☰：左からスライドイン。「GAME」見出し＋ゲーム名の一覧）
 const menuBtn = document.getElementById("menuBtn");
 const menuCloseBtn = document.getElementById("menuCloseBtn");
 const menuPanel = document.getElementById("menuPanel");
+const menuGameList = document.getElementById("menuGameList");
+
+// GAMES はこの関数スコープの後方で定義されるが、クリック時（初回オープン時）には
+// 既に定義済みなので参照できる。ここでは一度だけ生成してキャッシュする。
+let menuListBuilt = false;
+function buildMenuGameList(){
+  if(menuListBuilt) return;
+  GAMES.forEach(game => {
+    const a = document.createElement('a');
+    a.className = 'menu-game-item';
+    a.href = game.href;
+    a.innerHTML = `<span>${game.title}</span><span class="arrow">›</span>`;
+    menuGameList.appendChild(a);
+  });
+  menuListBuilt = true;
+}
 
 menuBtn.addEventListener("click",()=>{
+  buildMenuGameList();
   menuPanel.classList.toggle("open");
 });
 menuCloseBtn.addEventListener("click",()=>{
   menuPanel.classList.remove("open");
 });
+
 
 // --- 下部ナビ：ホーム／記録／コレクションの画面切り替え ---
 const navButtons = document.querySelectorAll('.nav-btn');
