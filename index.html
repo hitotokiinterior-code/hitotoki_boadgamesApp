@@ -651,6 +651,8 @@
 
   cursor:pointer;
 
+  z-index:1000;
+
 }
 .setting-btn.gear-btn{
   right:0;
@@ -658,6 +660,23 @@
 .setting-btn.menu-btn{
   left:0;
 }
+/* パネルが開いている間、背後のカード等へのタップを塞ぐ暗幕。
+   パネル自体は画面幅の80%しか覆っていないため、これが無いと残り20%の
+   隙間にあるカードが押せてしまい、ゲームが開いてしまう */
+.panel-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  z-index:998;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+.panel-backdrop.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
 /* 設定パネル */
 
 .setting-panel{
@@ -822,6 +841,8 @@
     </svg>
   </button>
 </header>
+
+<div class="panel-backdrop" id="panelBackdrop"></div>
 
 <div class="app-title">
   <h1>hitotoki</h1>
@@ -1163,23 +1184,13 @@ const gearBtn = document.getElementById("gearBtn");
   const closeBtn = document.getElementById("closeBtn");
 const settingPanel = document.getElementById("settingPanel");
 
-
-gearBtn.addEventListener("click",()=>{
-
-  settingPanel.classList.toggle("open");
-
-});
-closeBtn.addEventListener("click",()=>{
-
-  settingPanel.classList.remove("open");
-
-});  
-
 // メニューパネル（☰：左からスライドイン。「GAME」見出し＋ゲーム名の一覧）
 const menuBtn = document.getElementById("menuBtn");
 const menuCloseBtn = document.getElementById("menuCloseBtn");
 const menuPanel = document.getElementById("menuPanel");
 const menuGameList = document.getElementById("menuGameList");
+
+const panelBackdrop = document.getElementById("panelBackdrop");
 
 // GAMES はこの関数スコープの後方で定義されるが、クリック時（初回オープン時）には
 // 既に定義済みなので参照できる。ここでは一度だけ生成してキャッシュする。
@@ -1196,31 +1207,38 @@ function buildMenuGameList(){
   menuListBuilt = true;
 }
 
-menuBtn.addEventListener("click",()=>{
-  buildMenuGameList();
-  menuPanel.classList.toggle("open");
-});
-menuCloseBtn.addEventListener("click",()=>{
+// パネルは常にどちらか一方だけ開く。開いている間は暗幕（バックドロップ）を敷いて、
+// 背後のゲームカードなどにタップが届かない（＝誤ってゲームが起動しない）ようにする。
+function closeAllPanels(){
+  settingPanel.classList.remove("open");
   menuPanel.classList.remove("open");
-});
+  panelBackdrop.classList.remove("show");
+}
 
-// パネルの外側をタップしたら閉じる（×ボタンを押さなくてもOKにする）
-document.addEventListener("click", (e) => {
-  if(
-    settingPanel.classList.contains("open") &&
-    !e.target.closest("#settingPanel") &&
-    !e.target.closest("#gearBtn")
-  ){
-    settingPanel.classList.remove("open");
-  }
-  if(
-    menuPanel.classList.contains("open") &&
-    !e.target.closest("#menuPanel") &&
-    !e.target.closest("#menuBtn")
-  ){
-    menuPanel.classList.remove("open");
+gearBtn.addEventListener("click", () => {
+  const willOpen = !settingPanel.classList.contains("open");
+  closeAllPanels();
+  if(willOpen){
+    settingPanel.classList.add("open");
+    panelBackdrop.classList.add("show");
   }
 });
+closeBtn.addEventListener("click", closeAllPanels);
+
+menuBtn.addEventListener("click", () => {
+  buildMenuGameList();
+  const willOpen = !menuPanel.classList.contains("open");
+  closeAllPanels();
+  if(willOpen){
+    menuPanel.classList.add("open");
+    panelBackdrop.classList.add("show");
+  }
+});
+menuCloseBtn.addEventListener("click", closeAllPanels);
+
+// 暗幕（背後の隙間）をタップしたら閉じる。カード等の下にある要素へはクリックが
+// 届かない（暗幕がすべて受け止める）ので、ゲームが誤って開くことはない
+panelBackdrop.addEventListener("click", closeAllPanels);
 
 
 // --- 下部ナビ：ホーム／記録／コレクションの画面切り替え ---
