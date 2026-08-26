@@ -785,7 +785,7 @@
 .setting-menu{
   display:flex;
   flex-direction:column;
-  margin-top:28px;
+  margin-top:10px;
   width:100%;
 }
 .setting-menu-item{
@@ -807,6 +807,72 @@
 .setting-menu-item .arrow{
   color: var(--silver-dim);
   font-size:0.9rem;
+}
+
+/* まだ機能未実装の項目：見た目は他と揃えつつ、控えめに区別する */
+.setting-menu-item.placeholder-item{
+  color: var(--silver);
+  cursor:default;
+}
+.setting-menu-item.placeholder-item:hover{
+  color: var(--silver);
+}
+
+/* セクション見出し（サウンド／ゲーム／アプリ／サポート） */
+.panel-section-label{
+  width:100%;
+  margin-top:28px;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:0.18em;
+  color: var(--silver-dim);
+  text-transform:uppercase;
+}
+.panel-section-label.first-label{
+  margin-top:6px;
+}
+
+/* ON/OFFスイッチ */
+.switch{
+  position:relative;
+  display:inline-block;
+  width:38px;
+  height:21px;
+  flex-shrink:0;
+}
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.switch-slider{
+  position:absolute;
+  inset:0;
+  background: rgba(255,255,255,0.12);
+  border:1px solid var(--silver-dim);
+  border-radius:21px;
+  cursor:pointer;
+  transition: all .2s ease;
+}
+.switch-slider::before{
+  content:"";
+  position:absolute;
+  height:15px;
+  width:15px;
+  left:2px;
+  top:2px;
+  background:#fff;
+  border-radius:50%;
+  transition: all .2s ease;
+}
+.switch input:checked + .switch-slider{
+  background:#fff;
+  border-color:#fff;
+}
+.switch input:checked + .switch-slider::before{
+  transform: translateX(17px);
+  background:#141414;
 }
 
 
@@ -857,15 +923,70 @@
 
   <h2>設定</h2>
 
+  <div class="panel-section-label first-label">サウンド</div>
   <div class="setting-menu">
-    <a class="setting-menu-item" href="privacy.html">
-      <span>プライバシーポリシー</span><span class="arrow">›</span>
+    <div class="setting-menu-item">
+      <span>BGM</span>
+      <label class="switch">
+        <input type="checkbox" id="bgmToggle" checked>
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+    <div class="setting-menu-item">
+      <span>効果音</span>
+      <label class="switch">
+        <input type="checkbox" id="seToggle" checked>
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+    <div class="setting-menu-item">
+      <span>振動</span>
+      <label class="switch">
+        <input type="checkbox" id="vibToggle" checked>
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="panel-section-label">ゲーム</div>
+  <div class="setting-menu">
+    <div class="setting-menu-item placeholder-item">
+      <span>遊び方</span><span class="arrow">›</span>
+    </div>
+    <div class="setting-menu-item placeholder-item">
+      <span>ゲーム設定</span><span class="arrow">›</span>
+    </div>
+    <div class="setting-menu-item placeholder-item">
+      <span>プレイヤー名</span><span class="arrow">›</span>
+    </div>
+  </div>
+
+  <div class="panel-section-label">アプリ</div>
+  <div class="setting-menu">
+    <div class="setting-menu-item placeholder-item">
+      <span>購入を復元</span><span class="arrow">›</span>
+    </div>
+    <div class="setting-menu-item placeholder-item">
+      <span>通知設定</span><span class="arrow">›</span>
+    </div>
+    <div class="setting-menu-item placeholder-item">
+      <span>言語</span><span class="arrow">›</span>
+    </div>
+    <div class="setting-menu-item placeholder-item">
+      <span>バージョン情報</span><span class="arrow">›</span>
+    </div>
+  </div>
+
+  <div class="panel-section-label">サポート</div>
+  <div class="setting-menu">
+    <a class="setting-menu-item" href="contact.html">
+      <span>お問い合わせ</span><span class="arrow">›</span>
     </a>
     <a class="setting-menu-item" href="terms.html">
       <span>利用規約</span><span class="arrow">›</span>
     </a>
-    <a class="setting-menu-item" href="contact.html">
-      <span>お問い合わせ</span><span class="arrow">›</span>
+    <a class="setting-menu-item" href="privacy.html">
+      <span>プライバシーポリシー</span><span class="arrow">›</span>
     </a>
   </div>
 
@@ -1240,6 +1361,28 @@ menuCloseBtn.addEventListener("click", closeAllPanels);
 // 届かない（暗幕がすべて受け止める）ので、ゲームが誤って開くことはない
 panelBackdrop.addEventListener("click", closeAllPanels);
 
+// --- サウンド設定（BGM／効果音／振動）：状態を端末に保存して次回起動時も引き継ぐ ---
+// BGM・効果音は再生の仕組み自体がまだ無いため、今はON/OFFの状態を保持するのみ。
+// 振動だけは既存のタイマー機能と連動させ、OFFなら鳴動しないようにする。
+const soundPrefs = {
+  bgm: localStorage.getItem('pref_bgm') !== 'off',
+  se: localStorage.getItem('pref_se') !== 'off',
+  vibration: localStorage.getItem('pref_vibration') !== 'off',
+};
+
+function bindSoundToggle(id, key){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.checked = soundPrefs[key];
+  el.addEventListener('change', () => {
+    soundPrefs[key] = el.checked;
+    localStorage.setItem('pref_' + key, el.checked ? 'on' : 'off');
+  });
+}
+bindSoundToggle('bgmToggle', 'bgm');
+bindSoundToggle('seToggle', 'se');
+bindSoundToggle('vibToggle', 'vibration');
+
 
 // --- 下部ナビ：ホーム／記録／コレクションの画面切り替え ---
 const navButtons = document.querySelectorAll('.nav-btn');
@@ -1375,7 +1518,7 @@ navButtons.forEach(btn => {
         setState('finished');
         displayEl.classList.add('finished');
         formatFinished();
-        if(navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
+        if(soundPrefs.vibration && navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
         // 少し余韻を置いてから、時計表示に戻す
         setTimeout(() => {
           displayEl.classList.remove('finished');
