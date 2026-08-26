@@ -729,11 +729,16 @@
   line-height:1;
   cursor:pointer;
 }
+/* ☰メニューパネルの×だけ左上に配置する */
+.setting-panel.menu-panel .close-btn{
+  right:auto;
+  left:20px;
+}
 
 /* メニューパネル内の「GAME」見出し：ホーム画面用のマイナスマージンを打ち消して
-   パネル内の余白に合わせる */
+   パネル内の余白に合わせる。×ボタンが左上にあるので、それとかぶらない位置まで下げる */
 .menu-section-label{
-  margin-top:0;
+  margin-top:30px;
   margin-bottom:0;
 }
 
@@ -1197,6 +1202,24 @@ menuBtn.addEventListener("click",()=>{
 });
 menuCloseBtn.addEventListener("click",()=>{
   menuPanel.classList.remove("open");
+});
+
+// パネルの外側をタップしたら閉じる（×ボタンを押さなくてもOKにする）
+document.addEventListener("click", (e) => {
+  if(
+    settingPanel.classList.contains("open") &&
+    !e.target.closest("#settingPanel") &&
+    !e.target.closest("#gearBtn")
+  ){
+    settingPanel.classList.remove("open");
+  }
+  if(
+    menuPanel.classList.contains("open") &&
+    !e.target.closest("#menuPanel") &&
+    !e.target.closest("#menuBtn")
+  ){
+    menuPanel.classList.remove("open");
+  }
 });
 
 
