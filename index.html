@@ -660,9 +660,12 @@
 .setting-btn.menu-btn{
   left:0;
 }
-/* パネルが開いている間、背後のカード等へのタップを塞ぐ暗幕。
-   パネル自体は画面幅の80%しか覆っていないため、これが無いと残り20%の
-   隙間にあるカードが押せてしまい、ゲームが開いてしまう */
+/* パネルが開いている間は、⚙／☰ボタン自体を隠す
+   （もう片方のボタンが見えたままだと紛らわしく、パネルの×ボタンとも位置が被るため） */
+body.panel-open .setting-btn{
+  display:none;
+}
+/* パネルが開いている間、背後のカード等へのタップを塞ぐ暗幕 */
 .panel-backdrop{
   position:fixed;
   inset:0;
@@ -1330,10 +1333,13 @@ function buildMenuGameList(){
 
 // パネルは常にどちらか一方だけ開く。開いている間は暗幕（バックドロップ）を敷いて、
 // 背後のゲームカードなどにタップが届かない（＝誤ってゲームが起動しない）ようにする。
+// また、ヘッダーの⚙／☰ボタン自体も隠す（もう片方のボタンが見えたままだと紛らわしい上、
+// パネルの×ボタンと位置が被ってしまうため）。
 function closeAllPanels(){
   settingPanel.classList.remove("open");
   menuPanel.classList.remove("open");
   panelBackdrop.classList.remove("show");
+  document.body.classList.remove("panel-open");
 }
 
 gearBtn.addEventListener("click", () => {
@@ -1342,6 +1348,7 @@ gearBtn.addEventListener("click", () => {
   if(willOpen){
     settingPanel.classList.add("open");
     panelBackdrop.classList.add("show");
+    document.body.classList.add("panel-open");
   }
 });
 closeBtn.addEventListener("click", closeAllPanels);
@@ -1353,6 +1360,7 @@ menuBtn.addEventListener("click", () => {
   if(willOpen){
     menuPanel.classList.add("open");
     panelBackdrop.classList.add("show");
+    document.body.classList.add("panel-open");
   }
 });
 menuCloseBtn.addEventListener("click", closeAllPanels);
