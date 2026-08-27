@@ -1406,12 +1406,23 @@
     }
   }
 
-  const CPU_TIME_BUDGET_MS = 300;
+  // 難易度ごとの思考時間の上限。読みを深くする分、達人・鬼には少し多めに時間を渡す
+  // （反復深化なので、時間切れなら手前で完了した depth の最善手にフォールバックする＝UIは固まらない）
+  function cpuTimeBudgetMs(){
+    if(cpuDifficulty === 'oni') return 900;
+    if(cpuDifficulty === 'master') return 550;
+    return 300;
+  }
 
   function cpuChooseMove(){
     const side = cpuSide();
     const opponent = side === 'sente' ? 'gote' : 'sente';
-    const maxDepth = cpuDifficulty === 'oni' ? 4 : (cpuDifficulty === 'master' ? 3 : 2);
+    // 通常CPU=2手先、達人CPU=4手先、鬼CPU=6手先。
+    // 達人はこれまで3手先＋駒の損得計算だけだったため「見えている範囲が浅く、
+    // 数手先の罠にかかりやすい」＝ミスが多いように感じられていた。深さを1つ上げて
+    // 実力差をはっきりさせる。
+    const maxDepth = cpuDifficulty === 'oni' ? 6 : (cpuDifficulty === 'master' ? 4 : 2);
+    const CPU_TIME_BUDGET_MS = cpuTimeBudgetMs();
     const moves = generateFullyLegalMoves(board, hands, side);
     if(moves.length === 0) return null;
 
@@ -1420,7 +1431,7 @@
 
     // Iterative deepening: search depth 1, 2, 3... keeping the best result
     // from the deepest COMPLETED depth, and bail out once the time budget
-    // (300ms) is used up so the UI never freezes.
+    // is used up so the UI never freezes.
     for(let depth = 1; depth <= maxDepth; depth++){
       if(performance.now() - startTime > CPU_TIME_BUDGET_MS) break;
 
