@@ -83,8 +83,15 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:8px;
+    gap:6px;
     padding: 0 14px;
+  }
+  .timer-settings-hint{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.55rem;
+    letter-spacing:0.03em;
+    color: var(--silver-dim);
+    text-align:center;
   }
   .timer-presets{
     display:flex;
@@ -1134,6 +1141,7 @@ body.panel-open .setting-btn{
           <button class="step-btn" id="timerStepPlus">＋</button>
           <button class="step-btn reset-btn" id="timerResetBtn" title="0分にリセット">↺</button>
         </div>
+        <div class="timer-settings-hint">戻すとスタート</div>
       </div>
 
       <div class="timer-display" id="timerDisplay">
