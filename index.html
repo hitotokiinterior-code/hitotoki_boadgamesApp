@@ -878,6 +878,78 @@ body.panel-open .setting-btn{
   background:#141414;
 }
 
+/* 設定パネル内の「ページ」切り替え（メイン設定 ⇔ 遊び方一覧）。
+   ×ボタンはページの外にあるので、切り替えても常に表示されたまま */
+.settings-page{
+  width:100%;
+}
+.settings-back-row{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin-bottom:18px;
+  color: var(--silver-dim);
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-size:0.78rem;
+  letter-spacing:0.04em;
+  cursor:pointer;
+  width:fit-content;
+}
+.settings-back-row .chevron-back{
+  font-size:1rem;
+  line-height:1;
+}
+
+/* 遊び方：ゲームタイトルをタップすると、その下にルールが展開するアコーディオン */
+.howto-item{
+  border-bottom:1px solid var(--hairline);
+}
+.howto-item-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 4px;
+  cursor:pointer;
+  color:#fff;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-size:0.82rem;
+  letter-spacing:0.04em;
+  -webkit-tap-highlight-color:transparent;
+}
+.howto-item-header .chevron{
+  color: var(--silver-dim);
+  font-size:0.8rem;
+  transition: transform .2s ease;
+}
+.howto-item.open .howto-item-header .chevron{
+  transform: rotate(90deg);
+}
+.howto-item-body{
+  max-height:0;
+  overflow:hidden;
+  transition: max-height .3s ease;
+}
+.howto-item.open .howto-item-body{
+  max-height:700px;
+}
+.howto-item-body ul{
+  margin:0 0 16px;
+  padding:0 6px 0 1.15em;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.howto-item-body li{
+  font-size:0.72rem;
+  line-height:1.65;
+  color: var(--silver);
+  letter-spacing:0.02em;
+}
+.howto-item-body li b{
+  color:#fff;
+  font-weight:700;
+}
+
 
 </style>
 </head>
@@ -915,7 +987,7 @@ body.panel-open .setting-btn{
 
 <div class="app-title">
   <h1>hitotoki</h1>
-  <p class="app-subtitle">2人の山尾を、遊びに。</p>
+  <p class="app-subtitle">2人のひとときを、遊びに。</p>
 </div>
 
 <div class="setting-panel" id="settingPanel">
@@ -923,6 +995,8 @@ body.panel-open .setting-btn{
   <button class="close-btn" id="closeBtn">
     ×
   </button>
+
+  <div class="settings-page" id="settingsMainPage">
 
   <h2>設定</h2>
 
@@ -953,7 +1027,7 @@ body.panel-open .setting-btn{
 
   <div class="panel-section-label">ゲーム</div>
   <div class="setting-menu">
-    <div class="setting-menu-item placeholder-item">
+    <div class="setting-menu-item" id="howToPlayOpenBtn">
       <span>遊び方</span><span class="arrow">›</span>
     </div>
     <div class="setting-menu-item placeholder-item">
@@ -1008,6 +1082,7 @@ body.panel-open .setting-btn{
       <button class="tool-btn" id="diceRollBtn">振る</button>
     </div>
 
+
     <div class="tool-panel" id="coinPanel">
       <div class="coin-wrap">
         <div class="coin" id="coin">
@@ -1018,6 +1093,17 @@ body.panel-open .setting-btn{
       <div class="coin-result" id="coinResult">投げてみましょう</div>
       <button class="tool-btn" id="coinFlipBtn">投げる</button>
     </div>
+  </div>
+
+  </div>
+  <!-- /#settingsMainPage -->
+
+  <div class="settings-page" id="howToPlayPage" style="display:none;">
+    <div class="settings-back-row" id="howToPlayBackBtn">
+      <span class="chevron-back">‹</span><span>設定</span>
+    </div>
+    <h2>遊び方</h2>
+    <div class="setting-menu" id="howToPlayList"></div>
   </div>
 
 </div>
@@ -1316,6 +1402,142 @@ const menuGameList = document.getElementById("menuGameList");
 
 const panelBackdrop = document.getElementById("panelBackdrop");
 
+// --- 遊び方（⚙→ゲーム→遊び方）：各ゲームが個別に持っている「遊び方」の内容と
+//     同じ文言をここにまとめている。ゲームタイトルをタップすると、その下に
+//     ルールがアコーディオンで開く。 ---
+const HOW_TO_PLAY = [
+  {
+    title: 'ミニ将棋',
+    rules: [
+      '<b>王</b>：全方向に1マス',
+      '<b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）',
+      '<b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）',
+      '<b>角</b>：斜め4方向にどこまでも（成ると「馬」になり、上下左右にも1マス動ける）',
+      '<b>飛</b>：上下左右にどこまでも（成ると「龍」になり、斜め4方向にも1マス動ける）',
+      '<b>歩</b>：前に1マスのみ',
+      '敵陣（一番奥の列）に入る・出るときに成るかどうかを選べる（歩が最終列に進む時のみ、成りが必須）',
+      '相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）',
+      '歩は同じ列に自分の歩がある時は打てない（二歩）、敵陣の最終列にも打てない',
+      '自分の王が王手されたままになる手は指せない（王手放置反則）',
+      '打った歩で相手を詰ませることはできない（打ち歩詰め）',
+      '同一局面が4回現れたら千日手となり、先手の負け（連続王手による場合はその手を選べない）',
+      '<b>相手の「王」を詰ませたら勝利</b>',
+    ],
+  },
+  {
+    title: 'コネクトフォー',
+    rules: [
+      '7列×6段の盤に、交互にコインを落とします',
+      'コインは列の一番下の空きマスまで重力で落ちます',
+      '縦・横・斜め、どちらの向きでも4つ並べたら勝利です',
+      '全マスが埋まって誰も揃わなければ引き分けです',
+      'スコアは「はじめから」を押すまで対局をまたいで記録されます',
+    ],
+  },
+  {
+    title: '神経衰弱',
+    rules: [
+      'カードは裏向きに並んでいます。交互に2枚めくってペアを探します',
+      'めくった2枚が同じ絵柄ならペア成立。そのカードは取り除かれ、もう一度自分の番が続きます',
+      '絵柄が違えば少し待ってから裏向きに戻り、相手の番に移ります',
+      'すべてのペアが揃ったら終了。ペアを多く取った方の勝ちです',
+      '同じペア数なら引き分けです',
+    ],
+  },
+  {
+    title: 'ヒット＆ブロー',
+    rules: [
+      '2人がそれぞれ0〜9から重複しない3桁の暗証番号を設定します',
+      '交互に相手の番号を予想し、3桁の数字を入力します',
+      '<b>HIT</b>：数字も桁も合っている数（例：正解と同じ位置の一致数）',
+      '<b>BLOW</b>：数字は合っているが桁が違う数',
+      '先に3 HIT（完全一致）を出した方の勝ちです',
+    ],
+  },
+  {
+    title: 'ドット＆ボックス',
+    rules: [
+      '点と点の間にある線を1本ずつ交互に引いていきます',
+      '4辺すべて引かれてマスが完成すると、そのマスは最後に線を引いた人の陣地になります',
+      '一度取った陣地は取られません',
+      '自分の手番でマスを完成させると、続けてもう一度自分の番になります（何マスでも連続可）',
+      'マスを完成させなかった場合は相手の番に移ります',
+      '全ての線が引き終わった時点で、陣地が多い方の勝ちです',
+    ],
+  },
+  {
+    title: '五目並べ',
+    rules: [
+      '15×15の盤に、白と黒が交互に石を置いていきます',
+      '縦・横・斜め、いずれかの向きで5つ以上石を並べたら勝利です',
+      '一度置いた石は動かせません',
+      '全マスが埋まって誰も揃わなければ引き分けです',
+      '「CPU対戦」を選ぶと黒をCPUが担当します。1人でも遊べます',
+    ],
+  },
+  {
+    title: '積み木カウント',
+    rules: [
+      'ゲーム開始時に12〜15のいずれかが目標としてランダムに決まります',
+      '白と黒が交互に1・2・3のいずれかを選び、合計に積み上げていきます',
+      '自分の番で合計が目標を超えてしまったら、その人の負けです',
+      '目標は「見える」設定にすると常に表示され、「隠す」設定にすると超えるまでわかりません',
+      '隠していても、対局が終わると目標の数字が公開されます',
+    ],
+  },
+];
+
+const settingsMainPage = document.getElementById("settingsMainPage");
+const howToPlayPage = document.getElementById("howToPlayPage");
+const howToPlayOpenBtn = document.getElementById("howToPlayOpenBtn");
+const howToPlayBackBtn = document.getElementById("howToPlayBackBtn");
+const howToPlayList = document.getElementById("howToPlayList");
+
+let howToPlayBuilt = false;
+function buildHowToPlayList(){
+  if(howToPlayBuilt) return;
+  HOW_TO_PLAY.forEach(game => {
+    const item = document.createElement('div');
+    item.className = 'howto-item';
+
+    const header = document.createElement('div');
+    header.className = 'howto-item-header';
+    header.innerHTML = `<span>${game.title}</span><span class="chevron">›</span>`;
+
+    const body = document.createElement('div');
+    body.className = 'howto-item-body';
+    const ul = document.createElement('ul');
+    game.rules.forEach(ruleHtml => {
+      const li = document.createElement('li');
+      li.innerHTML = ruleHtml;
+      ul.appendChild(li);
+    });
+    body.appendChild(ul);
+
+    header.addEventListener('click', () => {
+      // 開くのは常に1つだけ。他が開いていれば閉じてから、タップした項目を開閉する
+      const wasOpen = item.classList.contains('open');
+      howToPlayList.querySelectorAll('.howto-item.open').forEach(el => el.classList.remove('open'));
+      if(!wasOpen) item.classList.add('open');
+    });
+
+    item.appendChild(header);
+    item.appendChild(body);
+    howToPlayList.appendChild(item);
+  });
+  howToPlayBuilt = true;
+}
+
+howToPlayOpenBtn.addEventListener('click', () => {
+  buildHowToPlayList();
+  settingsMainPage.style.display = 'none';
+  howToPlayPage.style.display = 'block';
+});
+howToPlayBackBtn.addEventListener('click', () => {
+  howToPlayPage.style.display = 'none';
+  settingsMainPage.style.display = 'block';
+});
+
 // GAMES はこの関数スコープの後方で定義されるが、クリック時（初回オープン時）には
 // 既に定義済みなので参照できる。ここでは一度だけ生成してキャッシュする。
 let menuListBuilt = false;
@@ -1340,6 +1562,9 @@ function closeAllPanels(){
   menuPanel.classList.remove("open");
   panelBackdrop.classList.remove("show");
   document.body.classList.remove("panel-open");
+  // 次に開いた時は常にメイン設定ページから始まるようにしておく
+  howToPlayPage.style.display = 'none';
+  settingsMainPage.style.display = 'block';
 }
 
 gearBtn.addEventListener("click", () => {
