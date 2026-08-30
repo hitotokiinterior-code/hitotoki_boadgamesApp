@@ -1731,11 +1731,25 @@ navButtons.forEach(btn => {
     updateStepValue();
   }
 
+  // 他のゲームページに移動してもタイマーが生き続けるよう、
+  // 「終了時刻（絶対時刻）」を端末に保存しておく。各ゲームページ側は
+  // 共通スクリプト（timer-watcher.js）でこれを見張っていて、時刻に達したら
+  // ポップアップで知らせてくれる。
+  const TIMER_STORAGE_KEY = 'hitotoki_timer';
+
+  function saveTimerToStorage(endTime){
+    try{ localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({ endTime })); }catch(e){}
+  }
+  function clearTimerFromStorage(){
+    try{ localStorage.removeItem(TIMER_STORAGE_KEY); }catch(e){}
+  }
+
   function startTimer(){
     remainingSeconds = selectedMinutes * 60;
     displayEl.classList.remove('finished');
     setState('running');
     formatRunning();
+    saveTimerToStorage(Date.now() + remainingSeconds * 1000);
   }
 
   // 「止める」ボタン：動作中のタイマーを即座に打ち切って時計表示に戻す
@@ -1744,12 +1758,29 @@ navButtons.forEach(btn => {
     displayEl.classList.remove('finished');
     setState('clock');
     formatClock();
+    clearTimerFromStorage();
   }
 
   // カバーを開いてのキャンセル：設定編集モードに戻る（時計には戻らない）
   function cancelTimer(){
     displayEl.classList.remove('finished');
     setState('open');
+    clearTimerFromStorage();
+  }
+
+  // 0になった時の演出（自然終了・すでに時刻を過ぎていた場合の両方から呼ばれる）
+  function triggerFinished(){
+    setState('finished');
+    displayEl.classList.add('finished');
+    formatFinished();
+    clearTimerFromStorage();
+    if(soundPrefs.vibration && navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
+    // 少し余韻を置いてから、時計表示に戻す
+    setTimeout(() => {
+      displayEl.classList.remove('finished');
+      setState('clock');
+      formatClock();
+    }, 2400);
   }
 
   // 1秒ごとのティック。今の状態に応じて「時計を進める」か「カウントダウンする」かだけを行う
@@ -1757,16 +1788,7 @@ navButtons.forEach(btn => {
     if(state === 'running'){
       remainingSeconds--;
       if(remainingSeconds <= 0){
-        setState('finished');
-        displayEl.classList.add('finished');
-        formatFinished();
-        if(soundPrefs.vibration && navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
-        // 少し余韻を置いてから、時計表示に戻す
-        setTimeout(() => {
-          displayEl.classList.remove('finished');
-          setState('clock');
-          formatClock();
-        }, 2400);
+        triggerFinished();
         return;
       }
       formatRunning();
@@ -1858,7 +1880,27 @@ navButtons.forEach(btn => {
 
   calcMaxOffset();
   updateStepValue();
-  formatClock();
+
+  // ページを開いた瞬間に、他の画面で走らせていたタイマーがまだ生きていないか確認する
+  (function resumeTimerIfAny(){
+    let saved = null;
+    try{ saved = JSON.parse(localStorage.getItem(TIMER_STORAGE_KEY) || 'null'); }catch(e){}
+    if(saved && saved.endTime){
+      const remainMs = saved.endTime - Date.now();
+      if(remainMs > 0){
+        // まだ動いている：残り時間を計算してカウントダウン表示を再開する
+        remainingSeconds = Math.ceil(remainMs / 1000);
+        setState('running');
+        formatRunning();
+        return;
+      } else {
+        // 他のページにいる間に時刻を過ぎていた：戻ってきた瞬間に終了演出を出す
+        triggerFinished();
+        return;
+      }
+    }
+    formatClock();
+  })();
 })();
 
 })();
