@@ -45,51 +45,6 @@
   .home-icon-btn:hover{ color: var(--gold-bright); }
   .home-icon-btn svg{ width:20px; height:20px; }
 
-  .menu-icon-btn{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:34px; height:34px;
-    color: var(--cream);
-    background:none;
-    border:none;
-    cursor:pointer;
-    flex-shrink:0;
-    transition: color .15s ease;
-  }
-  .menu-icon-btn:hover{ color: var(--gold-bright); }
-  .menu-icon-btn svg{ width:20px; height:20px; }
-
-  .menu-dropdown{
-    position:absolute;
-    top:40px; right:0;
-    z-index:30;
-    background: linear-gradient(160deg, var(--frame-hi), var(--frame-low));
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
-    display:flex;
-    flex-direction:column;
-    min-width: 150px;
-    overflow:hidden;
-  }
-  .menu-dropdown.hidden{ display:none; }
-  .menu-dropdown button{
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-weight:700;
-    font-size:0.76rem;
-    letter-spacing:0.06em;
-    color: var(--cream);
-    background:none;
-    border:none;
-    border-bottom: 1px solid var(--hairline);
-    text-align:left;
-    padding: 11px 14px;
-    cursor:pointer;
-  }
-  .menu-dropdown button:last-child{ border-bottom:none; }
-  .menu-dropdown button:hover{ background: rgba(205,168,105,0.1); color: var(--gold-bright); }
-
   body{
     margin:0;
     height: 100dvh;
@@ -122,12 +77,12 @@
     width:100%;
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:center;
     padding: 0 0 10px;
     border-bottom: 1px solid var(--hairline);
     position:relative;
   }
-  .header-menu-wrap{ position:relative; }
+  .home-icon-btn{ position:absolute; left:0; top:50%; transform:translateY(-50%); }
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
@@ -136,6 +91,7 @@
     margin:0;
     color:var(--cream);
     text-shadow: 0 2px 10px rgba(205,168,105,0.16);
+    text-align:center;
   }
   h1 .small{
     display:block;
@@ -506,6 +462,7 @@
   .winner-card p{ color:var(--gold-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
 
   .hidden{ display:none !important; }
+  .invisible{ visibility:hidden; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -516,16 +473,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-5h2v5a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V10"/></svg>
     </a>
     <h1>ヒット＆ブロー</h1>
-    <div class="header-menu-wrap">
-      <button class="menu-icon-btn" id="menuBtn" aria-label="メニュー">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <div class="menu-dropdown hidden" id="menuDropdown">
-        <button type="button" id="menuNewGameBtn">はじめから</button>
-        <button type="button" id="menuRulesBtn">遊び方</button>
-        <button type="button" id="menuModeSelectBtn">モード選択</button>
-      </div>
-    </div>
   </header>
 
   <!-- MODE SELECT SCREEN -->
@@ -1044,29 +991,6 @@
     document.getElementById('rules').classList.toggle('open');
   });
 
-  const menuBtn = document.getElementById('menuBtn');
-  const menuDropdown = document.getElementById('menuDropdown');
-  menuBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    menuDropdown.classList.toggle('hidden');
-  });
-  document.addEventListener('click', (e) => {
-    if(!menuDropdown.classList.contains('hidden') && !menuDropdown.contains(e.target) && e.target !== menuBtn){
-      menuDropdown.classList.add('hidden');
-    }
-  });
-  document.getElementById('menuNewGameBtn').addEventListener('click', () => {
-    menuDropdown.classList.add('hidden');
-    goToModeSelect();
-  });
-  document.getElementById('menuRulesBtn').addEventListener('click', () => {
-    menuDropdown.classList.add('hidden');
-    document.getElementById('rules').classList.toggle('open');
-  });
-  document.getElementById('menuModeSelectBtn').addEventListener('click', () => {
-    menuDropdown.classList.add('hidden');
-    goToModeSelect();
-  });
 
   function setMode(newVsCPU, newDifficulty){
     vsCPU = newVsCPU;
