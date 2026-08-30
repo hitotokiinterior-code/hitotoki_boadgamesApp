@@ -354,7 +354,7 @@
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
-  .history-toggle{
+  .history-toggle-btn{
     text-align:center;
     font-size:0.64rem;
     letter-spacing:0.05em;
@@ -362,7 +362,7 @@
     padding: 4px 0 0;
     cursor:pointer;
   }
-  .history-toggle:hover{ color: var(--gold-bright); }
+  .history-toggle-btn:hover{ color: var(--gold-bright); }
   .history-item{
     display:grid;
     grid-template-columns: 18px 1fr 30px 30px;
@@ -537,11 +537,13 @@
           <h3 id="senteHistoryLabel">白の予想</h3>
           <div class="history-col-head"><span></span><span>数字</span><span>HIT</span><span>BLOW</span></div>
           <div class="history-list" id="senteHistory"><div class="empty-hint">まだありません</div></div>
+          <div class="history-toggle" id="senteHistoryToggle"></div>
         </div>
         <div class="history-col gote">
           <h3 id="goteHistoryLabel">黒の予想</h3>
           <div class="history-col-head"><span></span><span>数字</span><span>HIT</span><span>BLOW</span></div>
           <div class="history-list" id="goteHistory"><div class="empty-hint">まだありません</div></div>
+          <div class="history-toggle" id="goteHistoryToggle"></div>
         </div>
       </div>
     </div>
@@ -616,6 +618,8 @@
     document.getElementById('winnerOverlay').classList.remove('show');
     document.getElementById('senteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
     document.getElementById('goteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
+    document.getElementById('senteHistoryToggle').innerHTML = '';
+    document.getElementById('goteHistoryToggle').innerHTML = '';
 
     if(vsCPU){
       secrets[cpuSide()] = randomCode();
@@ -927,9 +931,13 @@
 
   function renderHistory(who){
     const el = document.getElementById(who === 'sente' ? 'senteHistory' : 'goteHistory');
+    const toggleEl = document.getElementById(who === 'sente' ? 'senteHistoryToggle' : 'goteHistoryToggle');
     const list = guesses[who];
     el.innerHTML = '';
-    el.classList.toggle('expanded', !!historyExpanded[who]);
+    el.classList.remove('expanded');
+    el.style.maxHeight = '';
+    el.style.overflowY = '';
+    toggleEl.innerHTML = '';
     if(list.length === 0){
       el.innerHTML = '<div class="empty-hint">まだありません</div>';
       return;
@@ -970,13 +978,24 @@
     }
     if(list.length > 3){
       const toggle = document.createElement('div');
-      toggle.className = 'history-toggle';
+      toggle.className = 'history-toggle-btn';
       toggle.textContent = historyExpanded[who] ? '▲ 折りたたむ' : '▼ すべて表示（' + list.length + '件）';
       toggle.addEventListener('click', () => {
         historyExpanded[who] = !historyExpanded[who];
         renderHistory(who);
       });
-      el.appendChild(toggle);
+      toggleEl.appendChild(toggle);
+    }
+
+    if(historyExpanded[who] && list.length > 5){
+      const rows = el.querySelectorAll('.history-item');
+      const rowH = rows[0].getBoundingClientRect().height;
+      const style = getComputedStyle(el);
+      const gap = parseFloat(style.rowGap || style.gap) || 0;
+      const maxH = rowH * 5 + gap * 4;
+      el.style.maxHeight = maxH + 'px';
+      el.style.overflowY = 'auto';
+      el.classList.add('expanded');
     }
   }
 
