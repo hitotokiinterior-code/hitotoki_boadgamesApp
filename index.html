@@ -818,6 +818,10 @@ body.panel-open .setting-btn{
 .setting-menu-item .arrow{
   color: var(--silver-dim);
   font-size:0.9rem;
+  transition: transform .2s ease;
+}
+.setting-menu-item.bg-open .arrow{
+  transform: rotate(90deg);
 }
 
 /* まだ機能未実装の項目：見た目は他と揃えつつ、控えめに区別する */
@@ -958,6 +962,39 @@ body.panel-open .setting-btn{
   font-weight:700;
 }
 
+/* 背景テーマ：ミニ将棋にすでに実装されている5色パレットと同じものを、
+   ホーム画面（⚙→ゲーム→背景）でも選べるようにする */
+.bg-theme-body{
+  max-height:0;
+  overflow:hidden;
+  transition: max-height .25s ease;
+}
+.bg-theme-body.open{
+  max-height:100px;
+}
+.bg-theme-swatches{
+  display:flex;
+  gap:14px;
+  padding:14px 4px 18px;
+}
+.theme-swatch{
+  width:28px; height:28px;
+  border-radius:50%;
+  background: var(--sw, #0a0a0a);
+  border: 1px solid rgba(255,255,255,0.35);
+  cursor:pointer;
+  padding:0;
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.theme-swatch:hover{
+  transform: scale(1.12);
+  border-color:#fff;
+}
+.theme-swatch.active{
+  border-color:#fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.35);
+}
+
 
 </style>
 </head>
@@ -1037,6 +1074,18 @@ body.panel-open .setting-btn{
   <div class="setting-menu">
     <div class="setting-menu-item" id="howToPlayOpenBtn">
       <span>遊び方</span><span class="arrow">›</span>
+    </div>
+    <div class="setting-menu-item" id="bgThemeToggle">
+      <span>背景</span><span class="arrow" id="bgThemeArrow">›</span>
+    </div>
+    <div class="bg-theme-body" id="bgThemeBody">
+      <div class="bg-theme-swatches" id="bgThemeSwatches">
+        <button class="theme-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
+        <button class="theme-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
+        <button class="theme-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
+        <button class="theme-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
+        <button class="theme-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
+      </div>
     </div>
     <div class="setting-menu-item placeholder-item">
       <span>ゲーム設定</span><span class="arrow">›</span>
@@ -1546,6 +1595,45 @@ howToPlayBackBtn.addEventListener('click', () => {
   howToPlayPage.style.display = 'none';
   settingsMainPage.style.display = 'block';
 });
+
+// --- 背景テーマ（⚙→ゲーム→背景）：ミニ将棋にすでに実装されている5色パレットと
+//     同じ色を、ここで選ぶと全ページに反映される（bg-theme.js が各ゲームページで
+//     この保存内容を読み取って適用する） ---
+const BG_STORAGE_KEY = 'pref_bg_gradient';
+const bgThemeToggle = document.getElementById('bgThemeToggle');
+const bgThemeBody = document.getElementById('bgThemeBody');
+const bgThemeArrow = document.getElementById('bgThemeArrow');
+const bgThemeSwatches = document.getElementById('bgThemeSwatches');
+
+function applyBgTheme(grad){
+  document.body.style.background = 'radial-gradient(ellipse at 50% -10%, ' + grad + ')';
+}
+
+bgThemeToggle.addEventListener('click', () => {
+  const nowOpen = bgThemeBody.classList.toggle('open');
+  bgThemeToggle.classList.toggle('bg-open', nowOpen);
+});
+
+bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    const grad = sw.getAttribute('data-grad');
+    applyBgTheme(grad);
+    try{ localStorage.setItem(BG_STORAGE_KEY, grad); }catch(e){}
+    bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+  });
+});
+
+// 保存済みのテーマがあれば、開いた瞬間に反映＋該当スウォッチをactiveにしておく
+(function initBgTheme(){
+  let saved = null;
+  try{ saved = localStorage.getItem(BG_STORAGE_KEY); }catch(e){}
+  if(!saved) return;
+  applyBgTheme(saved);
+  bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => {
+    s.classList.toggle('active', s.getAttribute('data-grad') === saved);
+  });
+})();
 
 // GAMES はこの関数スコープの後方で定義されるが、クリック時（初回オープン時）には
 // 既に定義済みなので参照できる。ここでは一度だけ生成してキャッシュする。
