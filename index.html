@@ -444,6 +444,35 @@
   .game-card .tag.cpu{ color:#dcd6c0; border-color: rgba(220,214,192,0.35); }
   .game-card .tag.master{ color:#fff; border-color: rgba(255,255,255,0.5); }
 
+  /* 画像付きカード：左30%に写真、右70%に今まで通りの本文（番号・タイトル・タグ） */
+  .game-card.has-image{
+    flex-direction:row;
+    align-items:stretch;
+    padding:0;
+    overflow:hidden; /* 画像がカードの角丸からはみ出さないように */
+  }
+  .game-card .card-image{
+    width:32%;
+    flex-shrink:0;
+    position:relative;
+    background-size:cover;
+    background-position:center;
+  }
+  .game-card .card-image::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(90deg, rgba(0,0,0,0) 55%, rgba(10,10,10,0.6) 88%, #101010 100%);
+  }
+  .game-card .card-body{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding: 16px 12px 14px;
+  }
+
 
 
   footer{
@@ -1366,7 +1395,7 @@ body.panel-open .setting-btn{
 
   // --- ゲーム一覧データ（縦=1ページ6枚でページ送り／横=全カードを1本の帯で横スクロール） ---
   const GAMES = [
-    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
+    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
     { num:'02', title:'コネクトフォー', href:'connect_four.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
     { num:'03', title:'神経衰弱', href:'memory_match.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
     { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
@@ -1383,7 +1412,7 @@ body.panel-open .setting-btn{
 
   function buildCardEl(game){
     const a = document.createElement('a');
-    a.className = 'game-card';
+    a.className = 'game-card' + (game.img ? ' has-image' : '');
     a.href = game.href;
 
     const info = document.createElement('div');
@@ -1405,8 +1434,23 @@ body.panel-open .setting-btn{
       tagsWrap.appendChild(span);
     });
 
-    a.appendChild(info);
-    a.appendChild(tagsWrap);
+    if(game.img){
+      const imageDiv = document.createElement('div');
+      imageDiv.className = 'card-image';
+      imageDiv.style.backgroundImage = `url('${game.img}')`;
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.appendChild(info);
+      body.appendChild(tagsWrap);
+
+      a.appendChild(imageDiv);
+      a.appendChild(body);
+    } else {
+      a.appendChild(info);
+      a.appendChild(tagsWrap);
+    }
+
     return a;
   }
 
