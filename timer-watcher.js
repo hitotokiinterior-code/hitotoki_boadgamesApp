@@ -43,9 +43,10 @@
       'text-align:center;' +
       'box-shadow:0 12px 30px rgba(0,0,0,0.5);';
 
-    var icon = document.createElement('div');
-    icon.textContent = '⏰';
-    icon.style.cssText = 'font-size:2rem;margin-bottom:10px;';
+    var icon = document.createElement('img');
+    icon.src = 'assets/icons/timer_popup_watch.png';
+    icon.alt = '';
+    icon.style.cssText = 'width:56px;height:auto;margin-bottom:12px;';
 
     var title = document.createElement('div');
     title.textContent = '時間になりました';
