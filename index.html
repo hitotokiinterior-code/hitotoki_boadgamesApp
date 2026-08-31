@@ -462,7 +462,11 @@
     content:"";
     position:absolute;
     inset:0;
-    background: linear-gradient(90deg, rgba(0,0,0,0) 55%, rgba(10,10,10,0.6) 88%, #101010 100%);
+    background: linear-gradient(90deg, rgba(0,0,0,0) 65%, rgba(10,10,10,0.32) 90%, rgba(16,16,16,0.5) 100%);
+  }
+  /* game.noFade = true のカードは、右端のグラデーションを完全に無くす */
+  .game-card.has-image.no-fade .card-image::after{
+    display:none;
   }
   .game-card .card-body{
     flex:1;
@@ -1395,7 +1399,7 @@ body.panel-open .setting-btn{
 
   // --- ゲーム一覧データ（縦=1ページ6枚でページ送り／横=全カードを1本の帯で横スクロール） ---
   const GAMES = [
-    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
+    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
     { num:'02', title:'コネクトフォー', href:'connect_four.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
     { num:'03', title:'神経衰弱', href:'memory_match.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
     { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
@@ -1412,7 +1416,7 @@ body.panel-open .setting-btn{
 
   function buildCardEl(game){
     const a = document.createElement('a');
-    a.className = 'game-card' + (game.img ? ' has-image' : '');
+    a.className = 'game-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
     a.href = game.href;
 
     const info = document.createElement('div');
