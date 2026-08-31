@@ -213,22 +213,22 @@
     backface-visibility:hidden;
     border-radius: 6px;
     display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
   }
   .mem-card-back{
-    background: linear-gradient(155deg, #232323, #101010 55%, #030303);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 3px 6px rgba(0,0,0,0.5);
   }
-  .mem-card-back::before{
-    content:"";
-    width:46%; height:46%;
-    border: 1.5px solid rgba(255,255,255,0.22);
-    border-radius:50%;
+  .mem-card-back img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    border-radius:6px;
   }
   .mem-card-front{
     background: linear-gradient(155deg, #f2efe6, #d9d4c4 60%, #b8b3a4);
     transform: rotateY(180deg);
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.35);
-    overflow:hidden;
   }
   .mem-card-front img{
     width:100%;
@@ -463,6 +463,8 @@
 <script>
 (function(){
   // 画像は base64 埋め込みではなく、images/ フォルダの外部ファイルを参照する
+  const CARD_BACK_SRC = 'images/card-back.png';
+
   const SYMBOL_POOL = [
     { src: 'images/card-01-plant.png',  label: '植物' },
     { src: 'images/card-02-flower.png', label: '花' },
@@ -575,6 +577,11 @@
 
       const back = document.createElement('div');
       back.className = 'mem-card-face mem-card-back';
+      const backImg = document.createElement('img');
+      backImg.src = CARD_BACK_SRC;
+      backImg.alt = 'カード裏面';
+      backImg.draggable = false;
+      back.appendChild(backImg);
 
       const front = document.createElement('div');
       front.className = 'mem-card-face mem-card-front';
