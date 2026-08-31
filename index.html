@@ -348,6 +348,7 @@
   .app-subtitle{
     margin:1px 0 0;
     font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
     font-size:0.72rem;
     letter-spacing:0.08em;
     color: var(--silver-dim);
@@ -373,7 +374,7 @@
 
   /* --- swipeable list: 全カードを1本の縦リストにして、なめらかに連続スクロール --- */
   .game-grid{
-    --card-h: 90px;
+    --card-h: 100px;
     --card-gap: 10px;
     width:100%;
     height: calc(var(--card-h) * 4 + var(--card-gap) * 3 + 4px); /* 4px = 上下パディング分。border-boxで内側に食い込む分を補正 */
@@ -400,7 +401,7 @@
     flex-direction:column;
     justify-content:space-between;
     gap:8px;
-    padding: 12px 12px 10px;
+    padding: 16px 12px 14px;
     background: linear-gradient(160deg, #202020, #101010 55%, #030303);
     border: 1px solid var(--hairline);
     border-radius: 8px;
