@@ -1862,13 +1862,70 @@ navButtons.forEach(btn => {
     clearTimerFromStorage();
   }
 
-  // 0になった時の演出（自然終了・すでに時刻を過ぎていた場合の両方から呼ばれる）
+  // 他のゲームページ（timer-watcher.js側）と同じ見た目のポップアップを、
+  // ホーム画面自身でも表示する（今までは card 上の「ARRIVED」演出だけだった）
+  function showTimerPopup(){
+    if(document.getElementById('hitotokiTimerPopup')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'hitotokiTimerPopup';
+    overlay.style.cssText =
+      'position:fixed;inset:0;z-index:99999;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'background:rgba(0,0,0,0.55);' +
+      'backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);' +
+      'font-family:"Zen Kaku Gothic New",sans-serif;';
+
+    const card = document.createElement('div');
+    card.style.cssText =
+      'background:linear-gradient(160deg,#232016,#141210 55%,#030302);' +
+      'border:1px solid rgba(255,255,255,0.14);' +
+      'border-radius:12px;' +
+      'padding:32px 28px;' +
+      'max-width:280px;width:80%;' +
+      'text-align:center;' +
+      'box-shadow:0 12px 30px rgba(0,0,0,0.5);';
+
+    const icon = document.createElement('div');
+    icon.textContent = '⏰';
+    icon.style.cssText = 'font-size:2rem;margin-bottom:10px;';
+
+    const title = document.createElement('div');
+    title.textContent = '時間になりました';
+    title.style.cssText =
+      'font-family:"Kaisei Decol",serif;font-size:1.05rem;' +
+      'color:#fff;letter-spacing:0.05em;margin-bottom:8px;';
+
+    const desc = document.createElement('div');
+    desc.textContent = 'タイマーが終了しました';
+    desc.style.cssText =
+      'font-size:0.75rem;color:#9a9a9a;letter-spacing:0.03em;margin-bottom:22px;';
+
+    const btn = document.createElement('button');
+    btn.textContent = 'OK';
+    btn.style.cssText =
+      'width:100%;padding:11px;border-radius:7px;' +
+      'border:1px solid #fff;background:#fff;color:#141414;' +
+      'font-family:"Zen Kaku Gothic New",sans-serif;font-size:0.8rem;' +
+      'font-weight:700;letter-spacing:0.05em;cursor:pointer;';
+    btn.addEventListener('click', () => overlay.remove());
+
+    card.appendChild(icon);
+    card.appendChild(title);
+    card.appendChild(desc);
+    card.appendChild(btn);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+  }
+
+  // 0になった時の演出(自然終了・すでに時刻を過ぎていた場合の両方から呼ばれる)
   function triggerFinished(){
     setState('finished');
     displayEl.classList.add('finished');
     formatFinished();
     clearTimerFromStorage();
     if(soundPrefs.vibration && navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
+    showTimerPopup();
     // 少し余韻を置いてから、時計表示に戻す
     setTimeout(() => {
       displayEl.classList.remove('finished');
