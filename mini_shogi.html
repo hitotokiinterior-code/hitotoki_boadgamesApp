@@ -2049,7 +2049,10 @@
   });
 
   // --- user-selectable background color switch (setup screen only; hidden during play) ---
+  // ホーム画面（⚙→ゲーム→背景）と同じ localStorage キーを共有し、
+  // どちらで選んでも全ページに反映されるようにしている
   (function(){
+    const BG_STORAGE_KEY = 'pref_bg_gradient';
     const btn = document.getElementById('bgSwitchBtn');
     const panel = document.getElementById('bgSwitchPanel');
     const swatches = document.querySelectorAll('.bg-swatch[data-grad]');
@@ -2058,15 +2061,28 @@
       document.body.style.background = 'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')';
     }
 
+    function setActiveSwatch(gradStops){
+      swatches.forEach(s => s.classList.toggle('active', s.getAttribute('data-grad') === gradStops));
+    }
+
+    // ページを開いた時点で、他の画面で選ばれていたテーマがあればそれを反映する
+    let savedGrad = null;
+    try{ savedGrad = localStorage.getItem(BG_STORAGE_KEY); }catch(e){}
+    if(savedGrad){
+      applyBg(savedGrad);
+      setActiveSwatch(savedGrad);
+    }
+
     btn.addEventListener('click', () => {
       panel.classList.toggle('hidden');
     });
 
     swatches.forEach(sw => {
       sw.addEventListener('click', () => {
-        applyBg(sw.getAttribute('data-grad'));
-        swatches.forEach(s => s.classList.remove('active'));
-        sw.classList.add('active');
+        const grad = sw.getAttribute('data-grad');
+        applyBg(grad);
+        setActiveSwatch(grad);
+        try{ localStorage.setItem(BG_STORAGE_KEY, grad); }catch(e){}
         panel.classList.add('hidden');
       });
     });
