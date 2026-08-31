@@ -33,72 +33,22 @@
     touch-action: manipulation;
   }
 
-  .home-btn{
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 100;
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-weight:700;
-    font-size:0.7rem;
-    letter-spacing:0.06em;
-    color: #fff;
-    background: rgba(255,255,255,0.14);
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 3px;
-    padding: 7px 12px;
-    text-decoration:none;
-    backdrop-filter: blur(4px);
-    transition: background .15s ease, color .15s ease, border-color .15s ease;
-  }
-  .home-btn:hover{ background: rgba(255,255,255,0.24); border-color:#fff; }
-
-  .bg-switch-btn{
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 100;
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-weight:700;
-    font-size:0.7rem;
-    letter-spacing:0.06em;
-    color: #fff;
-    background: rgba(255,255,255,0.14);
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 3px;
-    padding: 7px 12px;
-    cursor:pointer;
-    backdrop-filter: blur(4px);
-    transition: background .15s ease, color .15s ease, border-color .15s ease;
-  }
-  .bg-switch-btn:hover{ background: rgba(255,255,255,0.24); border-color:#fff; }
-
-  .bg-switch-panel{
-    position: fixed;
-    top: 52px;
-    right: 14px;
-    z-index: 100;
+  .home-icon-btn{
     display:flex;
     align-items:center;
-    gap:8px;
-    padding: 8px 10px;
-    background: rgba(20,20,20,0.9);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 8px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  }
-  .bg-swatch{
-    width:22px; height:22px;
-    border-radius:50%;
-    background: var(--sw, #0a0a0a);
-    border: 1px solid rgba(255,255,255,0.35);
+    justify-content:center;
+    width:34px; height:34px;
+    color: var(--silver);
+    text-decoration:none;
+    background:none;
+    border:none;
     cursor:pointer;
-    padding:0;
-    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    flex-shrink:0;
+    transition: color .15s ease, opacity .15s ease;
   }
-  .bg-swatch:hover{ transform: scale(1.12); border-color:#fff; }
-  .bg-swatch.active{ border-color:#fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
+  .home-icon-btn:hover{ color: #fff; }
+  .home-icon-btn svg{ width:20px; height:20px; }
+
 
   body{
     margin:0;
@@ -128,7 +78,18 @@
     gap:10px;
   }
 
-  header{ text-align:center; margin-top:50px; }
+  header{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 0 0 10px;
+    border-bottom: 1px solid var(--hairline);
+    position:relative;
+    margin-top: 6px;
+  }
+  .home-icon-btn{ position:absolute; left:0; top:50%; transform:translateY(-50%); }
+
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
@@ -351,7 +312,6 @@
 
   .game-screen{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
 
-  .controls{ display:flex; gap:12px; margin-top:0; }
   button.main-btn{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
@@ -368,7 +328,6 @@
   button.main-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
   button.main-btn:active{ transform: translateY(1px); }
   button:focus-visible{ outline: 1px solid #fff; outline-offset:3px; }
-  .controls .main-btn.hidden{ display:none; }
 
   /* --- modal overlay --- */
   .modal-overlay{
@@ -398,34 +357,6 @@
     0%{ transform: scale(0.85); opacity:0; }
     100%{ transform: scale(1); opacity:1; }
   }
-  .modal-close{
-    position:absolute; top:10px; right:10px;
-    width:28px; height:28px;
-    display:flex; align-items:center; justify-content:center;
-    background: transparent;
-    border: 1px solid var(--hairline);
-    border-radius:50%;
-    color:#fff;
-    font-size:0.95rem;
-    line-height:1;
-    cursor:pointer;
-  }
-  .modal-close:hover{ border-color:#fff; }
-  .rules-box h2{
-    font-family:'Kaisei Decol', serif;
-    font-weight:500;
-    font-size:0.95rem;
-    margin: 0 0 12px;
-    color:#fff;
-    letter-spacing:0.05em;
-  }
-  .rules-box ul{
-    margin:4px 0 0;
-    padding-left:1.1em;
-    font-size:0.78rem;
-    line-height:1.9;
-    color:#cfcfcf;
-  }
   .confirm-box{ text-align:center; }
   .confirm-text{
     font-family:'Kaisei Decol', serif;
@@ -444,31 +375,26 @@
      横画面向けの最低限のレイアウト調整（縦画面が基本の作り）
      ============================================================ */
   @media (orientation: landscape) and (max-height: 600px){
-    .home-btn, .bg-switch-btn, .bg-switch-panel{ display:none !important; }
     header{ display:none; }
     body{ align-items:center; padding:4px; }
     .app{ gap:6px; }
     .mem-board{ width: min(80vh, 92vw); }
-    .mem-card-front{ font-size: calc(min(80vh, 92vw) / var(--cols) * 0.44); }
-    .controls .main-btn{ padding:6px 11px; font-size:0.6rem; }
     .setup-card{ margin-top:4px; padding:16px 18px; gap:12px; }
   }
 </style>
 </head>
 <body>
-<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
-<button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
-<div id="bgSwitchPanel" class="bg-switch-panel hidden">
-  <button class="bg-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
-  <button class="bg-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
-  <button class="bg-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
-  <button class="bg-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
-  <button class="bg-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
-</div>
 
 <div class="app">
 
-  <header><h1>神経衰弱</h1></header>
+  <header>
+    <button type="button" class="home-icon-btn" id="homeBtn" aria-label="ホームへ戻る">
+      <svg id="homeIconHome" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-5h2v5a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V10"/></svg>
+      <svg id="homeIconBack" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <h1>神経衰弱</h1>
+  </header>
+
 
   <div id="setupScreen" class="setup-screen">
     <div class="setup-card">
@@ -520,28 +446,8 @@
       </div>
     </div>
 
-    <div class="controls">
-      <button id="newGameBtn" class="main-btn">はじめから</button>
-      <button id="rulesBtn" class="main-btn">遊び方</button>
-      <button id="changeModeBtn" class="main-btn">モード変更</button>
-    </div>
-
   </div>
 
-</div>
-
-<div id="rulesModal" class="modal-overlay hidden">
-  <div class="modal-box rules-box">
-    <button class="modal-close" id="rulesCloseBtn" aria-label="閉じる">×</button>
-    <h2>遊び方</h2>
-    <ul>
-      <li>カードは裏向きに並んでいます。交互に2枚めくってペアを探します</li>
-      <li>めくった2枚が同じ絵柄ならペア成立。そのカードは取り除かれ、もう一度自分の番が続きます</li>
-      <li>絵柄が違えば少し待ってから裏向きに戻り、相手の番に移ります</li>
-      <li>すべてのペアが揃ったら終了。ペアを多く取った方の勝ちです</li>
-      <li>同じペア数なら引き分けです</li>
-    </ul>
-  </div>
 </div>
 
 <div id="confirmModal" class="modal-overlay hidden">
@@ -612,6 +518,7 @@
   document.getElementById('startGameBtn').addEventListener('click', () => {
     document.getElementById('setupScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
+    updateHomeIcon();
     startNewGame();
   });
 
@@ -878,11 +785,6 @@
   // --- controls ---
   document.getElementById('againBtn').addEventListener('click', startNewGame);
 
-  const rulesModal = document.getElementById('rulesModal');
-  document.getElementById('rulesBtn').addEventListener('click', () => rulesModal.classList.remove('hidden'));
-  document.getElementById('rulesCloseBtn').addEventListener('click', () => rulesModal.classList.add('hidden'));
-  rulesModal.addEventListener('click', (e) => { if(e.target === rulesModal) rulesModal.classList.add('hidden'); });
-
   const confirmModal = document.getElementById('confirmModal');
   let pendingConfirmAction = null;
 
@@ -913,44 +815,33 @@
     if(e.target === confirmModal){ confirmModal.classList.add('hidden'); pendingConfirmAction = null; }
   });
 
-  document.getElementById('newGameBtn').addEventListener('click', () => {
-    runOrConfirm(startNewGame);
-  });
-  document.getElementById('changeModeBtn').addEventListener('click', () => {
-    runOrConfirm(() => {
-      document.getElementById('gameScreen').classList.add('hidden');
-      document.getElementById('setupScreen').classList.remove('hidden');
-    });
-  });
+  // --- home / back icon navigation (hit&blowと同じ挙動) ---
+  function updateHomeIcon(){
+    const onSetupScreen = !document.getElementById('setupScreen').classList.contains('hidden');
+    document.getElementById('homeIconHome').classList.toggle('hidden', !onSetupScreen);
+    document.getElementById('homeIconBack').classList.toggle('hidden', onSetupScreen);
+    document.getElementById('homeBtn').setAttribute('aria-label', onSetupScreen ? 'ホームへ戻る' : 'モード選択に戻る');
+  }
 
-  // --- background switcher (他のゲームと共通) ---
-  (function(){
-    const btn = document.getElementById('bgSwitchBtn');
-    const panel = document.getElementById('bgSwitchPanel');
-    const swatches = document.querySelectorAll('.bg-swatch[data-grad]');
+  function goToSetupScreen(){
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('setupScreen').classList.remove('hidden');
+    updateHomeIcon();
+  }
 
-    function applyBg(gradStops){
-      document.body.style.background = 'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')';
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    const onSetupScreen = !document.getElementById('setupScreen').classList.contains('hidden');
+    if(onSetupScreen){
+      window.location.href = 'index.html';
+      return;
     }
+    runOrConfirm(goToSetupScreen);
+  });
 
-    btn.addEventListener('click', () => panel.classList.toggle('hidden'));
-
-    swatches.forEach(sw => {
-      sw.addEventListener('click', () => {
-        applyBg(sw.getAttribute('data-grad'));
-        swatches.forEach(s => s.classList.remove('active'));
-        sw.classList.add('active');
-        panel.classList.add('hidden');
-      });
-    });
-
-    document.addEventListener('click', (e) => {
-      if(!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn){
-        panel.classList.add('hidden');
-      }
-    });
-  })();
+  updateHomeIcon();
 })();
 </script>
+<script src="timer-watcher.js"></script>
+<script src="bg-theme.js"></script>
 </body>
 </html>
