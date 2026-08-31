@@ -237,7 +237,11 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    background: linear-gradient(160deg, #232016, #141210 55%, #030302);
+    background:
+      linear-gradient(160deg, rgba(20,18,14,0.55), rgba(3,3,2,0.72) 60%),
+      url('assets/timer/timer_cover.jpg');
+    background-size: cover;
+    background-position: center;
     border-right: 1px solid var(--hairline);
     cursor:grab;
     touch-action: pan-y; /* 縦スクロールは邪魔しない。横方向はJSでドラッグ検知 */
@@ -250,12 +254,16 @@
   .timer-cover .grip{
     display:flex;
     gap:4px;
+    padding:5px 9px;
+    background: rgba(0,0,0,0.35);
+    border-radius:10px;
+    backdrop-filter: blur(2px);
   }
   .timer-cover .grip span{
     width:3px; height:3px;
     border-radius:50%;
-    background: var(--silver-dim);
-    opacity:0.7;
+    background:#fff;
+    opacity:0.85;
   }
 
   .view-placeholder{
