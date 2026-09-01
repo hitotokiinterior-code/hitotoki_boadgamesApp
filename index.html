@@ -1106,7 +1106,7 @@ body.panel-open .setting-btn{
     <div class="setting-menu-item">
       <span>BGM</span>
       <label class="switch">
-        <input type="checkbox" id="bgmToggle" checked>
+        <input type="checkbox" id="bgmToggle">
         <span class="switch-slider"></span>
       </label>
     </div>
@@ -1768,7 +1768,7 @@ panelBackdrop.addEventListener("click", closeAllPanels);
 // 効果音は再生の仕組み自体がまだ無いため、今はON/OFFの状態を保持するのみ。
 // 振動は既存のタイマー機能と連動させ、OFFなら鳴動しないようにする。
 const soundPrefs = {
-  bgm: localStorage.getItem('pref_bgm') !== 'off',
+  bgm: localStorage.getItem('pref_bgm') === 'on',
   se: localStorage.getItem('pref_se') !== 'off',
   vibration: localStorage.getItem('pref_vibration') !== 'off',
 };
