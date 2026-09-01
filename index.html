@@ -1297,6 +1297,7 @@ body.panel-open .setting-btn{
   </button>
 </nav>
 
+<script src="bgm-player.js"></script>
 <script>
 (function(){
   // ピンチズームの保険（Safari対策）
@@ -1763,8 +1764,9 @@ menuCloseBtn.addEventListener("click", closeAllPanels);
 panelBackdrop.addEventListener("click", closeAllPanels);
 
 // --- サウンド設定（BGM／効果音／振動）：状態を端末に保存して次回起動時も引き継ぐ ---
-// BGM・効果音は再生の仕組み自体がまだ無いため、今はON/OFFの状態を保持するのみ。
-// 振動だけは既存のタイマー機能と連動させ、OFFなら鳴動しないようにする。
+// BGMは bgm-player.js（共通スクリプト）が実際の再生を担当している。
+// 効果音は再生の仕組み自体がまだ無いため、今はON/OFFの状態を保持するのみ。
+// 振動は既存のタイマー機能と連動させ、OFFなら鳴動しないようにする。
 const soundPrefs = {
   bgm: localStorage.getItem('pref_bgm') !== 'off',
   se: localStorage.getItem('pref_se') !== 'off',
@@ -1778,6 +1780,10 @@ function bindSoundToggle(id, key){
   el.addEventListener('change', () => {
     soundPrefs[key] = el.checked;
     localStorage.setItem('pref_' + key, el.checked ? 'on' : 'off');
+    if(key === 'bgm' && window.hitotokiBGM){
+      if(el.checked){ window.hitotokiBGM.play(); }
+      else{ window.hitotokiBGM.stop(); }
+    }
   });
 }
 bindSoundToggle('bgmToggle', 'bgm');
