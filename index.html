@@ -1113,14 +1113,14 @@ body.panel-open .setting-btn{
     <div class="setting-menu-item">
       <span>効果音</span>
       <label class="switch">
-        <input type="checkbox" id="seToggle" checked>
+        <input type="checkbox" id="seToggle">
         <span class="switch-slider"></span>
       </label>
     </div>
     <div class="setting-menu-item">
       <span>振動</span>
       <label class="switch">
-        <input type="checkbox" id="vibToggle" checked>
+        <input type="checkbox" id="vibToggle">
         <span class="switch-slider"></span>
       </label>
     </div>
@@ -1769,8 +1769,8 @@ panelBackdrop.addEventListener("click", closeAllPanels);
 // 振動は既存のタイマー機能と連動させ、OFFなら鳴動しないようにする。
 const soundPrefs = {
   bgm: localStorage.getItem('pref_bgm') === 'on',
-  se: localStorage.getItem('pref_se') !== 'off',
-  vibration: localStorage.getItem('pref_vibration') !== 'off',
+  se: localStorage.getItem('pref_se') === 'on',
+  vibration: localStorage.getItem('pref_vibration') === 'on',
 };
 
 function bindSoundToggle(id, key){
