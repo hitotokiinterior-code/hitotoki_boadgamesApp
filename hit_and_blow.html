@@ -8,20 +8,20 @@
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
 
   :root{
-    --frame-hi: #262019;
-    --frame-mid: #14100b;
-    --frame-low: #050402;
-    --void: #0c0a07;
-    --void-rim: #4a3a22;
-    --gold: #cda869;
-    --gold-bright: #e6c88a;
-    --gold-dim: #8a7350;
-    --cream: #f0e6d2;
-    --cream-box: #ece1c8;
-    --ink: #1a140b;
-    --hairline: rgba(205,168,105,0.28);
-    --hit: #f0e6d2;
-    --blow: #a4895c;
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --void: #060606;
+    --void-rim: #2a2a2a;
+    --gold: #cfcfcf;
+    --gold-bright: #f2efe6;
+    --gold-dim: #6f6f6f;
+    --cream: #f2efe6;
+    --cream-box: #ece7db;
+    --ink: #17130c;
+    --hairline: rgba(255,255,255,0.14);
+    --hit: #f2efe6;
+    --blow: #6f6f6f;
   }
 
   *{ box-sizing:border-box; }
@@ -58,7 +58,7 @@
     -webkit-user-select: none;
     user-select: none;
     background:
-      radial-gradient(ellipse at 50% -10%, #1a1610 0%, #0a0806 55%, #000000 100%);
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--gold);
     display:flex;
@@ -93,7 +93,7 @@
     letter-spacing: 0.08em;
     margin:0;
     color:var(--cream);
-    text-shadow: 0 2px 10px rgba(205,168,105,0.16);
+    text-shadow: 0 2px 10px rgba(255,255,255,0.16);
     text-align:center;
   }
   h1 .small{
@@ -135,7 +135,7 @@
     font-size:0.66rem;
     letter-spacing:0.06em;
     color: var(--gold);
-    background: rgba(205,168,105,0.04);
+    background: rgba(255,255,255,0.04);
     border: 1px solid var(--gold-dim);
     border-radius:3px;
     padding: 6px 11px;
@@ -162,7 +162,7 @@
     transition: color .2s ease;
   }
   .seal.gote{ color: var(--cream); }
-  .seal.gote::before{ color:#c4645a; }
+  .seal.gote::before{ color:#8f8f8f; }
   .seal.pulse{ animation: sealPulse .3s ease; }
   @keyframes sealPulse{
     0%{ opacity:0.2; transform: translateX(-3px); }
@@ -180,8 +180,8 @@
     padding: 18px 20px;
     box-shadow:
       0 16px 32px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(205,168,105,0.12),
-      inset 0 0 0 1px rgba(205,168,105,0.08);
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -229,7 +229,7 @@
   .keypad-btn{
     height: 47px;
     border-radius: 6px;
-    background: rgba(205,168,105,0.04);
+    background: rgba(255,255,255,0.04);
     border: 1px solid var(--gold-dim);
     color: var(--cream);
     font-family:'Jost', sans-serif;
@@ -240,7 +240,7 @@
     -webkit-tap-highlight-color: transparent;
     transition: background .1s ease, transform .1s ease, border-color .1s ease;
   }
-  .keypad-btn:active{ background: rgba(205,168,105,0.2); border-color: var(--gold-bright); transform: scale(0.95); }
+  .keypad-btn:active{ background: rgba(255,255,255,0.2); border-color: var(--gold-bright); transform: scale(0.95); }
   .keypad-btn.blank{ visibility:hidden; pointer-events:none; }
   .keypad-btn.backspace{ font-size: 1.1rem; color: var(--gold-dim); }
   .dial input{
@@ -291,7 +291,7 @@
     cursor:pointer;
     transition: background .15s ease, border-color .15s ease;
   }
-  button.main-btn:hover{ background: rgba(205,168,105,0.08); border-color:var(--gold-bright); }
+  button.main-btn:hover{ background: rgba(255,255,255,0.08); border-color:var(--gold-bright); }
   button.main-btn:active{ transform: translateY(1px); }
   button.main-btn:disabled{ opacity:0.3; cursor:default; }
   button:focus-visible{ outline: 1px solid var(--gold-bright); outline-offset: 3px; }
@@ -330,7 +330,7 @@
     gap:5px;
   }
   .history-col h3::before{ content:'◆'; font-size:0.62rem; color:var(--gold-bright); }
-  .history-col.gote h3::before{ color:#c4645a; }
+  .history-col.gote h3::before{ color:#8f8f8f; }
   .history-col-head{
     display:grid;
     grid-template-columns: 18px 1fr 30px 30px;
@@ -363,6 +363,7 @@
     cursor:pointer;
   }
   .history-toggle-btn:hover{ color: var(--gold-bright); }
+  .history-toggle{ min-height: 21px; }
   .history-item{
     display:grid;
     grid-template-columns: 18px 1fr 30px 30px;
@@ -409,13 +410,13 @@
   .rules{
     width:100%;
     max-width: 420px;
-    background: rgba(205,168,105,0.04);
+    background: rgba(255,255,255,0.04);
     border: 1px solid var(--hairline);
     border-radius: 4px;
     padding: 14px 18px;
     font-size:0.76rem;
     line-height:1.8;
-    color:#cfcfcf;
+    color:var(--gold);
     display:none;
   }
   .rules.open{ display:block; }
@@ -929,6 +930,8 @@
     }
   });
 
+  let historyRowHeight = null;
+
   function renderHistory(who){
     const el = document.getElementById(who === 'sente' ? 'senteHistory' : 'goteHistory');
     const toggleEl = document.getElementById(who === 'sente' ? 'senteHistoryToggle' : 'goteHistoryToggle');
@@ -938,6 +941,12 @@
     el.style.maxHeight = '';
     el.style.overflowY = '';
     toggleEl.innerHTML = '';
+
+    const style = getComputedStyle(el);
+    const gap = parseFloat(style.rowGap || style.gap) || 0;
+    const rowH = historyRowHeight || 24;
+    el.style.minHeight = (rowH * 3 + gap * 2) + 'px';
+
     if(list.length === 0){
       el.innerHTML = '<div class="empty-hint">まだありません</div>';
       return;
@@ -976,6 +985,13 @@
       row.appendChild(blowVal);
       el.appendChild(row);
     }
+
+    const rows = el.querySelectorAll('.history-item');
+    if(rows.length){
+      historyRowHeight = rows[0].getBoundingClientRect().height;
+      el.style.minHeight = (historyRowHeight * 3 + gap * 2) + 'px';
+    }
+
     if(list.length > 3){
       const toggle = document.createElement('div');
       toggle.className = 'history-toggle-btn';
@@ -987,12 +1003,8 @@
       toggleEl.appendChild(toggle);
     }
 
-    if(historyExpanded[who] && list.length > 5){
-      const rows = el.querySelectorAll('.history-item');
-      const rowH = rows[0].getBoundingClientRect().height;
-      const style = getComputedStyle(el);
-      const gap = parseFloat(style.rowGap || style.gap) || 0;
-      const maxH = rowH * 5 + gap * 4;
+    if(historyExpanded[who] && list.length > 4 && historyRowHeight){
+      const maxH = historyRowHeight * 4 + gap * 3;
       el.style.maxHeight = maxH + 'px';
       el.style.overflowY = 'auto';
       el.classList.add('expanded');
@@ -1064,6 +1076,6 @@
 </script>
 <script src="timer-watcher.js"></script>
 <script src="bg-theme.js"></script>
-<script src="bgm-player.js"></script>
+<script src="bgm-player.js?v=2"></script>
 </body>
 </html>
