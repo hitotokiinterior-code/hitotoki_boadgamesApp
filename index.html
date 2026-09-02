@@ -293,6 +293,148 @@
     max-width:260px;
   }
 
+  /* --- 記録タブ --- */
+  .records-view{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    padding-bottom:8px;
+  }
+  .records-first-played{
+    width:100%;
+    text-align:center;
+    padding: 4px 0 2px;
+  }
+  .records-first-played .label{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.6rem;
+    letter-spacing:0.18em;
+    color: var(--silver-dim);
+    text-transform:uppercase;
+  }
+  .records-first-played .value{
+    margin-top:6px;
+    font-family:'Kaisei Decol', serif;
+    font-size:1rem;
+    color:#ece4d1;
+    letter-spacing:0.04em;
+  }
+
+  .records-stat-row{
+    display:flex;
+    gap:10px;
+    width:100%;
+  }
+  .records-stat-card{
+    flex:1;
+    background: linear-gradient(160deg, #202020, #101010 55%, #030303);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 16px 14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  }
+  .records-stat-card .stat-num{
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:1.6rem;
+    color:#ece4d1;
+    font-variant-numeric: tabular-nums;
+  }
+  .records-stat-card .stat-label{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.62rem;
+    letter-spacing:0.08em;
+    color: var(--silver-dim);
+  }
+
+  .records-section-label{
+    width:100%;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.6rem;
+    font-weight:700;
+    letter-spacing:0.18em;
+    color: var(--silver-dim);
+    text-transform:uppercase;
+    margin-bottom:-8px;
+  }
+
+  .records-favorite-card{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: linear-gradient(160deg, #202020, #101010 55%, #030303);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  }
+  .records-favorite-card .fav-title{
+    font-family:'Kaisei Decol', serif;
+    font-size:0.95rem;
+    color:#ece4d1;
+    letter-spacing:0.03em;
+  }
+  .records-favorite-card .fav-count{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.68rem;
+    color: var(--silver-dim);
+  }
+
+  .records-winrate-list{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .records-winrate-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:13px 4px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .records-winrate-item .rw-title{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.8rem;
+    color:#fff;
+    letter-spacing:0.03em;
+  }
+  .records-winrate-item .rw-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .records-winrate-item .rw-bar{
+    width:64px;
+    height:5px;
+    border-radius:3px;
+    background: rgba(255,255,255,0.1);
+    overflow:hidden;
+  }
+  .records-winrate-item .rw-bar-fill{
+    height:100%;
+    background:#ece4d1;
+    border-radius:3px;
+  }
+  .records-winrate-item .rw-pct{
+    font-family:'Jost', sans-serif;
+    font-size:0.74rem;
+    color: var(--silver-dim);
+    min-width:64px;
+    text-align:right;
+    font-variant-numeric: tabular-nums;
+  }
+  .records-winrate-item .rw-pct.has-data{
+    color:#ece4d1;
+  }
+
   /* --- 下部ナビゲーションバー --- */
   .bottom-nav{
     position:fixed;
@@ -1265,10 +1407,37 @@ body.panel-open .setting-btn{
   </div>
 
   <div class="view-content" id="recordsView" style="display:none;">
-    <div class="view-placeholder">
-      <div class="icon">📖</div>
-      <div class="title">記録</div>
-      <div class="desc">対戦の記録機能は準備中です。<br>もうしばらくお待ちください。</div>
+    <div class="records-view">
+
+      <div class="records-first-played">
+        <div class="label">初めて遊んだ日</div>
+        <div class="value" id="recordsFirstPlayed">まだ記録がありません</div>
+      </div>
+
+      <div class="records-stat-row">
+        <div class="records-stat-card">
+          <div class="stat-num" id="recordsTotalPlays">0</div>
+          <div class="stat-label">総プレイ回数</div>
+        </div>
+        <div class="records-stat-card">
+          <div class="stat-num" id="recordsTotalWins">0</div>
+          <div class="stat-label">TOTAL WINS</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="records-section-label">一番遊んだゲーム</div>
+        <div class="records-favorite-card" style="margin-top:16px;">
+          <div class="fav-title" id="recordsFavoriteTitle">まだありません</div>
+          <div class="fav-count" id="recordsFavoriteCount"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="records-section-label">ゲーム別 対CPU勝率（50戦）</div>
+        <div class="records-winrate-list" id="recordsWinrateList" style="margin-top:16px;"></div>
+      </div>
+
     </div>
   </div>
 
@@ -1297,6 +1466,7 @@ body.panel-open .setting-btn{
   </button>
 </nav>
 
+<script src="stats-tracker.js"></script>
 <script src="bgm-player.js?v=2"></script>
 <script>
 (function(){
@@ -1802,6 +1972,86 @@ function switchView(viewId){
     // ホームに戻ったときはページ位置を再計算しておく（回転などでズレる場合があるため）
     renderGamePages();
   }
+  if(viewId === 'recordsView'){
+    renderRecordsView();
+  }
+}
+
+// --- 記録タブの描画：stats-tracker.js が蓄積したデータを表示用に組み立てる ---
+function renderRecordsView(){
+  if(!window.hitotokiStats) return;
+  const stats = window.hitotokiStats.load();
+
+  // 初めて遊んだ日
+  const firstPlayedEl = document.getElementById('recordsFirstPlayed');
+  if(stats.firstPlayedAt){
+    const d = new Date(stats.firstPlayedAt);
+    firstPlayedEl.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  } else {
+    firstPlayedEl.textContent = 'まだ記録がありません';
+  }
+
+  // 総プレイ回数／TOTAL WINS
+  document.getElementById('recordsTotalPlays').textContent = stats.totalPlays || 0;
+  document.getElementById('recordsTotalWins').textContent = stats.totalWins || 0;
+
+  // 一番遊んだゲーム
+  const favTitleEl = document.getElementById('recordsFavoriteTitle');
+  const favCountEl = document.getElementById('recordsFavoriteCount');
+  const gameEntries = Object.values(stats.byGame || {});
+  if(gameEntries.length === 0){
+    favTitleEl.textContent = 'まだありません';
+    favCountEl.textContent = '';
+  } else {
+    const top = gameEntries.reduce((a, b) => (b.plays > a.plays ? b : a));
+    favTitleEl.textContent = top.title;
+    favCountEl.textContent = `${top.plays}回`;
+  }
+
+  // ゲーム別 対CPU勝率（GAMES配列の並び順で、全ゲーム分を表示。記録が無いものは「記録なし」）
+  const listEl = document.getElementById('recordsWinrateList');
+  listEl.innerHTML = '';
+  GAMES.forEach(game => {
+    const gameId = game.href.replace('.html', '');
+    const entry = stats.byGame && stats.byGame[gameId];
+    const cpuResults = (entry && entry.cpuResults) || [];
+
+    const row = document.createElement('div');
+    row.className = 'records-winrate-item';
+
+    const title = document.createElement('div');
+    title.className = 'rw-title';
+    title.textContent = game.title;
+
+    const right = document.createElement('div');
+    right.className = 'rw-right';
+
+    const bar = document.createElement('div');
+    bar.className = 'rw-bar';
+    const barFill = document.createElement('div');
+    barFill.className = 'rw-bar-fill';
+
+    const pct = document.createElement('div');
+    pct.className = 'rw-pct';
+
+    if(cpuResults.length > 0){
+      const winCount = cpuResults.filter(Boolean).length;
+      const rate = Math.round((winCount / cpuResults.length) * 100);
+      barFill.style.width = rate + '%';
+      pct.textContent = `${rate}%（${winCount}/${cpuResults.length}）`;
+      pct.classList.add('has-data');
+    } else {
+      barFill.style.width = '0%';
+      pct.textContent = '記録なし';
+    }
+
+    bar.appendChild(barFill);
+    right.appendChild(bar);
+    right.appendChild(pct);
+    row.appendChild(title);
+    row.appendChild(right);
+    listEl.appendChild(row);
+  });
 }
 
 navButtons.forEach(btn => {
