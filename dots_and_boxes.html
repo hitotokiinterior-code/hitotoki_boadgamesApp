@@ -36,12 +36,17 @@
     color: var(--text-primary);
     font-family: 'Noto Sans JP', 'Inter', -apple-system, sans-serif;
     height:100%;
-    overflow-x:hidden;
+    width:100%;
+    position: fixed;
+    overflow:hidden;
+    overscroll-behavior: none;
+    touch-action: none;
   }
 
   /* ---------- Menu screen ---------- */
   .menu-screen{
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     padding: 0 0 calc(var(--ad-h) + 20px);
     font-family: 'Noto Serif JP', serif;
   }
@@ -173,7 +178,7 @@
     height: 100vh;
     display:flex;
     flex-direction:column;
-    padding: 16px 18px calc(var(--ad-h) + 18px);
+    padding: 8px 18px calc(var(--ad-h) + 18px);
     overflow: hidden;
   }
 
@@ -181,7 +186,7 @@
     display:flex;
     align-items:center;
     justify-content:flex-start;
-    padding: 2px 0 14px;
+    padding: 0 0 4px;
   }
   .back-btn{
     background:none;
@@ -323,6 +328,7 @@
 
   .box-symbol{
     opacity:0;
+    stroke-linecap: round;
     transition: opacity .3s ease .1s;
     pointer-events:none;
   }
@@ -519,6 +525,8 @@
 
 <script>
 (function(){
+  // 画面のスワイプ/バウンススクロールを完全にロックする
+  document.addEventListener('touchmove', function(e){ e.preventDefault(); }, { passive: false });
   // ---------- Labels (fixed: 白 / 黒) ----------
   const LABEL_P1 = '白';
   const LABEL_P2 = '黒';
@@ -662,7 +670,8 @@
         const cx = x + CELL/2, cy = y + CELL/2;
         const g = el('g', {class:'box-symbol'});
         const circle = el('circle', {cx: cx, cy: cy, r: 15});
-        const tri = el('polygon', {points: `${cx},${cy-16} ${cx+15},${cy+11} ${cx-15},${cy+11}`});
+        const xSize = 13;
+        const tri = el('path', {d: `M ${cx-xSize} ${cy-xSize} L ${cx+xSize} ${cy+xSize} M ${cx+xSize} ${cy-xSize} L ${cx-xSize} ${cy+xSize}`});
         g.appendChild(circle);
         g.appendChild(tri);
         circle.style.display = 'none';
