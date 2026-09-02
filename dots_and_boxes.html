@@ -293,7 +293,7 @@
 
   .edge-line.filled-player{
     stroke: var(--line-player);
-    stroke-width: 6;
+    stroke-width: 5;
     filter: drop-shadow(0 0 6px var(--line-player-glow));
   }
   .edge-outline{
@@ -404,6 +404,41 @@
   }
   .play-again:hover, .change-stage:hover{ border-color:#6a6a66; background:#151513; }
 
+  .view-board{
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family:'Noto Sans JP', sans-serif;
+    letter-spacing: 0.04em;
+    font-size: 13px;
+    padding: 4px 0 0;
+    margin-top: 4px;
+    cursor:pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color .2s ease;
+  }
+  .view-board:hover{ color: var(--text-primary); }
+
+  .result-fab{
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: var(--panel);
+    border: 1px solid var(--border-dim);
+    color: var(--text-primary);
+    font-family:'Noto Serif JP', serif;
+    font-size: 12px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    cursor:pointer;
+    z-index: 25;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .result-fab.shown{ opacity: 1; pointer-events: auto; }
+
   /* ---------- Ad slot (reserved space, ~1/8 of screen height) ---------- */
   .ad-slot{
     position: fixed;
@@ -456,6 +491,12 @@
       <button class="mode-card" id="modeCpu" data-mode="cpu">CPU対戦</button>
     </div>
 
+    <div class="menu-section-title second">先攻を選ぶ</div>
+    <div class="mode-row">
+      <button class="mode-card active" id="firstWhite" data-first="player">白</button>
+      <button class="mode-card" id="firstBlack" data-first="cpu">黒</button>
+    </div>
+
     <button class="start-btn" id="startBtn">はじめる</button>
   </div>
 </div>
@@ -493,7 +534,7 @@
       <defs>
         <pattern id="hatch-player" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
           <rect width="8" height="8" fill="rgba(217,205,176,0.14)"/>
-          <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(217,205,176,0.35)" stroke-width="2"/>
+          <line x1="0" y1="0" x2="0" y2="8" stroke="rgba(243,239,228,0.65)" stroke-width="2"/>
         </pattern>
         <pattern id="hatch-cpu" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
           <rect width="8" height="8" fill="rgba(60,60,58,0.5)"/>
@@ -518,8 +559,11 @@
       <button class="play-again" id="playAgainBtn">もう一度</button>
       <button class="change-stage" id="changeStageBtn">ステージ選択</button>
     </div>
+    <button class="view-board" id="viewBoardBtn">盤面を見る</button>
   </div>
 </div>
+
+<button class="result-fab" id="resultFab">結果を見る</button>
 
 <div class="ad-slot" id="adSlot"></div>
 
@@ -537,6 +581,8 @@
   const sizeGrid = document.getElementById('sizeGrid');
   const mode2pBtn = document.getElementById('mode2p');
   const modeCpuBtn = document.getElementById('modeCpu');
+  const firstWhiteBtn = document.getElementById('firstWhite');
+  const firstBlackBtn = document.getElementById('firstBlack');
   const startBtn = document.getElementById('startBtn');
   const homeBtn = document.getElementById('homeBtn');
 
@@ -569,6 +615,7 @@
   // ---------- Menu state ----------
   let selectedRows = 3, selectedCols = 3;
   let selectedMode = '2p';
+  let selectedFirst = 'player'; // 'player' = 白が先攻, 'cpu' = 黒が先攻
 
   sizeGrid.querySelectorAll('.size-row').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -587,7 +634,15 @@
   mode2pBtn.addEventListener('click', () => setMode('2p'));
   modeCpuBtn.addEventListener('click', () => setMode('cpu'));
 
-  startBtn.addEventListener('click', () => startGame(selectedRows, selectedCols, selectedMode));
+  function setFirst(f){
+    selectedFirst = f;
+    firstWhiteBtn.classList.toggle('active', f === 'player');
+    firstBlackBtn.classList.toggle('active', f === 'cpu');
+  }
+  firstWhiteBtn.addEventListener('click', () => setFirst('player'));
+  firstBlackBtn.addEventListener('click', () => setFirst('cpu'));
+
+  startBtn.addEventListener('click', () => startGame(selectedRows, selectedCols, selectedMode, selectedFirst));
   homeBtn.addEventListener('click', () => {
     // アプリのホーム画面(ゲーム一覧)へ遷移します。
     // 実際のファイル構成に合わせてパスを調整してください(例: 'index.html', '../index.html' など)。
@@ -596,6 +651,7 @@
 
   function showMenu(){
     endOverlay.classList.remove('shown');
+    resultFab.classList.remove('shown');
     gameScreen.classList.add('hidden');
     menuScreen.classList.remove('hidden');
   }
@@ -604,6 +660,7 @@
   const PAD = 40;
   let ROWS = 4, COLS = 4, CELL = 100, SVG_W = 640, SVG_H = 640;
   let mode = 'cpu';
+  let startingTurn = 'player';
   let horiz = [], vert = [], boxOwner = [];
   let scoreYou = 0, scoreCpu = 0;
   let currentTurn = 'player'; // 'player' = 白, 'cpu' = 黒
@@ -620,8 +677,9 @@
   function keyV(r,c){ return `v_${r}_${c}`; }
   function dotXY(r,c){ return [PAD + c*CELL, PAD + r*CELL]; }
 
-  function startGame(rows, cols, gameMode){
+  function startGame(rows, cols, gameMode, firstTurn){
     ROWS = rows; COLS = cols; mode = gameMode;
+    startingTurn = firstTurn || 'player';
     totalBoxes = ROWS * COLS;
     CELL = 100;
     SVG_W = PAD*2 + COLS*CELL;
@@ -634,13 +692,17 @@
 
     initState();
     buildBoard();
+
+    if(mode === 'cpu' && currentTurn === 'cpu'){
+      setTimeout(cpuMove, 550);
+    }
   }
 
   function initState(){
     horiz = Array.from({length: ROWS+1}, () => Array(COLS).fill(null));
     vert  = Array.from({length: ROWS},   () => Array(COLS+1).fill(null));
     boxOwner = Array.from({length: ROWS}, () => Array(COLS).fill(null));
-    scoreYou = 0; scoreCpu = 0; currentTurn = 'player'; gameOver = false;
+    scoreYou = 0; scoreCpu = 0; currentTurn = startingTurn; gameOver = false;
     scoreYouEl.textContent = '0';
     scoreCpuEl.textContent = '0';
     updateTurnIndicator();
@@ -862,12 +924,26 @@
   }
 
   // ---------- Controls ----------
+  const resultFab = document.getElementById('resultFab');
+
   document.getElementById('playAgainBtn').addEventListener('click', () => {
     endOverlay.classList.remove('shown');
+    resultFab.classList.remove('shown');
     initState();
     buildBoard();
+    if(mode === 'cpu' && currentTurn === 'cpu'){
+      setTimeout(cpuMove, 550);
+    }
   });
   document.getElementById('changeStageBtn').addEventListener('click', showMenu);
+  document.getElementById('viewBoardBtn').addEventListener('click', () => {
+    endOverlay.classList.remove('shown');
+    resultFab.classList.add('shown');
+  });
+  resultFab.addEventListener('click', () => {
+    endOverlay.classList.add('shown');
+    resultFab.classList.remove('shown');
+  });
   document.getElementById('backBtn').addEventListener('click', showMenu);
 })();
 </script>
