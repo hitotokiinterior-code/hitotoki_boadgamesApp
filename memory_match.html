@@ -491,6 +491,7 @@
   let vsCPU = false;
 
   let rows, cols, cards, revealed, busy, turn, gameOver, scores, lastResult;
+  let gameStartedAt = null;
   let cpuMemory; // Map<index, symbol> — CPUが「見た」カードだけを覚える
   const CPU_MEMORY_ACCURACY = 0.78; // 完璧に覚えているわけではない、というゆらぎ
 
@@ -550,6 +551,7 @@
     lastResult = null;
     scores = { p1:0, p2:0 };
     cpuMemory = new Map();
+    gameStartedAt = Date.now();
 
     document.getElementById('p1Label').textContent = 'プレイヤー1';
     document.getElementById('p2Label').textContent = vsCPU ? 'CPU' : 'プレイヤー2';
@@ -665,6 +667,15 @@
       lastResult = { draw:false, winner: scores.p1 > scores.p2 ? 'p1' : 'p2' };
     }
     updateTurnUI(false);
+
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく（p1が常に人間側）
+    if(window.hitotokiStats){
+      window.hitotokiStats.recordGameEnd('memory_match', '神経衰弱', {
+        vsCPU: vsCPU,
+        won: vsCPU && !lastResult.draw ? (lastResult.winner === 'p1') : undefined,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
+      });
+    }
   }
 
   // --- CPU logic: 見た札だけを覚える、たまに忘れる ---
@@ -843,6 +854,7 @@
 </script>
 <script src="timer-watcher.js"></script>
 <script src="bg-theme.js"></script>
+<script src="stats-tracker.js"></script>
 <script src="bgm-player.js?v=2"></script>
 </body>
 </html>
