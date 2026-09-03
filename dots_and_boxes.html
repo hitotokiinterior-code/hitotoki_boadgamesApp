@@ -494,7 +494,6 @@
     <div class="mode-row">
       <button class="mode-card active" id="mode2p" data-mode="2p">2人対戦</button>
       <button class="mode-card" id="modeCpu" data-mode="cpu">CPU対戦</button>
-      <button class="mode-card" id="modeCpuHard" data-mode="cpu-hard">達人CPU</button>
     </div>
 
     <button class="start-btn" id="startBtn">はじめる</button>
@@ -581,7 +580,6 @@
   const sizeGrid = document.getElementById('sizeGrid');
   const mode2pBtn = document.getElementById('mode2p');
   const modeCpuBtn = document.getElementById('modeCpu');
-  const modeCpuHardBtn = document.getElementById('modeCpuHard');
   const startBtn = document.getElementById('startBtn');
   const homeBtn = document.getElementById('homeBtn');
 
@@ -629,11 +627,9 @@
     selectedMode = m;
     mode2pBtn.classList.toggle('active', m === '2p');
     modeCpuBtn.classList.toggle('active', m === 'cpu');
-    modeCpuHardBtn.classList.toggle('active', m === 'cpu-hard');
   }
   mode2pBtn.addEventListener('click', () => setMode('2p'));
   modeCpuBtn.addEventListener('click', () => setMode('cpu'));
-  modeCpuHardBtn.addEventListener('click', () => setMode('cpu-hard'));
 
   // 先攻は常に白(player)、後攻は常に黒(cpu)で固定
   startBtn.addEventListener('click', () => startGame(selectedRows, selectedCols, selectedMode));
@@ -670,8 +666,8 @@
   function keyV(r,c){ return `v_${r}_${c}`; }
   function dotXY(r,c){ return [PAD + c*CELL, PAD + r*CELL]; }
 
-  function isCpuMode(){ return mode === 'cpu' || mode === 'cpu-hard'; }
-  function runAiMove(){ (mode === 'cpu-hard' ? expertMove : cpuMove)(); }
+  function isCpuMode(){ return mode === 'cpu'; }
+  function runAiMove(){ expertMove(); }
 
   function startGame(rows, cols, gameMode){
     ROWS = rows; COLS = cols; mode = gameMode;
