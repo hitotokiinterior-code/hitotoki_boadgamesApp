@@ -298,94 +298,120 @@
     width:100%;
     display:flex;
     flex-direction:column;
-    gap:20px;
+    gap:18px;
     padding-bottom:8px;
   }
-  .records-first-played{
+
+  /* サブタブ（全体／ゲーム別／履歴） */
+  .records-subtabs{
+    display:flex;
     width:100%;
-    text-align:center;
-    padding: 4px 0 2px;
+    border-bottom:1px solid var(--hairline);
   }
-  .records-first-played .label{
+  .records-subtab-btn{
+    flex:1;
+    background:transparent;
+    border:none;
+    padding:10px 4px 12px;
     font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:0.6rem;
-    letter-spacing:0.18em;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.05em;
     color: var(--silver-dim);
-    text-transform:uppercase;
+    cursor:pointer;
+    position:relative;
   }
-  .records-first-played .value{
-    margin-top:6px;
-    font-family:'Kaisei Decol', serif;
-    font-size:1rem;
-    color:#ece4d1;
-    letter-spacing:0.04em;
+  .records-subtab-btn.active{
+    color:#fff;
+  }
+  .records-subtab-btn.active::after{
+    content:"";
+    position:absolute;
+    left:20%; right:20%; bottom:-1px;
+    height:2px;
+    background:#ece4d1;
+    border-radius:2px;
   }
 
-  .records-stat-row{
-    display:flex;
-    gap:10px;
+  .records-panel{
+    display:none;
     width:100%;
+    flex-direction:column;
+    gap:18px;
   }
-  .records-stat-card{
-    flex:1;
+  .records-panel.active{
+    display:flex;
+  }
+
+  /* 全体パネル：ドーナツ＋統計リスト */
+  .records-donut-card{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:20px;
     background: linear-gradient(160deg, #202020, #101010 55%, #030303);
     border: 1px solid var(--hairline);
     border-radius: 8px;
-    padding: 16px 14px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:4px;
+    padding: 18px 20px;
     box-shadow: 0 6px 14px rgba(0,0,0,0.4);
   }
-  .records-stat-card .stat-num{
+  .records-donut-card svg{ flex-shrink:0; }
+  .records-donut-text{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .records-donut-text .dt-row .dt-label{
+    display:block;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.62rem;
+    letter-spacing:0.06em;
+    color: var(--silver-dim);
+    margin-bottom:2px;
+  }
+  .records-donut-text .dt-row .dt-value{
     font-family:'Jost', sans-serif;
     font-weight:600;
-    font-size:1.6rem;
+    font-size:1.3rem;
     color:#ece4d1;
     font-variant-numeric: tabular-nums;
   }
-  .records-stat-card .stat-label{
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:0.62rem;
-    letter-spacing:0.08em;
-    color: var(--silver-dim);
-  }
 
-  .records-section-label{
-    width:100%;
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:0.6rem;
-    font-weight:700;
-    letter-spacing:0.18em;
-    color: var(--silver-dim);
-    text-transform:uppercase;
-    margin-bottom:-8px;
-  }
-
-  .records-favorite-card{
+  .records-stat-list{
     width:100%;
     display:flex;
+    flex-direction:column;
+  }
+  .records-stat-item{
+    display:flex;
     align-items:center;
-    justify-content:space-between;
-    background: linear-gradient(160deg, #202020, #101010 55%, #030303);
-    border: 1px solid var(--hairline);
-    border-radius: 8px;
-    padding: 14px 16px;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    gap:12px;
+    padding:13px 4px;
+    border-bottom:1px solid var(--hairline);
   }
-  .records-favorite-card .fav-title{
-    font-family:'Kaisei Decol', serif;
-    font-size:0.95rem;
-    color:#ece4d1;
-    letter-spacing:0.03em;
-  }
-  .records-favorite-card .fav-count{
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:0.68rem;
+  .records-stat-item .stat-icon{
+    flex-shrink:0;
+    width:18px; height:18px;
     color: var(--silver-dim);
   }
+  .records-stat-item .stat-icon svg{ width:100%; height:100%; }
+  .records-stat-item .stat-name{
+    flex:1;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.78rem;
+    color:#fff;
+    letter-spacing:0.02em;
+  }
+  .records-stat-item .stat-val{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    color:#ece4d1;
+    letter-spacing:0.02em;
+    text-align:right;
+  }
 
+  /* ゲーム別パネル：対CPU勝率一覧 */
   .records-winrate-list{
     width:100%;
     display:flex;
@@ -433,6 +459,63 @@
   }
   .records-winrate-item .rw-pct.has-data{
     color:#ece4d1;
+  }
+
+  /* 履歴パネル：直近10件 */
+  .records-history-list{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .records-history-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 4px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .records-history-item .hist-main{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+  }
+  .records-history-item .hist-title{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.78rem;
+    color:#fff;
+    letter-spacing:0.02em;
+  }
+  .records-history-item .hist-date{
+    font-family:'Jost', sans-serif;
+    font-size:0.62rem;
+    color: var(--silver-dim);
+  }
+  .records-history-item .hist-result{
+    flex-shrink:0;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.68rem;
+    letter-spacing:0.05em;
+    padding:4px 9px;
+    border-radius:3px;
+    border: 1px solid var(--hairline);
+    color: var(--silver-dim);
+  }
+  .records-history-item .hist-result.win{
+    color:#ece4d1;
+    border-color: rgba(236,228,209,0.4);
+  }
+
+  .records-empty{
+    width:100%;
+    text-align:center;
+    padding:30px 10px;
+    font-size:0.74rem;
+    color: var(--silver-dim);
+    letter-spacing:0.03em;
+    line-height:1.7;
   }
 
   /* --- 下部ナビゲーションバー --- */
@@ -1409,33 +1492,81 @@ body.panel-open .setting-btn{
   <div class="view-content" id="recordsView" style="display:none;">
     <div class="records-view">
 
-      <div class="records-first-played">
-        <div class="label">初めて遊んだ日</div>
-        <div class="value" id="recordsFirstPlayed">まだ記録がありません</div>
+      <div class="records-subtabs">
+        <button class="records-subtab-btn active" id="recordsTabOverall" data-panel="recordsPanelOverall">全体</button>
+        <button class="records-subtab-btn" id="recordsTabByGame" data-panel="recordsPanelByGame">ゲーム別</button>
+        <button class="records-subtab-btn" id="recordsTabHistory" data-panel="recordsPanelHistory">履歴</button>
       </div>
 
-      <div class="records-stat-row">
-        <div class="records-stat-card">
-          <div class="stat-num" id="recordsTotalPlays">0</div>
-          <div class="stat-label">総プレイ回数</div>
+      <!-- 全体 -->
+      <div class="records-panel active" id="recordsPanelOverall">
+
+        <div class="records-donut-card">
+          <svg viewBox="0 0 120 120" width="96" height="96">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="14"/>
+            <circle id="recordsDonutArc" cx="60" cy="60" r="50" fill="none" stroke="#ece4d1" stroke-width="14"
+              stroke-linecap="round" stroke-dasharray="0 314.16" transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="records-donut-text">
+            <div class="dt-row">
+              <span class="dt-label">総プレイ数</span>
+              <span class="dt-value" id="recordsTotalPlays">0回</span>
+            </div>
+            <div class="dt-row">
+              <span class="dt-label">対CPU勝率（直近50戦）</span>
+              <span class="dt-value" id="recordsOverallWinRate">記録なし</span>
+            </div>
+          </div>
         </div>
-        <div class="records-stat-card">
-          <div class="stat-num" id="recordsTotalWins">0</div>
-          <div class="stat-label">TOTAL WINS</div>
+
+        <div class="records-stat-list">
+          <div class="records-stat-item">
+            <span class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
+            <span class="stat-name">連勝記録（対CPU）</span>
+            <span class="stat-val" id="recordsBestStreak">0連勝</span>
+          </div>
+          <div class="records-stat-item">
+            <span class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+            </span>
+            <span class="stat-name">最長プレイ時間</span>
+            <span class="stat-val" id="recordsLongestTime">記録なし</span>
+          </div>
+          <div class="records-stat-item">
+            <span class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <span class="stat-name">今月のプレイ数</span>
+            <span class="stat-val" id="recordsMonthlyPlays">0回</span>
+          </div>
+          <div class="records-stat-item">
+            <span class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </span>
+            <span class="stat-name">一番遊んだゲーム</span>
+            <span class="stat-val" id="recordsFavoriteGame">まだありません</span>
+          </div>
+          <div class="records-stat-item">
+            <span class="stat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            </span>
+            <span class="stat-name">はじめた日</span>
+            <span class="stat-val" id="recordsFirstPlayed">まだ記録がありません</span>
+          </div>
         </div>
+
       </div>
 
-      <div>
-        <div class="records-section-label">一番遊んだゲーム</div>
-        <div class="records-favorite-card" style="margin-top:16px;">
-          <div class="fav-title" id="recordsFavoriteTitle">まだありません</div>
-          <div class="fav-count" id="recordsFavoriteCount"></div>
-        </div>
+      <!-- ゲーム別 -->
+      <div class="records-panel" id="recordsPanelByGame">
+        <div class="records-winrate-list" id="recordsWinrateList"></div>
       </div>
 
-      <div>
-        <div class="records-section-label">ゲーム別 対CPU勝率（50戦）</div>
-        <div class="records-winrate-list" id="recordsWinrateList" style="margin-top:16px;"></div>
+      <!-- 履歴 -->
+      <div class="records-panel" id="recordsPanelHistory">
+        <div class="records-history-list" id="recordsHistoryList"></div>
       </div>
 
     </div>
@@ -1977,44 +2108,108 @@ function switchView(viewId){
   }
 }
 
-// --- 記録タブの描画：stats-tracker.js が蓄積したデータを表示用に組み立てる ---
+// --- 記録タブのサブタブ（全体／ゲーム別／履歴）切り替え ---
+const recordsSubtabBtns = document.querySelectorAll('.records-subtab-btn');
+recordsSubtabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    recordsSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.records-panel').forEach(p => {
+      p.classList.toggle('active', p.id === btn.dataset.panel);
+    });
+  });
+});
+
+// --- 記録タブの描画：stats-tracker.js が蓄積した「個々のプレイ履歴」から、
+//     表示に必要な集計値（今月のプレイ数・連勝記録・お気に入りゲームなど）を
+//     すべてその場で計算する ---
 function renderRecordsView(){
   if(!window.hitotokiStats) return;
   const stats = window.hitotokiStats.load();
+  const history = stats.history || [];
 
-  // 初めて遊んだ日
+  renderRecordsOverall(stats, history);
+  renderRecordsByGame(history);
+  renderRecordsHistory(history);
+}
+
+function formatDuration(sec){
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m > 0 ? `${m}分${s}秒` : `${s}秒`;
+}
+
+function renderRecordsOverall(stats, history){
+  // 総プレイ数
+  document.getElementById('recordsTotalPlays').textContent = `${history.length}回`;
+
+  // 対CPU勝率（直近50戦、全ゲーム合算）＋ ドーナツグラフ
+  const cpuGames = history.filter(h => h.vsCPU && h.won !== null);
+  const recentCpu = cpuGames.slice(-50);
+  const donutArc = document.getElementById('recordsDonutArc');
+  const rateEl = document.getElementById('recordsOverallWinRate');
+  if(recentCpu.length > 0){
+    const wins = recentCpu.filter(h => h.won).length;
+    const rate = Math.round((wins / recentCpu.length) * 100);
+    const circumference = 2 * Math.PI * 50; // r=50
+    donutArc.setAttribute('stroke-dasharray', `${(rate/100)*circumference} ${circumference}`);
+    rateEl.textContent = `${rate}%（${wins}/${recentCpu.length}）`;
+  } else {
+    donutArc.setAttribute('stroke-dasharray', `0 ${2 * Math.PI * 50}`);
+    rateEl.textContent = '記録なし';
+  }
+
+  // 連勝記録（対CPU）：時系列順に見て、最大の連続勝利数を求める
+  let bestStreak = 0, currentStreak = 0;
+  cpuGames.forEach(h => {
+    if(h.won){ currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+    else { currentStreak = 0; }
+  });
+  document.getElementById('recordsBestStreak').textContent = `${bestStreak}連勝`;
+
+  // 最長プレイ時間
+  const durations = history.map(h => h.durationSec).filter(d => typeof d === 'number' && d > 0);
+  const longestEl = document.getElementById('recordsLongestTime');
+  longestEl.textContent = durations.length > 0 ? formatDuration(Math.max(...durations)) : '記録なし';
+
+  // 今月のプレイ数
+  const now = new Date();
+  const thisMonthCount = history.filter(h => {
+    const d = new Date(h.ts);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+  document.getElementById('recordsMonthlyPlays').textContent = `${thisMonthCount}回`;
+
+  // 一番遊んだゲーム
+  const favEl = document.getElementById('recordsFavoriteGame');
+  if(history.length === 0){
+    favEl.textContent = 'まだありません';
+  } else {
+    const counts = {};
+    history.forEach(h => { counts[h.title] = (counts[h.title] || 0) + 1; });
+    const topTitle = Object.keys(counts).reduce((a, b) => (counts[b] > counts[a] ? b : a));
+    favEl.textContent = `${topTitle}（${counts[topTitle]}回）`;
+  }
+
+  // はじめた日
   const firstPlayedEl = document.getElementById('recordsFirstPlayed');
   if(stats.firstPlayedAt){
     const d = new Date(stats.firstPlayedAt);
-    firstPlayedEl.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    firstPlayedEl.textContent = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
   } else {
     firstPlayedEl.textContent = 'まだ記録がありません';
   }
+}
 
-  // 総プレイ回数／TOTAL WINS
-  document.getElementById('recordsTotalPlays').textContent = stats.totalPlays || 0;
-  document.getElementById('recordsTotalWins').textContent = stats.totalWins || 0;
-
-  // 一番遊んだゲーム
-  const favTitleEl = document.getElementById('recordsFavoriteTitle');
-  const favCountEl = document.getElementById('recordsFavoriteCount');
-  const gameEntries = Object.values(stats.byGame || {});
-  if(gameEntries.length === 0){
-    favTitleEl.textContent = 'まだありません';
-    favCountEl.textContent = '';
-  } else {
-    const top = gameEntries.reduce((a, b) => (b.plays > a.plays ? b : a));
-    favTitleEl.textContent = top.title;
-    favCountEl.textContent = `${top.plays}回`;
-  }
-
+function renderRecordsByGame(history){
   // ゲーム別 対CPU勝率（GAMES配列の並び順で、全ゲーム分を表示。記録が無いものは「記録なし」）
   const listEl = document.getElementById('recordsWinrateList');
   listEl.innerHTML = '';
   GAMES.forEach(game => {
     const gameId = game.href.replace('.html', '');
-    const entry = stats.byGame && stats.byGame[gameId];
-    const cpuResults = (entry && entry.cpuResults) || [];
+    const cpuResults = history
+      .filter(h => h.gameId === gameId && h.vsCPU && h.won !== null)
+      .slice(-50)
+      .map(h => h.won);
 
     const row = document.createElement('div');
     row.className = 'records-winrate-item';
@@ -2050,6 +2245,56 @@ function renderRecordsView(){
     right.appendChild(pct);
     row.appendChild(title);
     row.appendChild(right);
+    listEl.appendChild(row);
+  });
+}
+
+function renderRecordsHistory(history){
+  // 直近で遊んだゲームを10件、新しい順に表示
+  const listEl = document.getElementById('recordsHistoryList');
+  listEl.innerHTML = '';
+
+  if(history.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'records-empty';
+    empty.textContent = 'まだプレイ履歴がありません。ゲームで対局すると、ここに表示されます。';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  const recent = history.slice(-10).reverse();
+  recent.forEach(h => {
+    const row = document.createElement('div');
+    row.className = 'records-history-item';
+
+    const main = document.createElement('div');
+    main.className = 'hist-main';
+
+    const title = document.createElement('div');
+    title.className = 'hist-title';
+    title.textContent = h.title;
+
+    const d = new Date(h.ts);
+    const date = document.createElement('div');
+    date.className = 'hist-date';
+    date.textContent = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+    main.appendChild(title);
+    main.appendChild(date);
+
+    const result = document.createElement('div');
+    result.className = 'hist-result';
+    if(h.vsCPU && h.won === true){
+      result.textContent = '勝ち';
+      result.classList.add('win');
+    } else if(h.vsCPU && h.won === false){
+      result.textContent = '負け';
+    } else {
+      result.textContent = '2人対戦';
+    }
+
+    row.appendChild(main);
+    row.appendChild(result);
     listEl.appendChild(row);
   });
 }
