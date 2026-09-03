@@ -990,6 +990,7 @@
   const DEMOTED = { tokin:'pawn', narigin:'silver', uma:'bishop', ryu:'rook' };
 
   let board, hands, turn, selected, selectedDrop, gameOver;
+  let gameStartedAt = null;
   let moveHistory = [];
   let positionHistory = new Map(); // 千日手 (repetition) tracking
   let pendingPromotionMove = null;
@@ -1064,6 +1065,7 @@
     undoUseCount = 0;
     totalUndoUsedThisGame = 0;
     cpuMovesMade = 0;
+    gameStartedAt = Date.now();
     document.getElementById('winnerOverlay').classList.remove('show');
     document.getElementById('promotionOverlay').classList.remove('show');
 
@@ -1575,6 +1577,15 @@
     document.getElementById('winnerPerspectiveTop').classList.toggle('rotated', !vsCPU);
     document.getElementById('winnerReason').textContent = reason || '相手玉を詰ませました';
     overlay.classList.add('show');
+
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく
+    if(window.hitotokiStats){
+      window.hitotokiStats.recordGameEnd('mini_shogi', 'ミニ将棋', {
+        vsCPU: vsCPU,
+        won: vsCPU ? (winner === humanSide) : undefined,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
+      });
+    }
   }
 
   function showPromotionPrompt(){
@@ -2096,6 +2107,7 @@
 })();
 </script>
 <script src="timer-watcher.js"></script>
+<script src="stats-tracker.js"></script>
 <script src="bgm-player.js?v=2"></script>
 </body>
 </html>
