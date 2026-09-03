@@ -614,6 +614,7 @@
   // ---------- Menu state ----------
   let selectedRows = 3, selectedCols = 3;
   let selectedMode = '2p';
+  let gameStartedAt = null;
 
   sizeGrid.querySelectorAll('.size-row').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -686,6 +687,7 @@
 
     initState();
     buildBoard();
+    gameStartedAt = Date.now();
     // 先攻は常に白(player)なので、ここでCPUの自動着手は発生しない
   }
 
@@ -888,6 +890,15 @@
     endTitle.classList.toggle('lose', !win && !tie);
     endScore.textContent = `${scoreYou} – ${scoreCpu}`;
     setTimeout(() => endOverlay.classList.add('shown'), 250);
+
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく
+    if(window.hitotokiStats){
+      window.hitotokiStats.recordGameEnd('dots_and_boxes', 'ドット＆ボックス', {
+        vsCPU: isCpuMode(),
+        won: isCpuMode() && !tie ? win : undefined,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
+      });
+    }
   }
 
   function cpuMove(){
@@ -1055,5 +1066,9 @@
   document.getElementById('backBtn').addEventListener('click', showMenu);
 })();
 </script>
+<script src="timer-watcher.js"></script>
+<script src="bg-theme.js"></script>
+<script src="stats-tracker.js"></script>
+<script src="bgm-player.js?v=2"></script>
 </body>
 </html>
