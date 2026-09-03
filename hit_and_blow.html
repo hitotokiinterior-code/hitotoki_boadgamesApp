@@ -579,6 +579,7 @@
 <script>
 (function(){
   let secrets, guesses, turn, phase, settingFor;
+  let gameStartedAt = null;
   let historyExpanded = { sente: false, gote: false };
   let vsCPU = false;
   let cpuDifficulty = 'normal';
@@ -778,6 +779,7 @@
   function startGame(){
     phase = 'playing';
     turn = 'sente';
+    gameStartedAt = Date.now();
     updateModeLabels();
     show('gameScreen');
     updateTurnUI(false);
@@ -1017,6 +1019,15 @@
     document.getElementById('codeReveal').textContent = revealedCode.join('  ');
     document.getElementById('winnerSub').textContent = '相手の暗証番号を解読しました';
     overlay.classList.add('show');
+
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく
+    if(window.hitotokiStats){
+      window.hitotokiStats.recordGameEnd('hit_and_blow', 'ヒット＆ブロー', {
+        vsCPU: vsCPU,
+        won: vsCPU ? (winner === humanSide) : undefined,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
+      });
+    }
   }
 
   document.getElementById('homeBtn').addEventListener('click', () => {
@@ -1076,6 +1087,7 @@
 </script>
 <script src="timer-watcher.js"></script>
 <script src="bg-theme.js"></script>
+<script src="stats-tracker.js"></script>
 <script src="bgm-player.js?v=2"></script>
 </body>
 </html>
