@@ -343,6 +343,105 @@
     display:flex;
   }
 
+  /* --- コレクション：サブタブ（ゲームの歴史／アチーブメント） --- */
+  .collection-subtabs{
+    display:flex;
+    width:100%;
+    border-bottom:1px solid var(--hairline);
+  }
+  .collection-subtab-btn{
+    flex:1;
+    background:transparent;
+    border:none;
+    padding:10px 4px 12px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.05em;
+    color: var(--silver-dim);
+    cursor:pointer;
+    position:relative;
+  }
+  .collection-subtab-btn.active{
+    color:#fff;
+  }
+  .collection-subtab-btn.active::after{
+    content:"";
+    position:absolute;
+    left:20%; right:20%; bottom:-1px;
+    height:2px;
+    background:#ece4d1;
+    border-radius:2px;
+  }
+
+  .collection-panel{
+    display:none;
+    width:100%;
+    flex-direction:column;
+    gap:18px;
+  }
+  .collection-panel.active{
+    display:flex;
+  }
+
+  /* ゲームの歴史：2列×縦にどんどん伸びていくグリッド（内部だけスクロール） */
+  .history-grid{
+    width:100%;
+    max-height: calc(100vh - 300px);
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: min-content;
+    gap: 8px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    touch-action: pan-y; /* このエリアだけ縦スワイプを許可 */
+    padding: 2px 4px;
+  }
+  .history-grid::-webkit-scrollbar{
+    display:none;
+  }
+
+  /* .game-card の見た目をそのまま流用しつつ、タップで開閉するカードにする */
+  .history-card{
+    cursor:pointer;
+    height: var(--card-h);
+    transition: height .2s ease, transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .history-card .num,
+  .history-card .title{
+    pointer-events:none;
+  }
+  .history-card.expanded{
+    grid-column: 1 / -1;
+    height:auto;
+  }
+  .history-card .card-body,
+  .history-card > div:first-child{
+    /* info(num+title)とtagsの間の space-between を、テキストが増えても崩さないための保険 */
+    justify-content:flex-start;
+    gap:10px;
+  }
+  .history-text{
+    display:none;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.72rem;
+    line-height:1.9;
+    letter-spacing:0.03em;
+    color: var(--silver);
+    padding-top:10px;
+    margin-top:2px;
+    border-top:1px solid var(--hairline);
+    white-space:pre-wrap;
+  }
+  .history-card.expanded .history-text{
+    display:block;
+  }
+  .history-text.placeholder{
+    color: var(--silver-dim);
+    font-style:italic;
+  }
+
   /* 全体パネル：ドーナツ＋統計リスト */
   .records-donut-card{
     width:100%;
@@ -714,6 +813,27 @@
     flex-direction:column;
     justify-content:space-between;
     padding: 16px 12px 14px;
+  }
+
+  /* COMING SOON カード：リンクなし・タップ不可の未実装枠 */
+  .game-card.coming-soon{
+    align-items:center;
+    justify-content:center;
+    border-style:dashed;
+    border-color: var(--silver-dim);
+    cursor:default;
+  }
+  .game-card.coming-soon:hover{
+    transform:none;
+    border-color: var(--silver-dim);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  }
+  .game-card.coming-soon .title{
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:0.8rem;
+    letter-spacing:0.14em;
+    color: var(--silver-dim);
   }
 
 
@@ -1573,10 +1693,23 @@ body.panel-open .setting-btn{
   </div>
 
   <div class="view-content" id="collectionView" style="display:none;">
-    <div class="view-placeholder">
-      <div class="icon">🃏</div>
-      <div class="title">コレクション</div>
-      <div class="desc">コレクション機能は準備中です。<br>もうしばらくお待ちください。</div>
+    <div class="collection-subtabs">
+      <button class="collection-subtab-btn active" id="collectionTabHistory" data-panel="collectionPanelHistory">ゲームの歴史</button>
+      <button class="collection-subtab-btn" id="collectionTabAchievement" data-panel="collectionPanelAchievement">アチーブメント</button>
+    </div>
+
+    <!-- ゲームの歴史：カードをタップするとその場で文章が展開される -->
+    <div class="collection-panel active" id="collectionPanelHistory">
+      <div class="history-grid" id="historyGrid"></div>
+    </div>
+
+    <!-- アチーブメント：今回は枠のみ、中身は準備中 -->
+    <div class="collection-panel" id="collectionPanelAchievement">
+      <div class="view-placeholder">
+        <div class="icon">🏆</div>
+        <div class="title">アチーブメント</div>
+        <div class="desc">アチーブメント機能は準備中です。<br>もうしばらくお待ちください。</div>
+      </div>
     </div>
   </div>
 
@@ -1717,23 +1850,34 @@ body.panel-open .setting-btn{
 });
 
   // --- ゲーム一覧データ（縦=1ページ6枚でページ送り／横=全カードを1本の帯で横スクロール） ---
+  // history: コレクション「ゲームの歴史」タブでカードを開いた時に表示する文章。
+  //          好きな文章に書き換えてOK（空のままだと仮のプレースホルダー文言が出ます）。
+  // comingSoon: true にすると、リンクを持たない「COMING SOON」用のダミーカードになる
+  //             （タップ不可・「ゲームの歴史」タブには表示されません）。
   const GAMES = [
-    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
-    { num:'02', title:'コネクトフォー', href:'connect_four.html', img:'assets/cards/connect_four.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
-    { num:'03', title:'神経衰弱', href:'memory_match.html', img:'assets/cards/memory_match.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
-    { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
-    { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', tags:[{t:'2人'}] },
-    { num:'06', title:'五目並べ', href:'gomoku.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
-    { num:'07', title:'積み木カウント', href:'counting_duel.html', tags:[{t:'2人'}] },
-    { num:'08', title:'ダイス21', href:'dice21.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
-    { num:'09', title:'ダウト', href:'doubt_game.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
-    { num:'10', title:'ブラックジャック', href:'blackjack.html', tags:[{t:'ディーラー戦',c:'cpu'}] },
-    { num:'11', title:'2人人狼', href:'werewolf2.html', tags:[{t:'2人'}] },
+    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
+    { num:'02', title:'コネクトフォー', href:'connect_four.html', img:'assets/cards/connect_four.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
+    { num:'03', title:'神経衰弱', href:'memory_match.html', img:'assets/cards/memory_match.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'}], history:'' },
+    { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
+    { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', tags:[{t:'2人'}], history:'' },
+    { num:'06', title:'五目並べ', href:'gomoku.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' }, // 将来的に名称変更の可能性あり
+    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
+    { num:'08', title:'COMING SOON', comingSoon:true, tags:[], history:'' },
   ];
 
   const gameGrid = document.getElementById('gameGrid');
 
   function buildCardEl(game){
+    if(game.comingSoon){
+      const div = document.createElement('div');
+      div.className = 'game-card coming-soon';
+      const title = document.createElement('div');
+      title.className = 'title';
+      title.textContent = game.title;
+      div.appendChild(title);
+      return div;
+    }
+
     const a = document.createElement('a');
     a.className = 'game-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
     a.href = game.href;
@@ -1787,6 +1931,79 @@ body.panel-open .setting-btn{
   }
 
   renderGamePages();
+
+  // --- コレクション「ゲームの歴史」：カード自体をタップするとその場で文章が展開される ---
+  const historyGrid = document.getElementById('historyGrid');
+  const HISTORY_PLACEHOLDER = 'まだ文章が用意されていません。';
+
+  function buildHistoryCardEl(game){
+    const card = document.createElement('div');
+    card.className = 'game-card history-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
+
+    const info = document.createElement('div');
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = game.num;
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = game.title;
+    info.appendChild(num);
+    info.appendChild(title);
+
+    const tagsWrap = document.createElement('div');
+    tagsWrap.className = 'tags';
+    game.tags.forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'tag' + (tag.c ? ' ' + tag.c : '');
+      span.textContent = tag.t;
+      tagsWrap.appendChild(span);
+    });
+
+    const historyText = document.createElement('div');
+    const hasHistory = !!(game.history && game.history.trim());
+    historyText.className = 'history-text' + (hasHistory ? '' : ' placeholder');
+    historyText.textContent = hasHistory ? game.history : HISTORY_PLACEHOLDER;
+
+    if(game.img){
+      const imageDiv = document.createElement('div');
+      imageDiv.className = 'card-image';
+      imageDiv.style.backgroundImage = `url('${game.img}')`;
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.appendChild(info);
+      body.appendChild(tagsWrap);
+      body.appendChild(historyText);
+
+      card.appendChild(imageDiv);
+      card.appendChild(body);
+    } else {
+      card.appendChild(info);
+      card.appendChild(tagsWrap);
+      card.appendChild(historyText);
+    }
+
+    card.addEventListener('click', () => {
+      const willOpen = !card.classList.contains('expanded');
+      // 一度に開くのは1枚だけにして、縦に伸びすぎないようにする
+      historyGrid.querySelectorAll('.history-card.expanded').forEach(c => {
+        if(c !== card) c.classList.remove('expanded');
+      });
+      card.classList.toggle('expanded', willOpen);
+    });
+
+    return card;
+  }
+
+  function renderHistoryGrid(){
+    if(!historyGrid || historyGrid.dataset.rendered) return;
+    historyGrid.innerHTML = '';
+    // COMING SOON（未実装）のダミーカードは、歴史を書きようがないので除外する
+    GAMES.filter(game => !game.comingSoon).forEach(game => {
+      historyGrid.appendChild(buildHistoryCardEl(game));
+    });
+    historyGrid.dataset.rendered = 'true';
+  }
 
 
     const opening = document.getElementById("opening");
@@ -2106,6 +2323,9 @@ function switchView(viewId){
   if(viewId === 'recordsView'){
     renderRecordsView();
   }
+  if(viewId === 'collectionView'){
+    renderHistoryGrid();
+  }
 }
 
 // --- 記録タブのサブタブ（全体／ゲーム別／履歴）切り替え ---
@@ -2114,6 +2334,17 @@ recordsSubtabBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     recordsSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.records-panel').forEach(p => {
+      p.classList.toggle('active', p.id === btn.dataset.panel);
+    });
+  });
+});
+
+// --- コレクションタブのサブタブ（ゲームの歴史／アチーブメント）切り替え ---
+const collectionSubtabBtns = document.querySelectorAll('.collection-subtab-btn');
+collectionSubtabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    collectionSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.collection-panel').forEach(p => {
       p.classList.toggle('active', p.id === btn.dataset.panel);
     });
   });
