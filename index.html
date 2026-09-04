@@ -406,6 +406,11 @@
   .history-card{
     cursor:pointer;
   }
+  /* 神経衰弱など、改行させたくないタイトル用（画像が50%になり幅が狭いため少し縮める） */
+  .history-card .title.nowrap-small{
+    font-size:0.78rem;
+    white-space:nowrap;
+  }
 
   /* タップ時に開く、半透明のウィンドウ風モーダル */
   .history-modal{
@@ -822,7 +827,7 @@
   .game-card .tag.cpu{ color:#dcd6c0; border-color: rgba(220,214,192,0.35); }
   .game-card .tag.master{ color:#fff; border-color: rgba(255,255,255,0.5); }
 
-  /* 画像付きカード：左半分に写真、右半分に本文（番号・タイトル） */
+  /* 画像付きカード：左30%に写真、右70%に本文（番号・タイトル） */
   .game-card.has-image{
     flex-direction:row;
     align-items:stretch;
@@ -830,11 +835,15 @@
     overflow:hidden; /* 画像がカードの角丸からはみ出さないように */
   }
   .game-card .card-image{
-    width:50%;
+    width:32%;
     flex-shrink:0;
     position:relative;
     background-size:cover;
     background-position:center;
+  }
+  /* コレクション「ゲームの歴史」の画像付きカードだけ、画像:文字を半々にする */
+  .history-grid .game-card .card-image{
+    width:50%;
   }
   .game-card .card-image::after{
     content:"";
@@ -1904,12 +1913,14 @@ body.panel-open .setting-btn{
   //          好きな文章に書き換えてOK（空のままだと仮のプレースホルダー文言が出ます）。
   // comingSoon: true にすると、リンクを持たない「COMING SOON」用のダミーカードになる
   //             （タップ不可・「ゲームの歴史」タブには表示されません）。
+  // historyTitleLines / historyTitleNoWrap: 「ゲームの歴史」カード（画像:文字=50:50で幅が狭い）
+  //             だけで使うタイトル表示調整。ホーム画面のカードには影響しません。
   const GAMES = [
     { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
-    { num:'02', title:'コネクトフォー', href:'connect_four.html', img:'assets/cards/connect_four.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
-    { num:'03', title:'神経衰弱', href:'memory_match.html', img:'assets/cards/memory_match.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'}], history:'' },
-    { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
-    { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', tags:[{t:'2人'}], history:'' },
+    { num:'02', title:'コネクトフォー', href:'connect_four.html', img:'assets/cards/connect_four.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['コネクト','フォー'] },
+    { num:'03', title:'神経衰弱', href:'memory_match.html', img:'assets/cards/memory_match.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'}], history:'', historyTitleNoWrap:true },
+    { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ヒット＆','ブロー'] },
+    { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', tags:[{t:'2人'}], history:'', historyTitleLines:['ドット＆','ボックス'] },
     { num:'06', title:'五目並べ', href:'gomoku.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' }, // 将来的に名称変更の可能性あり
     { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
     { num:'08', title:'COMING SOON', comingSoon:true, tags:[], history:'' },
@@ -2012,7 +2023,16 @@ body.panel-open .setting-btn{
     num.textContent = game.num;
     const title = document.createElement('div');
     title.className = 'title';
-    title.textContent = game.title;
+    if(game.historyTitleLines){
+      // 指定された位置で改行（例：ヒット＆ / ブロー）
+      game.historyTitleLines.forEach((line, i) => {
+        if(i > 0) title.appendChild(document.createElement('br'));
+        title.appendChild(document.createTextNode(line));
+      });
+    } else {
+      if(game.historyTitleNoWrap) title.classList.add('nowrap-small');
+      title.textContent = game.title;
+    }
     info.appendChild(num);
     info.appendChild(title);
 
