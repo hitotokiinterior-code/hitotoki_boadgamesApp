@@ -402,42 +402,82 @@
     display:none;
   }
 
-  /* .game-card の見た目をそのまま流用しつつ、タップで開閉するカードにする */
+  /* .game-card の見た目をそのまま流用。カードサイズは固定のまま、タップでモーダルを開く */
   .history-card{
     cursor:pointer;
-    height: var(--card-h);
-    transition: height .2s ease, transform .15s ease, border-color .15s ease, box-shadow .15s ease;
   }
-  .history-card .num,
-  .history-card .title{
-    pointer-events:none;
-  }
-  .history-card.expanded{
-    grid-column: 1 / -1;
-    height:auto;
-  }
-  .history-card .card-body,
-  .history-card > div:first-child{
-    /* info(num+title)とtagsの間の space-between を、テキストが増えても崩さないための保険 */
-    justify-content:flex-start;
-    gap:10px;
-  }
-  .history-text{
+
+  /* タップ時に開く、半透明のウィンドウ風モーダル */
+  .history-modal{
+    position:fixed;
+    inset:0;
+    z-index:9999;
     display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(6,6,6,0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 28px;
+  }
+  .history-modal.open{
+    display:flex;
+  }
+  .history-modal-card{
+    position:relative;
+    width:100%;
+    max-width:360px;
+    max-height:66vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    background: rgba(28,28,28,0.62);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:30px 22px 26px;
+    box-shadow: 0 18px 44px rgba(0,0,0,0.5);
+  }
+  .history-modal-card::-webkit-scrollbar{
+    display:none;
+  }
+  .history-modal-close{
+    position:absolute;
+    top:10px; right:10px;
+    width:26px; height:26px;
+    border-radius:50%;
+    border:1px solid var(--hairline);
+    background: rgba(255,255,255,0.06);
+    color: var(--silver);
+    font-family:'Jost', sans-serif;
+    font-size:0.8rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .history-modal-num{
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:0.68rem;
+    letter-spacing:0.05em;
+    color: var(--silver-dim);
+    margin-bottom:4px;
+  }
+  .history-modal-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.05rem;
+    letter-spacing:0.04em;
+    color:#ece4d1;
+    margin-bottom:16px;
+  }
+  .history-modal-text{
     font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:0.72rem;
+    font-size:0.78rem;
     line-height:1.9;
     letter-spacing:0.03em;
     color: var(--silver);
-    padding-top:10px;
-    margin-top:2px;
-    border-top:1px solid var(--hairline);
     white-space:pre-wrap;
   }
-  .history-card.expanded .history-text{
-    display:block;
-  }
-  .history-text.placeholder{
+  .history-modal-text.placeholder{
     color: var(--silver-dim);
     font-style:italic;
   }
@@ -782,7 +822,7 @@
   .game-card .tag.cpu{ color:#dcd6c0; border-color: rgba(220,214,192,0.35); }
   .game-card .tag.master{ color:#fff; border-color: rgba(255,255,255,0.5); }
 
-  /* 画像付きカード：左30%に写真、右70%に今まで通りの本文（番号・タイトル・タグ） */
+  /* 画像付きカード：左半分に写真、右半分に本文（番号・タイトル） */
   .game-card.has-image{
     flex-direction:row;
     align-items:stretch;
@@ -790,7 +830,7 @@
     overflow:hidden; /* 画像がカードの角丸からはみ出さないように */
   }
   .game-card .card-image{
-    width:32%;
+    width:50%;
     flex-shrink:0;
     position:relative;
     background-size:cover;
@@ -1698,7 +1738,7 @@ body.panel-open .setting-btn{
       <button class="collection-subtab-btn" id="collectionTabAchievement" data-panel="collectionPanelAchievement">アチーブメント</button>
     </div>
 
-    <!-- ゲームの歴史：カードをタップするとその場で文章が展開される -->
+    <!-- ゲームの歴史：カードをタップすると、サイズはそのままにモーダルが開いて文章を読める -->
     <div class="collection-panel active" id="collectionPanelHistory">
       <div class="history-grid" id="historyGrid"></div>
     </div>
@@ -1713,6 +1753,16 @@ body.panel-open .setting-btn{
     </div>
   </div>
 
+</div>
+
+<!-- ゲームの歴史：タップ時に開く半透明モーダル -->
+<div class="history-modal" id="historyModal">
+  <div class="history-modal-card" id="historyModalCard">
+    <button class="history-modal-close" id="historyModalClose">×</button>
+    <div class="history-modal-num" id="historyModalNum"></div>
+    <div class="history-modal-title" id="historyModalTitle"></div>
+    <div class="history-modal-text" id="historyModalText"></div>
+  </div>
 </div>
 
 <nav class="bottom-nav" id="bottomNav">
@@ -1892,15 +1942,6 @@ body.panel-open .setting-btn{
     info.appendChild(num);
     info.appendChild(title);
 
-    const tagsWrap = document.createElement('div');
-    tagsWrap.className = 'tags';
-    game.tags.forEach(tag => {
-      const span = document.createElement('span');
-      span.className = 'tag' + (tag.c ? ' ' + tag.c : '');
-      span.textContent = tag.t;
-      tagsWrap.appendChild(span);
-    });
-
     if(game.img){
       const imageDiv = document.createElement('div');
       imageDiv.className = 'card-image';
@@ -1909,13 +1950,11 @@ body.panel-open .setting-btn{
       const body = document.createElement('div');
       body.className = 'card-body';
       body.appendChild(info);
-      body.appendChild(tagsWrap);
 
       a.appendChild(imageDiv);
       a.appendChild(body);
     } else {
       a.appendChild(info);
-      a.appendChild(tagsWrap);
     }
 
     return a;
@@ -1932,9 +1971,36 @@ body.panel-open .setting-btn{
 
   renderGamePages();
 
-  // --- コレクション「ゲームの歴史」：カード自体をタップするとその場で文章が展開される ---
+  // --- コレクション「ゲームの歴史」：カードをタップすると、カードサイズはそのままに
+  //     半透明のウィンドウ風モーダルが開いて文章を読める ---
   const historyGrid = document.getElementById('historyGrid');
+  const historyModal = document.getElementById('historyModal');
+  const historyModalCard = document.getElementById('historyModalCard');
+  const historyModalClose = document.getElementById('historyModalClose');
+  const historyModalNum = document.getElementById('historyModalNum');
+  const historyModalTitle = document.getElementById('historyModalTitle');
+  const historyModalText = document.getElementById('historyModalText');
   const HISTORY_PLACEHOLDER = 'まだ文章が用意されていません。';
+
+  function openHistoryModal(game){
+    historyModalNum.textContent = game.num;
+    historyModalTitle.textContent = game.title;
+    const hasHistory = !!(game.history && game.history.trim());
+    historyModalText.textContent = hasHistory ? game.history : HISTORY_PLACEHOLDER;
+    historyModalText.classList.toggle('placeholder', !hasHistory);
+    historyModal.classList.add('open');
+  }
+
+  function closeHistoryModal(){
+    historyModal.classList.remove('open');
+  }
+
+  if(historyModal){
+    historyModalClose.addEventListener('click', closeHistoryModal);
+    historyModal.addEventListener('click', (e) => {
+      if(e.target === historyModal) closeHistoryModal(); // 背景タップでも閉じる
+    });
+  }
 
   function buildHistoryCardEl(game){
     const card = document.createElement('div');
@@ -1950,20 +2016,6 @@ body.panel-open .setting-btn{
     info.appendChild(num);
     info.appendChild(title);
 
-    const tagsWrap = document.createElement('div');
-    tagsWrap.className = 'tags';
-    game.tags.forEach(tag => {
-      const span = document.createElement('span');
-      span.className = 'tag' + (tag.c ? ' ' + tag.c : '');
-      span.textContent = tag.t;
-      tagsWrap.appendChild(span);
-    });
-
-    const historyText = document.createElement('div');
-    const hasHistory = !!(game.history && game.history.trim());
-    historyText.className = 'history-text' + (hasHistory ? '' : ' placeholder');
-    historyText.textContent = hasHistory ? game.history : HISTORY_PLACEHOLDER;
-
     if(game.img){
       const imageDiv = document.createElement('div');
       imageDiv.className = 'card-image';
@@ -1972,25 +2024,14 @@ body.panel-open .setting-btn{
       const body = document.createElement('div');
       body.className = 'card-body';
       body.appendChild(info);
-      body.appendChild(tagsWrap);
-      body.appendChild(historyText);
 
       card.appendChild(imageDiv);
       card.appendChild(body);
     } else {
       card.appendChild(info);
-      card.appendChild(tagsWrap);
-      card.appendChild(historyText);
     }
 
-    card.addEventListener('click', () => {
-      const willOpen = !card.classList.contains('expanded');
-      // 一度に開くのは1枚だけにして、縦に伸びすぎないようにする
-      historyGrid.querySelectorAll('.history-card.expanded').forEach(c => {
-        if(c !== card) c.classList.remove('expanded');
-      });
-      card.classList.toggle('expanded', willOpen);
-    });
+    card.addEventListener('click', () => openHistoryModal(game));
 
     return card;
   }
