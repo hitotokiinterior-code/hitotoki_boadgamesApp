@@ -1118,6 +1118,49 @@
 .setting-btn.menu-btn{
   left:0;
 }
+
+/* --- ホームヘッダーの電光掲示板風テキスト --- */
+/* ☰ と ⚙ の間のスペースに、右→中央へ発光しながら流れ込むメッセージを表示する */
+.header-ticker{
+  position:absolute;
+  left:40px; right:40px;
+  top:0; bottom:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:900;
+}
+.header-ticker-text{
+  display:inline-block;
+  max-width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-weight:700;
+  font-size:0.7rem;
+  letter-spacing:0.06em;
+  color:#fff;
+  text-shadow: 0 0 5px rgba(255,255,255,0.9), 0 0 14px rgba(255,255,255,0.55);
+  transform: translateX(160%);
+  opacity:0;
+}
+.header-ticker-text.is-enter{
+  transition: transform .9s cubic-bezier(.22,.68,0,1.01), opacity .35s ease;
+  transform: translateX(0);
+  opacity:1;
+}
+.header-ticker-text.is-exit{
+  transition: transform .6s cubic-bezier(.5,0,.75,0), opacity .45s ease;
+  transform: translateX(-160%);
+  opacity:0;
+}
+/* パネル表示中は⚙／☰と同様に隠す */
+body.panel-open .header-ticker{
+  display:none;
+}
 /* パネルが開いている間は、⚙／☰ボタン自体を隠す
    （もう片方のボタンが見えたままだと紛らわしく、パネルの×ボタンとも位置が被るため） */
 body.panel-open .setting-btn{
@@ -1470,6 +1513,9 @@ body.panel-open .setting-btn{
       <line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
   </button>
+  <div class="header-ticker" id="headerTicker">
+    <span class="header-ticker-text" id="headerTickerText"></span>
+  </div>
   <button class="setting-btn gear-btn" id="gearBtn">
     <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/>
@@ -2066,6 +2112,49 @@ body.panel-open .setting-btn{
     historyGrid.dataset.rendered = 'true';
   }
 
+  // --- ホームヘッダーの電光掲示板風メッセージ ---
+  // ここに書いた文章が、ホーム画面が表示されるたびに右から中央へ発光しながら流れてきます。
+  // ゲーム画面には一切表示されない、開発者用の隠しお知らせ欄です。複数登録すると自動で順番に流れます。
+  const TICKER_MESSAGES = [白井はどうやらお腹が空いているようだ
+    // '例：ここに書いた文章がホーム画面に流れます',
+  ];
+
+  const headerTickerText = document.getElementById('headerTickerText');
+  let tickerIndex = 0;
+  let tickerTimer1 = null;
+  let tickerTimer2 = null;
+
+  function stopTicker(){
+    clearTimeout(tickerTimer1);
+    clearTimeout(tickerTimer2);
+  }
+
+  function playTickerMessage(){
+    if(!headerTickerText || TICKER_MESSAGES.length === 0) return;
+    headerTickerText.textContent = TICKER_MESSAGES[tickerIndex % TICKER_MESSAGES.length];
+    headerTickerText.classList.remove('is-exit');
+    headerTickerText.classList.remove('is-enter');
+    void headerTickerText.offsetWidth; // 強制リフローでアニメーションを毎回リスタートさせる
+    headerTickerText.classList.add('is-enter');
+
+    if(TICKER_MESSAGES.length > 1){
+      tickerTimer1 = setTimeout(() => {
+        headerTickerText.classList.remove('is-enter');
+        headerTickerText.classList.add('is-exit');
+        tickerTimer2 = setTimeout(() => {
+          tickerIndex++;
+          playTickerMessage();
+        }, 650); // is-exitの transition 時間に合わせる
+      }, 3200); // 中央に表示しておく時間
+    }
+  }
+
+  function startTicker(){
+    stopTicker();
+    tickerIndex = 0;
+    playTickerMessage();
+  }
+
 
     const opening = document.getElementById("opening");
   const openingVideo = document.getElementById("openingVideo");
@@ -2077,6 +2166,7 @@ body.panel-open .setting-btn{
   opening.style.display = "none";
   startScreen.style.display = "none";
   app.style.display = "flex";
+  startTicker(); // 既にスタート済みなら、そのままホーム表示と同時にティッカー開始
 
 }
   
@@ -2097,6 +2187,7 @@ body.panel-open .setting-btn{
   startScreen.addEventListener("click", () => {
     startScreen.style.display = "none";
     app.style.display = "flex";
+    startTicker(); // タップしてホームに入ったタイミングでティッカー開始
   });
 // 設定パネル（⚙：右からスライドイン。プライバシーポリシー等＋おまけ機能）
 const gearBtn = document.getElementById("gearBtn");
@@ -2380,6 +2471,7 @@ function switchView(viewId){
   if(viewId === 'homeView'){
     // ホームに戻ったときはページ位置を再計算しておく（回転などでズレる場合があるため）
     renderGamePages();
+    startTicker(); // ホームに来るたびに電光掲示板を再生
   }
   if(viewId === 'recordsView'){
     renderRecordsView();
