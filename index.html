@@ -1131,7 +1131,9 @@
   overflow:hidden;
   pointer-events:none;
   z-index:900;
-  background:#000;
+  background: rgba(0,0,0,0.7); /* 黒パネルを-30%透過 */
+  border-top:1px solid rgba(255,255,255,0.25);
+  border-bottom:1px solid rgba(255,255,255,0.25);
   border-radius:4px;
 }
 .header-ticker-text{
@@ -1151,12 +1153,12 @@
   pointer-events:none;
 }
 .header-ticker-text.is-enter{
-  transition: transform .9s cubic-bezier(.22,.68,0,1.01), opacity .35s ease;
+  transition: transform 1.8s cubic-bezier(.22,.68,0,1.01), opacity .7s ease;
   transform: translateX(0);
   opacity:1;
 }
 .header-ticker-text.is-exit{
-  transition: transform .6s cubic-bezier(.5,0,.75,0), opacity .45s ease;
+  transition: transform 1.2s cubic-bezier(.5,0,.75,0), opacity .9s ease;
   transform: translateX(-160%);
   opacity:0;
 }
@@ -2147,7 +2149,7 @@ body.panel-open .setting-btn{
         tickerTimer2 = setTimeout(() => {
           tickerIndex++;
           playTickerMessage();
-        }, 650); // is-exitの transition 時間に合わせる
+        }, 1250); // is-exitの transition 時間に合わせる（1.2s）
       }, 3200); // 中央に表示しておく時間
     }
   }
