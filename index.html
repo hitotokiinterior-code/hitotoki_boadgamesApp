@@ -1119,53 +1119,11 @@
   left:0;
 }
 
-/* --- ホームヘッダーの電光掲示板風テキスト --- */
-/* ☰ と ⚙ の間のスペースに、右→中央へ発光しながら流れ込むメッセージを表示する */
-.header-ticker{
-  position:absolute;
-  left:36px; right:36px;
-  top:0; bottom:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  pointer-events:none;
-  z-index:900;
-  background: rgba(0,0,0,0.7); /* 黒パネルを-30%透過 */
-  border-top:1px solid rgba(255,255,255,0.25);
-  border-bottom:1px solid rgba(255,255,255,0.25);
-  border-radius:4px;
+/* --- ホームヘッダーのお知らせアイコン（⚙のすぐ左） --- */
+.setting-btn.notice-btn{
+  right:38px; /* ⚙(32px幅)の右寄せに対して、隙間6pxを空けてすぐ左に並べる */
 }
-.header-ticker-text{
-  display:inline-block;
-  max-width:100%;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  font-family:'Zen Kaku Gothic New', sans-serif;
-  font-weight:700;
-  font-size:0.7rem;
-  letter-spacing:0.06em;
-  color:#fff;
-  text-shadow: 0 0 2.5px rgba(255,255,255,0.45), 0 0 7px rgba(255,255,255,0.28);
-  transform: translateX(160%);
-  opacity:0;
-  pointer-events:none;
-}
-.header-ticker-text.is-enter{
-  transition: transform 1.8s cubic-bezier(.22,.68,0,1.01), opacity .7s ease;
-  transform: translateX(0);
-  opacity:1;
-}
-.header-ticker-text.is-exit{
-  transition: transform 1.2s cubic-bezier(.5,0,.75,0), opacity .9s ease;
-  transform: translateX(-160%);
-  opacity:0;
-}
-/* パネル表示中は⚙／☰と同様に隠す */
-body.panel-open .header-ticker{
-  display:none;
-}
+
 /* パネルが開いている間は、⚙／☰ボタン自体を隠す
    （もう片方のボタンが見えたままだと紛らわしく、パネルの×ボタンとも位置が被るため） */
 body.panel-open .setting-btn{
@@ -1518,9 +1476,12 @@ body.panel-open .setting-btn{
       <line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
   </button>
-  <div class="header-ticker" id="headerTicker">
-    <span class="header-ticker-text" id="headerTickerText"></span>
-  </div>
+  <button class="setting-btn notice-btn" id="noticeBtn">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+  </button>
   <button class="setting-btn gear-btn" id="gearBtn">
     <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/>
@@ -2117,49 +2078,6 @@ body.panel-open .setting-btn{
     historyGrid.dataset.rendered = 'true';
   }
 
-  // --- ホームヘッダーの電光掲示板風メッセージ ---
-  // ここに書いた文章が、ホーム画面が表示されるたびに右から中央へ発光しながら流れてきます。
-  // ゲーム画面には一切表示されない、開発者用の隠しお知らせ欄です。複数登録すると自動で順番に流れます。
-  const TICKER_MESSAGES = [
-    '白井は腹が減っている',
-  ];
-
-  const headerTickerText = document.getElementById('headerTickerText');
-  let tickerIndex = 0;
-  let tickerTimer1 = null;
-  let tickerTimer2 = null;
-
-  function stopTicker(){
-    clearTimeout(tickerTimer1);
-    clearTimeout(tickerTimer2);
-  }
-
-  function playTickerMessage(){
-    if(!headerTickerText || TICKER_MESSAGES.length === 0) return;
-    headerTickerText.textContent = TICKER_MESSAGES[tickerIndex % TICKER_MESSAGES.length];
-    headerTickerText.classList.remove('is-exit');
-    headerTickerText.classList.remove('is-enter');
-    void headerTickerText.offsetWidth; // 強制リフローでアニメーションを毎回リスタートさせる
-    headerTickerText.classList.add('is-enter');
-
-    if(TICKER_MESSAGES.length > 1){
-      tickerTimer1 = setTimeout(() => {
-        headerTickerText.classList.remove('is-enter');
-        headerTickerText.classList.add('is-exit');
-        tickerTimer2 = setTimeout(() => {
-          tickerIndex++;
-          playTickerMessage();
-        }, 1250); // is-exitの transition 時間に合わせる（1.2s）
-      }, 3200); // 中央に表示しておく時間
-    }
-  }
-
-  function startTicker(){
-    stopTicker();
-    tickerIndex = 0;
-    playTickerMessage();
-  }
-
 
     const opening = document.getElementById("opening");
   const openingVideo = document.getElementById("openingVideo");
@@ -2171,7 +2089,6 @@ body.panel-open .setting-btn{
   opening.style.display = "none";
   startScreen.style.display = "none";
   app.style.display = "flex";
-  try{ startTicker(); }catch(e){ console.error(e); } // 既にスタート済みなら、そのままホーム表示と同時にティッカー開始
 
 }
   
@@ -2192,12 +2109,15 @@ body.panel-open .setting-btn{
   startScreen.addEventListener("click", () => {
     startScreen.style.display = "none";
     app.style.display = "flex";
-    try{ startTicker(); }catch(e){ console.error(e); } // タップしてホームに入ったタイミングでティッカー開始
   });
 // 設定パネル（⚙：右からスライドイン。プライバシーポリシー等＋おまけ機能）
 const gearBtn = document.getElementById("gearBtn");
   const closeBtn = document.getElementById("closeBtn");
 const settingPanel = document.getElementById("settingPanel");
+
+// お知らせボタン（⚙のすぐ左）：見た目のみ先行実装。中身のページ・処理は後で追加予定。
+const noticeBtn = document.getElementById("noticeBtn");
+// noticeBtn.addEventListener("click", () => { /* TODO: お知らせページ／パネルを開く処理 */ });
 
 // メニューパネル（☰：左からスライドイン。「GAME」見出し＋ゲーム名の一覧）
 const menuBtn = document.getElementById("menuBtn");
@@ -2476,7 +2396,6 @@ function switchView(viewId){
   if(viewId === 'homeView'){
     // ホームに戻ったときはページ位置を再計算しておく（回転などでズレる場合があるため）
     renderGamePages();
-    try{ startTicker(); }catch(e){ console.error(e); } // ホームに来るたびに電光掲示板を再生
   }
   if(viewId === 'recordsView'){
     renderRecordsView();
