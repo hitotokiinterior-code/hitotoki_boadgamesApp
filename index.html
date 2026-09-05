@@ -2307,7 +2307,8 @@ bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(sw => {
 let menuListBuilt = false;
 function buildMenuGameList(){
   if(menuListBuilt) return;
-  GAMES.forEach(game => {
+  // COMING SOON（リンク先が無いダミーカード）はメニュー一覧には出さない
+  GAMES.filter(game => !game.comingSoon).forEach(game => {
     const a = document.createElement('a');
     a.className = 'menu-game-item';
     a.href = game.href;
