@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>ウサギと猟犬 | hitotoki</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050505;
+    --ink:#ffffff;
+    --ink-dim:#ffffffb3;
+    --white:#ffffff;
+    --line:#3a3a3a;
+    --glow:0 0 10px rgba(255,255,255,.85), 0 0 22px rgba(255,255,255,.35);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--bg); color:var(--ink);
+    overflow:hidden; overscroll-behavior:none; touch-action:none;
+    font-family:'Shippori Mincho','Noto Serif JP',serif;
+  }
+  #app{position:fixed; inset:0; display:flex; flex-direction:column;}
+  .screen{
+    position:absolute; inset:0; display:none; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .screen.active{display:flex;}
+
+  /* ---------- HOME ---------- */
+  #screen-home .title{
+    font-size:30px; letter-spacing:.14em; font-weight:700; color:var(--ink);
+    text-align:center; line-height:1.7;
+  }
+  #screen-home .sub{
+    margin-top:6px; font-size:12px; letter-spacing:.3em; color:var(--ink-dim);
+  }
+  .rule-line{
+    width:64px; height:1px; background:var(--ink-dim); margin:22px 0;
+  }
+  .btn{
+    font-family:inherit; font-size:15px; letter-spacing:.18em;
+    background:transparent; color:var(--ink);
+    border:1px solid var(--white); padding:11px 34px;
+    cursor:pointer; border-radius:0;
+  }
+  .btn.solid{ background:var(--white); color:#000; border-color:var(--white); font-weight:700; }
+  .btn:active{ opacity:.6; }
+
+  /* ---------- HOME BUTTON (icon) ---------- */
+  .home-icon-btn{
+    position:absolute; top:16px; left:16px; width:38px; height:38px;
+    display:flex; align-items:center; justify-content:center;
+    background:transparent; border:none; cursor:pointer; z-index:20;
+  }
+  .home-icon-btn svg{width:16px; height:16px; display:block;}
+
+  /* ---------- MODE SELECT ---------- */
+  #screen-mode{padding:78px 22px 0; justify-content:flex-start;}
+  .mode-title{font-size:18px; letter-spacing:.2em; margin-bottom:26px; font-weight:700;}
+  .section-label{font-size:11px; letter-spacing:.25em; color:var(--ink-dim); margin-bottom:8px; align-self:flex-start;}
+  .pair-row{display:flex; gap:10px; width:100%; max-width:320px; margin-bottom:22px;}
+  .opt-card{
+    flex:1; text-align:center; padding:13px 4px; border:1px solid var(--white);
+    font-size:13px; letter-spacing:.12em; cursor:pointer; color:var(--ink-dim);
+  }
+  .opt-card.selected{ background:var(--white); color:#000; border-color:var(--white); font-weight:700; }
+  .mode-wrap{display:flex; flex-direction:column; align-items:center; width:100%; max-width:320px;}
+  #role-block{width:100%;}
+
+  /* ---------- GAME ---------- */
+  #screen-game{padding-top:52px;}
+  .turnbar{
+    display:flex; gap:14px; align-items:center; justify-content:center;
+    margin-bottom:6px;
+  }
+  .turn-chip{
+    display:flex; align-items:center; gap:6px; padding:6px 14px;
+    border:1px solid var(--line); font-size:12px; letter-spacing:.1em; color:var(--ink-dim);
+    transition:box-shadow .25s, color .25s, border-color .25s;
+  }
+  .turn-chip .dot{width:9px; height:9px; border-radius:50%; background:var(--white); display:inline-block;}
+  .turn-chip .ring{width:9px; height:9px; border-radius:50%; background:#000; border:2px solid var(--white); display:inline-block;}
+  .turn-chip.active{ color:var(--ink); border-color:var(--ink); box-shadow:var(--glow); }
+
+  #board-wrap{
+    flex:1; width:100%; display:flex; align-items:center; justify-content:center;
+    padding:4px 10px;
+  }
+  #board-svg{ width:100%; max-width:440px; height:auto; }
+  .edge{ stroke:var(--line); stroke-width:2.5; }
+  .node-bg{ fill:#0a0a0a; stroke:var(--line); stroke-width:1.5; }
+  .node-hit{ fill:transparent; }
+  .legal-mark{ fill:none; stroke:var(--white); stroke-width:2; filter:drop-shadow(0 0 5px rgba(255,255,255,.9)); }
+  .piece-hare{ fill:var(--white); filter:drop-shadow(0 0 6px rgba(255,255,255,.85)); }
+  .piece-hound{ fill:#050505; stroke:var(--white); stroke-width:2.5; filter:drop-shadow(0 0 4px rgba(255,255,255,.6)); }
+  .piece-hound.selected, .piece-hare.selected{ filter:drop-shadow(0 0 10px rgba(255,255,255,1)); }
+
+  .status-line{ font-size:11px; letter-spacing:.15em; color:var(--ink-dim); margin-top:2px; height:16px; text-align:center;}
+
+  #ad-space{ width:100%; flex:0 0 12%; background:transparent; }
+
+  /* ---------- RESULT OVERLAY ---------- */
+  #screen-result{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,.86); z-index:30; flex-direction:column;
+  }
+  #screen-result.active{display:flex;}
+  .result-text{ font-size:22px; letter-spacing:.16em; font-weight:700; margin-bottom:26px; text-align:center;}
+  .result-btns{ display:flex; flex-direction:column; gap:10px; align-items:center;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- MODE SELECT -->
+  <div class="screen active" id="screen-mode">
+    <div class="home-icon-btn" id="home-btn-mode">
+      <svg viewBox="0 0 24 24"><path d="M3 11 L12 3 L21 11 L21 21 L14 21 L14 14 L10 14 L10 21 L3 21 Z" fill="none" stroke="#ffffff" stroke-width="2"/></svg>
+    </div>
+    <div class="mode-title">対戦モード</div>
+    <div class="mode-wrap">
+      <div class="section-label">モードを選ぶ</div>
+      <div class="pair-row" id="mode-pair">
+        <div class="opt-card selected" data-mode="pvp">2人対戦</div>
+        <div class="opt-card" data-mode="cpu">CPU対戦</div>
+        <div class="opt-card" data-mode="master">達人CPU</div>
+      </div>
+
+      <div id="role-block">
+        <div class="section-label">白の役割</div>
+        <div class="pair-row" id="role-pair">
+          <div class="opt-card selected" data-role="hare">ウサギ</div>
+          <div class="opt-card" data-role="hound">猟犬</div>
+        </div>
+      </div>
+
+      <button class="btn solid" id="btn-start-game" style="margin-top:8px;">はじめる</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="screen-game">
+    <div class="home-icon-btn" id="home-btn-game">
+      <svg viewBox="0 0 24 24"><path d="M3 11 L12 3 L21 11 L21 21 L14 21 L14 14 L10 14 L10 21 L3 21 Z" fill="none" stroke="#ffffff" stroke-width="2"/></svg>
+    </div>
+    <div class="turnbar">
+      <div class="turn-chip" id="chip-hare"><span class="dot"></span>ウサギ</div>
+      <div class="turn-chip" id="chip-hound"><span class="ring"></span>猟犬</div>
+    </div>
+    <div class="status-line" id="status-line"></div>
+    <div id="board-wrap">
+      <svg id="board-svg" viewBox="0 0 500 260"></svg>
+    </div>
+    <div id="ad-space"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="screen-result">
+    <div class="result-text" id="result-text"></div>
+    <div class="result-btns">
+      <button class="btn" id="btn-view-board">盤面を見る</button>
+      <button class="btn solid" id="btn-again">もう一度</button>
+      <button class="btn" id="btn-result-home">ホームへ</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- board topology (crystal shape) ---------------- */
+  const NODES = {
+    A:{x:110, y:40},  B:{x:250, y:40},  C:{x:390, y:40},
+    D:{x:40,  y:130}, E:{x:110,y:130}, F:{x:250,y:130}, G:{x:390,y:130}, H:{x:460,y:130},
+    I:{x:110, y:220}, J:{x:250,y:220}, K:{x:390,y:220}
+  };
+  const COL = { D:0, A:1,E:1,I:1, B:2,F:2,J:2, C:3,G:3,K:3, H:4 };
+
+  const EDGE_LIST = [
+    ['A','B'],['B','C'],
+    ['D','E'],['E','F'],['F','G'],['G','H'],
+    ['I','J'],['J','K'],
+    ['A','E'],['E','I'],
+    ['B','F'],['F','J'],
+    ['C','G'],['G','K'],
+    ['D','A'],['D','I'],
+    ['A','F'],['I','F'],
+    ['C','F'],['K','F'],
+    ['H','C'],['H','K']
+  ];
+  const adj = {};
+  EDGE_LIST.forEach(([a,b])=>{
+    (adj[a]=adj[a]||[]).push(b);
+    (adj[b]=adj[b]||[]).push(a);
+  });
+
+  const px = id => NODES[id].x;
+  const py = id => NODES[id].y;
+  const colOf = id => COL[id];
+
+  /* ---------------- game state ---------------- */
+  let state, config, selected=null, animating=false;
+
+  function initState(){
+    state = {
+      hounds:['A','E','I'],
+      hare: 'H',
+      turn: 'hound',
+      moveCount: 0,
+      houndColSum: colOf('A')+colOf('E')+colOf('I'),
+      lastProgressPly: 0,
+    };
+    selected = null;
+  }
+
+  function houndMoves(hounds, hare, idx){
+    const pos = hounds[idx];
+    const c0 = colOf(pos);
+    return (adj[pos]||[]).filter(n=>{
+      if(colOf(n) < c0) return false;
+      if(hounds.includes(n)) return false;
+      if(n===hare) return false;
+      return true;
+    });
+  }
+  function allHoundMoves(hounds, hare){
+    let out=[];
+    hounds.forEach((h,idx)=> houndMoves(hounds,hare,idx).forEach(dest=>out.push({idx,dest})));
+    return out;
+  }
+  function hareMoves(hounds, hare){
+    return (adj[hare]||[]).filter(n=> !hounds.includes(n));
+  }
+
+  /* ---------------- CPU evaluation ---------------- */
+  function evalForHound(hounds, hare){
+    const hm = hareMoves(hounds, hare).length;
+    const hareCol = colOf(hare);
+    const houndsAvgCol = hounds.reduce((s,h)=>s+colOf(h),0)/hounds.length;
+    return -5*hm + hareCol*3 + houndsAvgCol*1;
+  }
+
+  function cpuHoundMove(){
+    const cands = allHoundMoves(state.hounds, state.hare);
+    let best=null, bestScore=-Infinity;
+    cands.forEach(mv=>{
+      const newHounds = state.hounds.slice(); newHounds[mv.idx]=mv.dest;
+      let score;
+      if(hareMoves(newHounds, state.hare).length===0){
+        score = 1e6;
+      } else {
+        const hMoves = hareMoves(newHounds, state.hare);
+        let minScore = Infinity;
+        hMoves.forEach(hd=>{
+          let s = evalForHound(newHounds, hd);
+          if(colOf(hd)===0) s = -1e6;
+          if(s<minScore) minScore = s;
+        });
+        score = minScore;
+      }
+      if(score>bestScore){ bestScore=score; best=mv; }
+    });
+    return best;
+  }
+
+  function cpuHareMove(){
+    const cands = hareMoves(state.hounds, state.hare);
+    const escape = cands.find(c=>colOf(c)===0);
+    if(escape) return escape;
+    let best=null, bestScore=-Infinity;
+    cands.forEach(dest=>{
+      const hMoves = allHoundMoves(state.hounds, dest);
+      let worst = Infinity;
+      if(hMoves.length===0){
+        worst = 1e6;
+      } else {
+        hMoves.forEach(mv=>{
+          const newHounds = state.hounds.slice(); newHounds[mv.idx]=mv.dest;
+          let s = -evalForHound(newHounds, dest);
+          if(hareMoves(newHounds, dest).length===0) s = -1e6;
+          if(s<worst) worst = s;
+        });
+      }
+      if(worst>bestScore){ bestScore=worst; best=dest; }
+    });
+    return best;
+  }
+
+  /* ---------------- 達人CPU: 厳密解 (後退解析/retrograde analysis) ---------------- */
+  let SOLVED = null;
+  function solveGame(){
+    const houndsKey = arr => arr.slice().sort().join(',');
+    const stateKey = (hounds, hare, turn) => houndsKey(hounds)+'|'+hare+'|'+turn;
+
+    const stateData = {};
+    const succ = {};
+    const preds = {};
+    const outdeg = {};
+    const VALUE = {};
+    const BESTMOVE = {};
+    const visited = new Set();
+    const bfsQ = [];
+
+    const startHounds = ['A','E','I'], startHare='H';
+    const startKey = stateKey(startHounds, startHare, 'hound');
+    stateData[startKey] = {hounds:startHounds, hare:startHare, turn:'hound'};
+    visited.add(startKey);
+    bfsQ.push(startKey);
+
+    while(bfsQ.length){
+      const k = bfsQ.shift();
+      const {hounds, hare, turn} = stateData[k];
+      const edges = [];
+      if(turn==='hound'){
+        hounds.forEach((h,idx)=>{
+          const c0 = colOf(h);
+          (adj[h]||[]).forEach(n=>{
+            if(colOf(n) < c0) return;
+            if(hounds.includes(n)) return;
+            if(n===hare) return;
+            const newHounds = hounds.slice(); newHounds[idx]=n;
+            const sortedNew = newHounds.slice().sort();
+            const hareLegal = (adj[hare]||[]).filter(x=> !sortedNew.includes(x));
+            if(hareLegal.length===0){
+              edges.push({terminal:'HOUND', move:{hound:h, dest:n}});
+            } else {
+              const nk = stateKey(sortedNew, hare, 'hare');
+              if(!visited.has(nk)){
+                visited.add(nk);
+                stateData[nk] = {hounds:sortedNew, hare, turn:'hare'};
+                bfsQ.push(nk);
+              }
+              edges.push({key:nk, move:{hound:h, dest:n}});
+            }
+          });
+        });
+      } else {
+        (adj[hare]||[]).forEach(n=>{
+          if(hounds.includes(n)) return;
+          if(colOf(n)===0){
+            edges.push({terminal:'HARE', move:{dest:n}});
+          } else {
+            const nk = stateKey(hounds, n, 'hound');
+            if(!visited.has(nk)){
+              visited.add(nk);
+              stateData[nk] = {hounds, hare:n, turn:'hound'};
+              bfsQ.push(nk);
+            }
+            edges.push({key:nk, move:{dest:n}});
+          }
+        });
+      }
+      succ[k] = edges;
+    }
+
+    const resolveQueue = [];
+    Object.keys(succ).forEach(k=>{
+      const turn = stateData[k].turn;
+      const winLabel = turn==='hound' ? 'HOUND' : 'HARE';
+      const winEdge = succ[k].find(e=>e.terminal===winLabel);
+      if(winEdge){
+        VALUE[k]=winLabel; BESTMOVE[k]=winEdge.move;
+        resolveQueue.push(k);
+      } else {
+        outdeg[k] = succ[k].length;
+        succ[k].forEach(e=>{
+          (preds[e.key] = preds[e.key]||[]).push({from:k, move:e.move});
+        });
+      }
+    });
+
+    let qi=0;
+    while(qi<resolveQueue.length){
+      const k = resolveQueue[qi++];
+      const kVal = VALUE[k];
+      (preds[k]||[]).forEach(({from,move})=>{
+        if(VALUE[from]) return;
+        const fromTurn = stateData[from].turn;
+        const moverLabel = fromTurn==='hound' ? 'HOUND':'HARE';
+        if(kVal===moverLabel){
+          VALUE[from]=moverLabel; BESTMOVE[from]=move;
+          resolveQueue.push(from);
+        } else {
+          outdeg[from]--;
+          if(outdeg[from]===0){
+            const oppLabel = fromTurn==='hound' ? 'HARE':'HOUND';
+            VALUE[from]=oppLabel;
+            resolveQueue.push(from);
+          }
+        }
+      });
+    }
+
+    // 未解決(サイクル) = 引き分け。best moveは相手勝ちに繋がらない手を選ぶ
+    Object.keys(succ).forEach(k=>{
+      if(VALUE[k]) return;
+      VALUE[k]='DRAW';
+      const turn = stateData[k].turn;
+      const oppLabel = turn==='hound' ? 'HARE':'HOUND';
+      const safe = succ[k].find(e=> !e.terminal && VALUE[e.key] !== oppLabel);
+      BESTMOVE[k] = safe ? safe.move : (succ[k][0] ? succ[k][0].move : null);
+    });
+
+    SOLVED = { stateKey, VALUE, BESTMOVE };
+  }
+
+  function masterHoundMove(){
+    if(!SOLVED) solveGame();
+    const k = SOLVED.stateKey(state.hounds, state.hare, 'hound');
+    const mv = SOLVED.BESTMOVE[k];
+    if(!mv) return cpuHoundMove();
+    const idx = state.hounds.indexOf(mv.hound);
+    return { idx, dest: mv.dest };
+  }
+  function masterHareMove(){
+    if(!SOLVED) solveGame();
+    const k = SOLVED.stateKey(state.hounds, state.hare, 'hare');
+    const mv = SOLVED.BESTMOVE[k];
+    if(!mv) return cpuHareMove();
+    return mv.dest;
+  }
+
+  /* ---------------- rendering ---------------- */
+  const svg = document.getElementById('board-svg');
+  const NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs){
+    const e = document.createElementNS(NS, tag);
+    for(const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function isHumanTurn(){
+    if(config.mode==='pvp') return true;
+    return state.turn === config.playerRole;
+  }
+
+  function render(){
+    svg.innerHTML='';
+    // edges
+    EDGE_LIST.forEach(([a,b])=>{
+      svg.appendChild(el('line',{class:'edge', x1:px(a), y1:py(a), x2:px(b), y2:py(b)}));
+    });
+    // legal move highlights
+    let legalDests = [];
+    if(selected!==null && isHumanTurn()){
+      if(state.turn==='hound') legalDests = houndMoves(state.hounds, state.hare, selected);
+      else legalDests = hareMoves(state.hounds, state.hare);
+    }
+    // node background dots
+    Object.keys(NODES).forEach(p=>{
+      svg.appendChild(el('circle',{class:'node-bg', cx:px(p), cy:py(p), r:6}));
+    });
+    legalDests.forEach(d=>{
+      svg.appendChild(el('circle',{class:'legal-mark', cx:px(d), cy:py(d), r:12, 'data-dest':d}));
+    });
+    // hound pieces
+    state.hounds.forEach((h,idx)=>{
+      const isSel = selected===idx && state.turn==='hound';
+      svg.appendChild(el('circle',{class:'piece-hound'+(isSel?' selected':''), cx:px(h), cy:py(h), r:13, 'data-hound':idx}));
+    });
+    // hare piece
+    {
+      const isSel = selected==='hare' && state.turn==='hare';
+      svg.appendChild(el('circle',{class:'piece-hare'+(isSel?' selected':''), cx:px(state.hare), cy:py(state.hare), r:11, 'data-hare':'1'}));
+    }
+    // hit targets (clickable, invisible, larger)
+    Object.keys(NODES).forEach(p=>{
+      const t = el('circle',{class:'node-hit', cx:px(p), cy:py(p), r:16, 'data-point':p});
+      t.style.cursor='pointer';
+      t.addEventListener('click', ()=>onPointClick(p));
+      svg.appendChild(t);
+    });
+
+    document.getElementById('chip-hare').classList.toggle('active', state.turn==='hare');
+    document.getElementById('chip-hound').classList.toggle('active', state.turn==='hound');
+
+    const statusEl = document.getElementById('status-line');
+    if(config.mode!=='pvp'){
+      statusEl.textContent = isHumanTurn() ? 'あなたの番です' : (config.mode==='master' ? '達人CPU思考中…' : 'CPU思考中…');
+    } else {
+      statusEl.textContent='';
+    }
+  }
+
+  function onPointClick(p){
+    if(animating) return;
+    if(!isHumanTurn()) return;
+
+    if(state.turn==='hound'){
+      const hi = state.hounds.indexOf(p);
+      if(hi!==-1){
+        selected = (selected===hi) ? null : hi;
+        render();
+        return;
+      }
+      if(selected!==null){
+        const legal = houndMoves(state.hounds, state.hare, selected);
+        if(legal.includes(p)){
+          doMove({idx:selected, dest:p});
+        }
+      }
+    } else {
+      if(p===state.hare){
+        selected = (selected==='hare') ? null : 'hare';
+        render();
+        return;
+      }
+      if(selected==='hare'){
+        const legal = hareMoves(state.hounds, state.hare);
+        if(legal.includes(p)){
+          doHareMove(p);
+        }
+      }
+    }
+  }
+
+  function doMove(mv){
+    state.hounds = state.hounds.slice();
+    state.hounds[mv.idx] = mv.dest;
+    state.moveCount++;
+    selected = null;
+    afterHoundMove();
+  }
+  function doHareMove(dest){
+    state.hare = dest;
+    state.moveCount++;
+    selected = null;
+    afterHareMove();
+  }
+
+  function checkNoProgress(){
+    if(state.moveCount - state.lastProgressPly >= 20){
+      endGame('hare_special');
+      return true;
+    }
+    return false;
+  }
+
+  function afterHoundMove(){
+    if(hareMoves(state.hounds, state.hare).length===0){
+      render();
+      return endGame('hound');
+    }
+    const newSum = state.hounds.reduce((s,h)=>s+colOf(h),0);
+    if(newSum > state.houndColSum){
+      state.houndColSum = newSum;
+      state.lastProgressPly = state.moveCount;
+    }
+    if(checkNoProgress()){ render(); return; }
+    state.turn='hare';
+    render();
+    proceedTurn();
+  }
+  function afterHareMove(){
+    if(colOf(state.hare)===0){
+      render();
+      return endGame('hare');
+    }
+    if(checkNoProgress()){ render(); return; }
+    if(state.moveCount>=70){
+      render();
+      return endGame('draw');
+    }
+    state.turn='hound';
+    render();
+    proceedTurn();
+  }
+
+  function proceedTurn(){
+    if(!isHumanTurn()){
+      animating=true;
+      setTimeout(()=>{
+        if(state.turn==='hound'){
+          const mv = config.mode==='master' ? masterHoundMove() : cpuHoundMove();
+          animating=false;
+          if(mv) doMove(mv); else endGame('hare');
+        } else {
+          const dest = config.mode==='master' ? masterHareMove() : cpuHareMove();
+          animating=false;
+          if(dest) doHareMove(dest); else endGame('hound');
+        }
+      }, 550);
+    }
+  }
+
+  function endGame(winner){
+    const txt = document.getElementById('result-text');
+    if(winner==='hare') txt.textContent='ウサギの 勝ち';
+    else if(winner==='hare_special') txt.textContent='ウサギの 特殊勝ち(千日手)';
+    else if(winner==='hound') txt.textContent='猟犬の 勝ち';
+    else txt.textContent='引き分け';
+    document.getElementById('screen-result').classList.add('active');
+  }
+
+  /* ---------------- screen navigation ---------------- */
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  document.getElementById('home-btn-mode').addEventListener('click', ()=>{
+    chosenMode='pvp'; chosenRole='hare';
+    document.querySelectorAll('#mode-pair .opt-card').forEach(c=>c.classList.toggle('selected', c.dataset.mode==='pvp'));
+    document.querySelectorAll('#role-pair .opt-card').forEach(c=>c.classList.toggle('selected', c.dataset.role==='hare'));
+    showScreen('screen-mode');
+  });
+  document.getElementById('home-btn-game').addEventListener('click', ()=> showScreen('screen-mode'));
+  document.getElementById('btn-result-home').addEventListener('click', ()=>{
+    document.getElementById('screen-result').classList.remove('active');
+    showScreen('screen-mode');
+  });
+  document.getElementById('btn-view-board').addEventListener('click', ()=>{
+    document.getElementById('screen-result').classList.remove('active');
+  });
+  document.getElementById('btn-again').addEventListener('click', ()=>{
+    document.getElementById('screen-result').classList.remove('active');
+    startGame();
+  });
+
+  let chosenMode='pvp', chosenRole='hare';
+  document.getElementById('mode-pair').addEventListener('click', e=>{
+    const card = e.target.closest('.opt-card'); if(!card) return;
+    chosenMode = card.dataset.mode;
+    document.querySelectorAll('#mode-pair .opt-card').forEach(c=>c.classList.toggle('selected', c===card));
+  });
+  document.getElementById('role-pair').addEventListener('click', e=>{
+    const card = e.target.closest('.opt-card'); if(!card) return;
+    chosenRole = card.dataset.role;
+    document.querySelectorAll('#role-pair .opt-card').forEach(c=>c.classList.toggle('selected', c===card));
+  });
+
+  document.getElementById('btn-start-game').addEventListener('click', ()=>{
+    config = { mode: chosenMode, whiteRole: chosenRole, playerRole: chosenRole };
+    startGame();
+  });
+
+  function startGame(){
+    initState();
+    showScreen('screen-game');
+    render();
+    proceedTurn();
+  }
+
+})();
+</script>
+</body>
+</html>
