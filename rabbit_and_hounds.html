@@ -50,12 +50,27 @@
   .btn:active{ opacity:.6; }
 
   /* ---------- HOME BUTTON (icon) ---------- */
-  .home-icon-btn{
-    position:absolute; top:16px; left:16px; width:38px; height:38px;
-    display:flex; align-items:center; justify-content:center;
-    background:transparent; border:none; cursor:pointer; z-index:20;
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Shippori Mincho','Noto Serif JP',serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-block;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
   }
-  .home-icon-btn svg{width:16px; height:16px; display:block;}
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
 
   /* ---------- MODE SELECT ---------- */
   #screen-mode{padding:78px 22px 0; justify-content:flex-start;}
@@ -122,9 +137,7 @@
 
   <!-- MODE SELECT -->
   <div class="screen active" id="screen-mode">
-    <div class="home-icon-btn" id="home-btn-mode">
-      <svg viewBox="0 0 24 24"><path d="M3 11 L12 3 L21 11 L21 21 L14 21 L14 14 L10 14 L10 21 L3 21 Z" fill="none" stroke="#ffffff" stroke-width="2"/></svg>
-    </div>
+    <a class="home-btn" id="home-btn-mode" href="index.html">← ホーム</a>
     <div class="mode-title">対戦モード</div>
     <div class="mode-wrap">
       <div class="section-label">モードを選ぶ</div>
@@ -151,9 +164,7 @@
 
   <!-- GAME -->
   <div class="screen" id="screen-game">
-    <div class="home-icon-btn" id="home-btn-game">
-      <svg viewBox="0 0 24 24"><path d="M3 11 L12 3 L21 11 L21 21 L14 21 L14 14 L10 14 L10 21 L3 21 Z" fill="none" stroke="#ffffff" stroke-width="2"/></svg>
-    </div>
+    <button class="home-btn" id="home-btn-game">← ホーム</button>
     <div class="turnbar">
       <div class="turn-chip" id="chip-hare"><span class="dot"></span>ウサギ</div>
       <div class="turn-chip" id="chip-hound"><span class="ring"></span>猟犬</div>
@@ -517,12 +528,6 @@
     document.getElementById(id).classList.add('active');
   }
 
-  document.getElementById('home-btn-mode').addEventListener('click', ()=>{
-    chosenMode='pvp'; chosenRole='hare';
-    document.querySelectorAll('#mode-pair .opt-card').forEach(c=>c.classList.toggle('selected', c.dataset.mode==='pvp'));
-    document.querySelectorAll('#role-pair .opt-card').forEach(c=>c.classList.toggle('selected', c.dataset.role==='hare'));
-    showScreen('screen-mode');
-  });
   document.getElementById('home-btn-game').addEventListener('click', ()=> showScreen('screen-mode'));
   document.getElementById('btn-result-home').addEventListener('click', ()=>{
     document.getElementById('screen-result').classList.remove('active');
