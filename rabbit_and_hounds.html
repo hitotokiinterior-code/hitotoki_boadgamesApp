@@ -71,7 +71,12 @@
   #role-block{width:100%;}
 
   /* ---------- GAME ---------- */
-  #screen-game{padding-top:52px;}
+  #screen-game{
+    padding-top:52px;
+    background-image: linear-gradient(rgba(0,0,0,.52), rgba(0,0,0,.58)), url("assets/images/rabbit_and_hounds_bg.jpg");
+    background-size: cover;
+    background-position: center;
+  }
   .turnbar{
     display:flex; gap:14px; align-items:center; justify-content:center;
     margin-bottom:6px;
@@ -94,9 +99,9 @@
   .node-bg{ fill:#0a0a0a; stroke:var(--line); stroke-width:1.5; }
   .node-hit{ fill:transparent; }
   .legal-mark{ fill:none; stroke:var(--white); stroke-width:2; filter:drop-shadow(0 0 5px rgba(255,255,255,.9)); }
-  .piece-hare{ fill:var(--white); filter:drop-shadow(0 0 6px rgba(255,255,255,.85)); }
-  .piece-hound{ fill:#050505; stroke:var(--white); stroke-width:2.5; filter:drop-shadow(0 0 4px rgba(255,255,255,.6)); }
-  .piece-hound.selected, .piece-hare.selected{ filter:drop-shadow(0 0 10px rgba(255,255,255,1)); }
+  .piece-hare{ filter:drop-shadow(0 0 6px rgba(255,255,255,.85)); }
+  .piece-hound{ filter:drop-shadow(0 0 5px rgba(255,255,255,.7)); }
+  .piece-hound.selected, .piece-hare.selected{ filter:drop-shadow(0 0 12px rgba(255,255,255,1)); }
 
   .status-line{ font-size:11px; letter-spacing:.15em; color:var(--ink-dim); margin-top:2px; height:16px; text-align:center;}
 
@@ -173,6 +178,9 @@
 (function(){
   "use strict";
 
+  const HOUND_ICON = "assets/icons/rabbit_and_hounds_hound.png";
+  const HARE_ICON = "assets/icons/rabbit_and_hounds_hare.png";
+
   /* ---------------- board topology (crystal shape) ---------------- */
   const NODES = {
     A:{x:110, y:40},  B:{x:250, y:40},  C:{x:390, y:40},
@@ -208,12 +216,10 @@
 
   function initState(){
     state = {
-      hounds:['A','E','I'],
+      hounds:['D','A','I'],
       hare: 'H',
       turn: 'hound',
       moveCount: 0,
-      houndColSum: colOf('A')+colOf('E')+colOf('I'),
-      lastProgressPly: 0,
     };
     selected = null;
   }
@@ -306,7 +312,7 @@
     const visited = new Set();
     const bfsQ = [];
 
-    const startHounds = ['A','E','I'], startHare='H';
+    const startHounds = ['D','A','I'], startHare='H';
     const startKey = stateKey(startHounds, startHare, 'hound');
     stateData[startKey] = {hounds:startHounds, hare:startHare, turn:'hound'};
     visited.add(startKey);
@@ -461,12 +467,14 @@
     // hound pieces
     state.hounds.forEach((h,idx)=>{
       const isSel = selected===idx && state.turn==='hound';
-      svg.appendChild(el('circle',{class:'piece-hound'+(isSel?' selected':''), cx:px(h), cy:py(h), r:13, 'data-hound':idx}));
+      const sz = 32;
+      svg.appendChild(el('image',{class:'piece-hound'+(isSel?' selected':''), href:HOUND_ICON, x:px(h)-sz/2, y:py(h)-sz/2, width:sz, height:sz, 'data-hound':idx}));
     });
     // hare piece
     {
       const isSel = selected==='hare' && state.turn==='hare';
-      svg.appendChild(el('circle',{class:'piece-hare'+(isSel?' selected':''), cx:px(state.hare), cy:py(state.hare), r:11, 'data-hare':'1'}));
+      const sz = 28;
+      svg.appendChild(el('image',{class:'piece-hare'+(isSel?' selected':''), href:HARE_ICON, x:px(state.hare)-sz/2, y:py(state.hare)-sz/2, width:sz, height:sz, 'data-hare':'1'}));
     }
     // hit targets (clickable, invisible, larger)
     Object.keys(NODES).forEach(p=>{
@@ -533,8 +541,8 @@
     afterHareMove();
   }
 
-  function checkNoProgress(){
-    if(state.moveCount - state.lastProgressPly >= 20){
+  function checkMoveLimit(){
+    if(state.moveCount >= 30){
       endGame('hare_special');
       return true;
     }
@@ -546,12 +554,7 @@
       render();
       return endGame('hound');
     }
-    const newSum = state.hounds.reduce((s,h)=>s+colOf(h),0);
-    if(newSum > state.houndColSum){
-      state.houndColSum = newSum;
-      state.lastProgressPly = state.moveCount;
-    }
-    if(checkNoProgress()){ render(); return; }
+    if(checkMoveLimit()){ render(); return; }
     state.turn='hare';
     render();
     proceedTurn();
@@ -561,11 +564,7 @@
       render();
       return endGame('hare');
     }
-    if(checkNoProgress()){ render(); return; }
-    if(state.moveCount>=70){
-      render();
-      return endGame('draw');
-    }
+    if(checkMoveLimit()){ render(); return; }
     state.turn='hound';
     render();
     proceedTurn();
