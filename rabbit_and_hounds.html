@@ -157,7 +157,7 @@
     </div>
     <div class="status-line" id="status-line"></div>
     <div id="board-wrap">
-      <svg id="board-svg" viewBox="0 0 500 260"></svg>
+      <svg id="board-svg" viewBox="0 0 500 340"></svg>
     </div>
     <div id="ad-space"></div>
   </div>
@@ -184,8 +184,8 @@
   /* ---------------- board topology (crystal shape) ---------------- */
   const NODES = {
     A:{x:110, y:40},  B:{x:250, y:40},  C:{x:390, y:40},
-    D:{x:40,  y:130}, E:{x:110,y:130}, F:{x:250,y:130}, G:{x:390,y:130}, H:{x:460,y:130},
-    I:{x:110, y:220}, J:{x:250,y:220}, K:{x:390,y:220}
+    D:{x:40,  y:170}, E:{x:110,y:170}, F:{x:250,y:170}, G:{x:390,y:170}, H:{x:460,y:170},
+    I:{x:110, y:300}, J:{x:250,y:300}, K:{x:390,y:300}
   };
   const COL = { D:0, A:1,E:1,I:1, B:2,F:2,J:2, C:3,G:3,K:3, H:4 };
 
@@ -467,13 +467,13 @@
     // hound pieces
     state.hounds.forEach((h,idx)=>{
       const isSel = selected===idx && state.turn==='hound';
-      const sz = 32;
+      const sz = 45;
       svg.appendChild(el('image',{class:'piece-hound'+(isSel?' selected':''), href:HOUND_ICON, x:px(h)-sz/2, y:py(h)-sz/2, width:sz, height:sz, 'data-hound':idx}));
     });
     // hare piece
     {
       const isSel = selected==='hare' && state.turn==='hare';
-      const sz = 28;
+      const sz = 39;
       svg.appendChild(el('image',{class:'piece-hare'+(isSel?' selected':''), href:HARE_ICON, x:px(state.hare)-sz/2, y:py(state.hare)-sz/2, width:sz, height:sz, 'data-hare':'1'}));
     }
     // hit targets (clickable, invisible, larger)
