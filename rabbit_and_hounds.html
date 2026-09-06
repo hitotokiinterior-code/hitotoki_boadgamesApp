@@ -43,8 +43,8 @@
   .btn{
     font-family:inherit; font-size:15px; letter-spacing:.18em;
     background:transparent; color:var(--ink);
-    border:1px solid var(--white); padding:11px 44px;
-    cursor:pointer; border-radius:0;
+    border:1px solid var(--white); padding:11px 34px;
+    cursor:pointer; border-radius:8px;
   }
   .btn.solid{ background:var(--white); color:#000; border-color:var(--white); font-weight:700; }
   .btn:active{ opacity:.6; }
@@ -72,6 +72,68 @@
   }
   .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
 
+  .hidden{ display:none !important; }
+
+  .bg-switch-btn{
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 100;
+    font-family:'Shippori Mincho','Noto Serif JP',serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor:pointer;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .bg-switch-btn:hover{ background: rgba(255,255,255,0.24); border-color:#fff; }
+
+  .bg-switch-panel{
+    position: fixed;
+    top: 52px;
+    right: 14px;
+    z-index: 100;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    background: rgba(20,20,20,0.9);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+  .bg-swatch{
+    width:22px; height:22px;
+    border-radius:50%;
+    background: var(--sw, #0a0a0a);
+    border: 1px solid rgba(255,255,255,0.35);
+    cursor:pointer;
+    padding:0;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
+  .bg-swatch:hover{ transform: scale(1.12); border-color:#fff; }
+  .bg-swatch.active{ border-color:#fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
+
+  .sennichite-badge{
+    font-family:'Shippori Mincho','Noto Serif JP',serif;
+    font-weight:700;
+    font-size:0.72rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    text-align:center;
+    line-height:1.6;
+    margin-top:20px;
+    display:none;
+  }
+  .sennichite-badge.show{ display:block; }
+
   /* ---------- MODE SELECT ---------- */
   #screen-mode{padding:78px 22px 0; justify-content:flex-start;}
   .mode-title{font-size:18px; letter-spacing:.2em; margin-bottom:26px; font-weight:700;}
@@ -80,6 +142,7 @@
   .opt-card{
     flex:1; text-align:center; padding:13px 4px; border:1px solid var(--white);
     font-size:13px; letter-spacing:.12em; cursor:pointer; color:var(--ink-dim);
+    border-radius:8px;
   }
   .opt-card.selected{ background:var(--white); color:#000; border-color:var(--white); font-weight:700; }
   .mode-wrap{display:flex; flex-direction:column; align-items:center; width:100%; max-width:320px;}
@@ -112,7 +175,7 @@
   }
 
   #board-wrap{
-    flex:1; width:100%; display:flex; align-items:flex-start; justify-content:center;
+    flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     padding:4px 10px; margin-top:34px;
   }
   #board-svg{ width:100%; max-width:440px; height:auto; }
@@ -139,6 +202,14 @@
 </style>
 </head>
 <body>
+<button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
+<div id="bgSwitchPanel" class="bg-switch-panel hidden">
+  <button class="bg-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
+  <button class="bg-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
+  <button class="bg-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
+  <button class="bg-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
+  <button class="bg-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
+</div>
 <div id="app">
 
   <!-- MODE SELECT -->
@@ -162,8 +233,8 @@
       </div>
 
       <div style="display:flex; gap:10px; margin-top:8px; width:100%;">
-        <button class="btn solid" id="btn-start-game" style="flex:1; line-height:1.4;">はじめる</button>
-        <button class="btn" id="btn-random-hare" style="flex:1; line-height:1.4;">ウサギ<br>ランダム</button>
+        <button class="btn solid" id="btn-start-game" style="flex:1; padding:8px 34px; line-height:1.3;">はじめる</button>
+        <button class="btn" id="btn-random-hare" style="flex:1; padding:8px 12px; line-height:1.25; font-size:11px;">ウサギ<br>ランダム</button>
       </div>
     </div>
   </div>
@@ -179,6 +250,7 @@
     <div class="status-line" id="status-line"></div>
     <div id="board-wrap">
       <svg id="board-svg" viewBox="0 0 500 340"></svg>
+      <div class="sennichite-badge" id="sennichite-badge"></div>
     </div>
     <div id="ad-space"></div>
   </div>
@@ -446,6 +518,16 @@
     document.getElementById('chip-hound').classList.toggle('active', state.turn==='hound');
     document.getElementById('turn-label').textContent = state.turn==='hare' ? '― ウサギの番 ―' : '― 猟犬の番 ―';
 
+    const remaining = 30 - state.moveCount;
+    const badge = document.getElementById('sennichite-badge');
+    if(remaining > 0 && remaining <= 8){
+      badge.textContent = `ウサギの特殊勝利\nまで残り${remaining}手`;
+      badge.style.whiteSpace = 'pre-line';
+      badge.classList.add('show');
+    } else {
+      badge.classList.remove('show');
+    }
+
     const statusEl = document.getElementById('status-line');
     if(config.mode!=='pvp'){
       statusEl.textContent = isHumanTurn() ? 'あなたの番です' : (config.mode==='master' ? '達人CPU思考中…' : 'CPU思考中…');
@@ -549,7 +631,7 @@
   function endGame(winner){
     const txt = document.getElementById('result-text');
     if(winner==='hare') txt.textContent='ウサギの 勝ち';
-    else if(winner==='hare_special') txt.textContent='ウサギの 特殊勝ち(千日手)';
+    else if(winner==='hare_special') txt.textContent='ウサギの 特殊勝利(千日手)';
     else if(winner==='hound') txt.textContent='猟犬の 勝ち';
     else txt.textContent='引き分け';
     document.getElementById('screen-result').classList.add('active');
@@ -559,6 +641,9 @@
   function showScreen(id){
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
+    const isModeScreen = (id === 'screen-mode');
+    document.getElementById('bgSwitchBtn').classList.toggle('hidden', !isModeScreen);
+    if(!isModeScreen) document.getElementById('bgSwitchPanel').classList.add('hidden');
   }
 
   document.getElementById('home-btn-game').addEventListener('click', ()=> showScreen('screen-mode'));
@@ -603,6 +688,51 @@
     render();
     proceedTurn();
   }
+
+  // --- user-selectable background color switch (mode-select screen only; hidden during play) ---
+  // ミニ将棋など他ページと同じ localStorage キーを共有し、どちらで選んでも
+  // アプリ全体でテーマが揃うようにしている
+  (function(){
+    const BG_STORAGE_KEY = 'pref_bg_gradient';
+    const btn = document.getElementById('bgSwitchBtn');
+    const panel = document.getElementById('bgSwitchPanel');
+    const swatches = document.querySelectorAll('.bg-swatch[data-grad]');
+
+    function applyBg(gradStops){
+      document.documentElement.style.setProperty('--bg', 'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')');
+    }
+
+    function setActiveSwatch(gradStops){
+      swatches.forEach(s => s.classList.toggle('active', s.getAttribute('data-grad') === gradStops));
+    }
+
+    let savedGrad = null;
+    try{ savedGrad = localStorage.getItem(BG_STORAGE_KEY); }catch(e){}
+    if(savedGrad){
+      applyBg(savedGrad);
+      setActiveSwatch(savedGrad);
+    }
+
+    btn.addEventListener('click', () => {
+      panel.classList.toggle('hidden');
+    });
+
+    swatches.forEach(sw => {
+      sw.addEventListener('click', () => {
+        const grad = sw.getAttribute('data-grad');
+        applyBg(grad);
+        setActiveSwatch(grad);
+        try{ localStorage.setItem(BG_STORAGE_KEY, grad); }catch(e){}
+        panel.classList.add('hidden');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn){
+        panel.classList.add('hidden');
+      }
+    });
+  })();
 
 })();
 </script>
