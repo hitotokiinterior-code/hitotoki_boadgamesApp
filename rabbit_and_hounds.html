@@ -142,7 +142,10 @@
         </div>
       </div>
 
-      <button class="btn solid" id="btn-start-game" style="margin-top:8px;">はじめる</button>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="btn solid" id="btn-start-game">はじめる</button>
+        <button class="btn" id="btn-random-hare">ウサギランダム</button>
+      </div>
     </div>
   </div>
 
@@ -212,12 +215,18 @@
   const colOf = id => COL[id];
 
   /* ---------------- game state ---------------- */
-  let state, config, selected=null, animating=false;
+  let state, config, selected=null, animating=false, randomHareStart=false;
 
   function initState(){
+    const houndStart = ['D','A','I'];
+    let hareStart = 'H';
+    if(randomHareStart){
+      const candidates = Object.keys(NODES).filter(id => !houndStart.includes(id));
+      hareStart = candidates[Math.floor(Math.random()*candidates.length)];
+    }
     state = {
-      hounds:['D','A','I'],
-      hare: 'H',
+      hounds: houndStart.slice(),
+      hare: hareStart,
       turn: 'hound',
       moveCount: 0,
     };
@@ -297,138 +306,44 @@
     return best;
   }
 
-  /* ---------------- 達人CPU: 厳密解 (後退解析/retrograde analysis) ---------------- */
-  let SOLVED = null;
-  function solveGame(){
-    const houndsKey = arr => arr.slice().sort().join(',');
-    const stateKey = (hounds, hare, turn) => houndsKey(hounds)+'|'+hare+'|'+turn;
+  /* ---------------- 達人CPU: 深さ制限つきミニマックス(常に理論値ではないが読みが深い) ---------------- */
+  const MASTER_DEPTH = 6;
 
-    const stateData = {};
-    const succ = {};
-    const preds = {};
-    const outdeg = {};
-    const VALUE = {};
-    const BESTMOVE = {};
-    const visited = new Set();
-    const bfsQ = [];
-
-    const startHounds = ['D','A','I'], startHare='H';
-    const startKey = stateKey(startHounds, startHare, 'hound');
-    stateData[startKey] = {hounds:startHounds, hare:startHare, turn:'hound'};
-    visited.add(startKey);
-    bfsQ.push(startKey);
-
-    while(bfsQ.length){
-      const k = bfsQ.shift();
-      const {hounds, hare, turn} = stateData[k];
-      const edges = [];
-      if(turn==='hound'){
-        hounds.forEach((h,idx)=>{
-          const c0 = colOf(h);
-          (adj[h]||[]).forEach(n=>{
-            if(colOf(n) < c0) return;
-            if(hounds.includes(n)) return;
-            if(n===hare) return;
-            const newHounds = hounds.slice(); newHounds[idx]=n;
-            const sortedNew = newHounds.slice().sort();
-            const hareLegal = (adj[hare]||[]).filter(x=> !sortedNew.includes(x));
-            if(hareLegal.length===0){
-              edges.push({terminal:'HOUND', move:{hound:h, dest:n}});
-            } else {
-              const nk = stateKey(sortedNew, hare, 'hare');
-              if(!visited.has(nk)){
-                visited.add(nk);
-                stateData[nk] = {hounds:sortedNew, hare, turn:'hare'};
-                bfsQ.push(nk);
-              }
-              edges.push({key:nk, move:{hound:h, dest:n}});
-            }
-          });
-        });
-      } else {
-        (adj[hare]||[]).forEach(n=>{
-          if(hounds.includes(n)) return;
-          if(colOf(n)===0){
-            edges.push({terminal:'HARE', move:{dest:n}});
-          } else {
-            const nk = stateKey(hounds, n, 'hound');
-            if(!visited.has(nk)){
-              visited.add(nk);
-              stateData[nk] = {hounds, hare:n, turn:'hound'};
-              bfsQ.push(nk);
-            }
-            edges.push({key:nk, move:{dest:n}});
-          }
-        });
+  function minimax(hounds, hare, turn, depth, alpha, beta){
+    if(turn==='hare'){
+      const hMoves = hareMoves(hounds, hare);
+      if(hMoves.length===0) return { score: 1e6 + depth, move:null };
+      if(depth===0) return { score: evalForHound(hounds, hare), move:null };
+      let best=null, bestScore=Infinity;
+      for(const dest of hMoves){
+        const score = (colOf(dest)===0) ? (-1e6 - depth) : minimax(hounds, dest, 'hound', depth-1, alpha, beta).score;
+        if(score<bestScore){ bestScore=score; best=dest; }
+        if(bestScore<beta) beta=bestScore;
+        if(beta<=alpha) break;
       }
-      succ[k] = edges;
-    }
-
-    const resolveQueue = [];
-    Object.keys(succ).forEach(k=>{
-      const turn = stateData[k].turn;
-      const winLabel = turn==='hound' ? 'HOUND' : 'HARE';
-      const winEdge = succ[k].find(e=>e.terminal===winLabel);
-      if(winEdge){
-        VALUE[k]=winLabel; BESTMOVE[k]=winEdge.move;
-        resolveQueue.push(k);
-      } else {
-        outdeg[k] = succ[k].length;
-        succ[k].forEach(e=>{
-          (preds[e.key] = preds[e.key]||[]).push({from:k, move:e.move});
-        });
+      return { score:bestScore, move:best };
+    } else {
+      if(depth===0) return { score: evalForHound(hounds, hare), move:null };
+      const hMoves = allHoundMoves(hounds, hare);
+      let best=null, bestScore=-Infinity;
+      for(const mv of hMoves){
+        const newHounds = hounds.slice(); newHounds[mv.idx]=mv.dest;
+        const score = (hareMoves(newHounds, hare).length===0) ? (1e6 + depth) : minimax(newHounds, hare, 'hare', depth-1, alpha, beta).score;
+        if(score>bestScore){ bestScore=score; best=mv; }
+        if(bestScore>alpha) alpha=bestScore;
+        if(beta<=alpha) break;
       }
-    });
-
-    let qi=0;
-    while(qi<resolveQueue.length){
-      const k = resolveQueue[qi++];
-      const kVal = VALUE[k];
-      (preds[k]||[]).forEach(({from,move})=>{
-        if(VALUE[from]) return;
-        const fromTurn = stateData[from].turn;
-        const moverLabel = fromTurn==='hound' ? 'HOUND':'HARE';
-        if(kVal===moverLabel){
-          VALUE[from]=moverLabel; BESTMOVE[from]=move;
-          resolveQueue.push(from);
-        } else {
-          outdeg[from]--;
-          if(outdeg[from]===0){
-            const oppLabel = fromTurn==='hound' ? 'HARE':'HOUND';
-            VALUE[from]=oppLabel;
-            resolveQueue.push(from);
-          }
-        }
-      });
+      return { score:bestScore, move:best };
     }
-
-    // 未解決(サイクル) = 引き分け。best moveは相手勝ちに繋がらない手を選ぶ
-    Object.keys(succ).forEach(k=>{
-      if(VALUE[k]) return;
-      VALUE[k]='DRAW';
-      const turn = stateData[k].turn;
-      const oppLabel = turn==='hound' ? 'HARE':'HOUND';
-      const safe = succ[k].find(e=> !e.terminal && VALUE[e.key] !== oppLabel);
-      BESTMOVE[k] = safe ? safe.move : (succ[k][0] ? succ[k][0].move : null);
-    });
-
-    SOLVED = { stateKey, VALUE, BESTMOVE };
   }
 
   function masterHoundMove(){
-    if(!SOLVED) solveGame();
-    const k = SOLVED.stateKey(state.hounds, state.hare, 'hound');
-    const mv = SOLVED.BESTMOVE[k];
-    if(!mv) return cpuHoundMove();
-    const idx = state.hounds.indexOf(mv.hound);
-    return { idx, dest: mv.dest };
+    const res = minimax(state.hounds, state.hare, 'hound', MASTER_DEPTH, -Infinity, Infinity);
+    return res.move || cpuHoundMove();
   }
   function masterHareMove(){
-    if(!SOLVED) solveGame();
-    const k = SOLVED.stateKey(state.hounds, state.hare, 'hare');
-    const mv = SOLVED.BESTMOVE[k];
-    if(!mv) return cpuHareMove();
-    return mv.dest;
+    const res = minimax(state.hounds, state.hare, 'hare', MASTER_DEPTH, -Infinity, Infinity);
+    return res.move || cpuHareMove();
   }
 
   /* ---------------- rendering ---------------- */
@@ -635,6 +550,12 @@
 
   document.getElementById('btn-start-game').addEventListener('click', ()=>{
     config = { mode: chosenMode, whiteRole: chosenRole, playerRole: chosenRole };
+    randomHareStart = false;
+    startGame();
+  });
+  document.getElementById('btn-random-hare').addEventListener('click', ()=>{
+    config = { mode: chosenMode, whiteRole: chosenRole, playerRole: chosenRole };
+    randomHareStart = true;
     startGame();
   });
 
