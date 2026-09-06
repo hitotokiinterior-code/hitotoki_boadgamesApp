@@ -121,7 +121,6 @@
   .legal-mark{ fill:none; stroke:var(--white); stroke-width:2; filter:drop-shadow(0 0 5px rgba(255,255,255,.9)); }
   .piece-hare{ filter:drop-shadow(0 0 6px rgba(255,255,255,.85)); }
   .piece-hound{ filter:drop-shadow(0 0 5px rgba(255,255,255,.7)); }
-  .piece-hound.turn-glow, .piece-hare.turn-glow{ filter:drop-shadow(0 0 100px rgba(255,255,255,1)); }
   .piece-hound.selected, .piece-hare.selected{ filter:drop-shadow(0 0 12px rgba(255,255,255,1)); }
 
   .status-line{ font-size:11px; letter-spacing:.15em; color:var(--ink-dim); margin-top:2px; height:16px; text-align:center;}
@@ -373,6 +372,18 @@
     return e;
   }
 
+  const TURN_GLOW_RADIUS = 33;
+  function ensureGlowDef(){
+    if(document.getElementById('turnGlowGrad')) return;
+    const defs = el('defs',{});
+    const grad = el('radialGradient',{id:'turnGlowGrad'});
+    grad.appendChild(el('stop',{offset:'0%','stop-color':'#ffffff','stop-opacity':'0.95'}));
+    grad.appendChild(el('stop',{offset:'55%','stop-color':'#ffffff','stop-opacity':'0.45'}));
+    grad.appendChild(el('stop',{offset:'100%','stop-color':'#ffffff','stop-opacity':'0'}));
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+  }
+
   function isHumanTurn(){
     if(config.mode==='pvp') return true;
     return state.turn === config.playerRole;
@@ -380,6 +391,7 @@
 
   function render(){
     svg.innerHTML='';
+    ensureGlowDef();
     // edges
     EDGE_LIST.forEach(([a,b])=>{
       svg.appendChild(el('line',{class:'edge', x1:px(a), y1:py(a), x2:px(b), y2:py(b)}));
@@ -401,8 +413,10 @@
     state.hounds.forEach((h,idx)=>{
       const isSel = selected===idx && state.turn==='hound';
       const isTurnGlow = state.turn==='hound';
+      if(isTurnGlow){
+        svg.appendChild(el('circle',{cx:px(h), cy:py(h), r:TURN_GLOW_RADIUS, fill:'url(#turnGlowGrad)'}));
+      }
       let cls = 'piece-hound';
-      if(isTurnGlow) cls += ' turn-glow';
       if(isSel) cls += ' selected';
       const sz = 45;
       svg.appendChild(el('image',{class:cls, href:HOUND_ICON, x:px(h)-sz/2, y:py(h)-sz/2, width:sz, height:sz, 'data-hound':idx}));
@@ -411,8 +425,10 @@
     {
       const isSel = selected==='hare' && state.turn==='hare';
       const isTurnGlow = state.turn==='hare';
+      if(isTurnGlow){
+        svg.appendChild(el('circle',{cx:px(state.hare), cy:py(state.hare), r:TURN_GLOW_RADIUS, fill:'url(#turnGlowGrad)'}));
+      }
       let cls = 'piece-hare';
-      if(isTurnGlow) cls += ' turn-glow';
       if(isSel) cls += ' selected';
       const sz = 39;
       svg.appendChild(el('image',{class:cls, href:HARE_ICON, x:px(state.hare)-sz/2, y:py(state.hare)-sz/2, width:sz, height:sz, 'data-hare':'1'}));
