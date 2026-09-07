@@ -78,10 +78,7 @@
   .menu-card{
     max-width: 640px;
     margin: 20px auto 0;
-    background: var(--panel);
-    border: 1px solid var(--border-dim);
-    border-radius: 12px;
-    padding: 22px 18px 20px;
+    padding: 0 18px 20px;
   }
 
   .menu-section-title{
@@ -91,6 +88,22 @@
     margin-bottom: 12px;
   }
   .menu-section-title.second{ margin-top: 26px; }
+
+  .menu-mode-title{
+    font-family:'Noto Serif JP', serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 0.1em;
+    color: var(--text-primary);
+    margin-top: 26px;
+  }
+  .menu-mode-label{
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    margin-top: 2px;
+    margin-bottom: 12px;
+  }
 
   .size-list{
     display:grid;
@@ -490,7 +503,8 @@
       </button>
     </div>
 
-    <div class="menu-section-title second">対戦モードを選ぶ</div>
+    <div class="menu-mode-title">対戦モード</div>
+    <div class="menu-mode-label">モードを選ぶ</div>
     <div class="mode-row">
       <button class="mode-card active" id="mode2p" data-mode="2p">2人対戦</button>
       <button class="mode-card" id="modeCpu" data-mode="cpu">CPU対戦</button>
