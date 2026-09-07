@@ -50,29 +50,96 @@
     padding: 0 0 calc(var(--ad-h) + 20px);
     font-family: 'Noto Serif JP', serif;
   }
-  .menu-topbar{
-    display:grid;
-    grid-template-columns: 44px 1fr 44px;
-    align-items:center;
-    padding: 16px 18px 14px;
-    border-bottom: 1px solid #1c1c1a;
-  }
   .home-btn{
-    background:none;
-    border:none;
-    color: var(--text-primary);
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
     cursor:pointer;
-    padding: 4px;
+    text-decoration:none;
+    display:inline-block;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
+  .bg-switch-btn{
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 100;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor:pointer;
+    backdrop-filter: blur(4px);
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: none;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .bg-switch-btn:hover{ background: rgba(255,255,255,0.24); border-color:#fff; }
+
+  .bg-switch-panel{
+    position: fixed;
+    top: 52px;
+    right: 14px;
+    z-index: 100;
     display:flex;
     align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    background: rgba(20,20,20,0.9);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
   }
-  .home-btn svg{ width:22px; height:22px; }
-  .menu-title-bar{
+  .bg-swatch{
+    width:22px; height:22px;
+    border-radius:50%;
+    background: var(--sw, #0a0a0a);
+    border: 1px solid rgba(255,255,255,0.35);
+    cursor:pointer;
+    padding:0;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
+  .bg-swatch:hover{ transform: scale(1.12); border-color:#fff; }
+  .bg-swatch.active{ border-color:#fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
+
+  .menu-header{
     text-align:center;
+    margin-top: 60px;
+    padding-bottom: 14px;
+  }
+  .menu-title-bar{
     font-family:'Noto Serif JP', serif;
     font-size: 19px;
     font-weight: 700;
     letter-spacing: 0.05em;
+  }
+  .menu-title-en{
+    margin-top: 4px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.32em;
+    color: var(--text-dim);
+    text-transform: uppercase;
   }
 
   .menu-card{
@@ -183,6 +250,7 @@
   .start-btn:hover{ border-color:#5a5a56; background:#141412; }
 
   .menu-screen.hidden, .app.hidden{ display:none; }
+  .hidden{ display:none !important; }
 
   /* ---------- App (game) screen ---------- */
   .app{
@@ -471,15 +539,19 @@
 <body>
 
 <div class="menu-screen" id="menuScreen">
-  <div class="menu-topbar">
-    <button class="home-btn" id="homeBtn" aria-label="ホーム">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter">
-        <path d="M3 11.5 L12 4 L21 11.5"/>
-        <path d="M5.5 9.5 V20 H18.5 V9.5"/>
-      </svg>
-    </button>
+  <a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+  <button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
+  <div id="bgSwitchPanel" class="bg-switch-panel hidden">
+    <button class="bg-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
+    <button class="bg-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
+    <button class="bg-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
+    <button class="bg-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
+    <button class="bg-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
+  </div>
+
+  <div class="menu-header">
     <div class="menu-title-bar">ドット&amp;ボックス</div>
-    <div></div>
+    <div class="menu-title-en">DOTS &amp; BOXES</div>
   </div>
 
   <div class="menu-card">
@@ -595,7 +667,6 @@
   const mode2pBtn = document.getElementById('mode2p');
   const modeCpuBtn = document.getElementById('modeCpu');
   const startBtn = document.getElementById('startBtn');
-  const homeBtn = document.getElementById('homeBtn');
 
   const board = document.getElementById('board');
   const dotLayer = document.getElementById('dotLayer');
@@ -647,11 +718,6 @@
 
   // 先攻は常に白(player)、後攻は常に黒(cpu)で固定
   startBtn.addEventListener('click', () => startGame(selectedRows, selectedCols, selectedMode));
-  homeBtn.addEventListener('click', () => {
-    // アプリのホーム画面(ゲーム一覧)へ遷移します。
-    // 実際のファイル構成に合わせてパスを調整してください(例: 'index.html', '../index.html' など)。
-    window.location.href = 'index.html';
-  });
 
   function showMenu(){
     endOverlay.classList.remove('shown');
@@ -1074,6 +1140,51 @@
     resultFab.classList.remove('shown');
   });
   document.getElementById('backBtn').addEventListener('click', showMenu);
+
+  // --- user-selectable background color switch (menu screen only) ---
+  // 他のゲームと同じ localStorage キーを共有し、どちらで選んでも
+  // アプリ全体でテーマが揃うようにしている
+  (function(){
+    const BG_STORAGE_KEY = 'pref_bg_gradient';
+    const btn = document.getElementById('bgSwitchBtn');
+    const panel = document.getElementById('bgSwitchPanel');
+    const swatches = document.querySelectorAll('.bg-swatch[data-grad]');
+
+    function applyBg(gradStops){
+      document.body.style.background = 'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')';
+    }
+
+    function setActiveSwatch(gradStops){
+      swatches.forEach(s => s.classList.toggle('active', s.getAttribute('data-grad') === gradStops));
+    }
+
+    let savedGrad = null;
+    try{ savedGrad = localStorage.getItem(BG_STORAGE_KEY); }catch(e){}
+    if(savedGrad){
+      applyBg(savedGrad);
+      setActiveSwatch(savedGrad);
+    }
+
+    btn.addEventListener('click', () => {
+      panel.classList.toggle('hidden');
+    });
+
+    swatches.forEach(sw => {
+      sw.addEventListener('click', () => {
+        const grad = sw.getAttribute('data-grad');
+        applyBg(grad);
+        setActiveSwatch(grad);
+        try{ localStorage.setItem(BG_STORAGE_KEY, grad); }catch(e){}
+        panel.classList.add('hidden');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn){
+        panel.classList.add('hidden');
+      }
+    });
+  })();
 })();
 </script>
 <script src="timer-watcher.js"></script>
