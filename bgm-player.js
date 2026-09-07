@@ -25,7 +25,7 @@
   var BGM_SRC = 'assets/audio/bgm.mp3';
   var POS_KEY = 'hitotoki_bgm_pos';
   var PREF_KEY = 'pref_bgm';
-  var VOLUME = 0.35;
+  var VOLUME = 0.25;
 
   function bgmEnabled(){
     // 'on' の時だけ有効。未設定（初回訪問）や 'off' は無効＝デフォルトOFF
