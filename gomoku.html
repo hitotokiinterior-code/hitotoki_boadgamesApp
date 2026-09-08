@@ -228,31 +228,6 @@
   }
   .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
 
-  #ruleToggleRow{
-    flex-direction: column;
-    width:100%;
-  }
-  #ruleToggleRow .mode-toggle-btn{
-    width:100%;
-    padding: 10px 14px;
-    text-align:left;
-  }
-  .mode-toggle-btn .sub{
-    display:block;
-    font-size:0.6rem;
-    color: var(--silver-dim);
-    margin-top:3px;
-    letter-spacing:0.04em;
-  }
-  .mode-toggle-btn.active .sub{ color:#555; }
-
-  .rule-badge{
-    font-size:0.62rem;
-    letter-spacing:0.08em;
-    color: var(--silver-dim);
-    text-align:center;
-  }
-
   .turn-wrap{
     display:flex;
     align-items:center;
@@ -297,8 +272,8 @@
   .board{
     position:relative;
     display:grid;
-    grid-template-columns: repeat(var(--board-size, 15), 1fr);
-    grid-template-rows: repeat(var(--board-size, 15), 1fr);
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
     width: min(380px, 78vw);
     height: min(380px, 78vw);
     background: var(--board-bg);
@@ -501,18 +476,12 @@
 <div class="app">
 
   <header>
-    <h1>五目並べ<span class="small">N-MOKU NARABE</span></h1>
+    <h1>五目並べ<span class="small">GOMOKU · 15 × 15</span></h1>
   </header>
 
   <div id="setupScreen" class="setup-screen">
     <div class="setup-card">
       <div class="setup-mode-title">対戦モード</div>
-      <div class="setup-section-label">ルールを選ぶ</div>
-      <div class="mode-toggle-row" id="ruleToggleRow">
-        <button class="mode-toggle-btn" id="ruleThreeBtn">3目並べ<span class="sub">5×5マス・3つ並べたら勝ち</span></button>
-        <button class="mode-toggle-btn" id="ruleFourBtn">4目並べ<span class="sub">7×7マス・4つ並べたら勝ち</span></button>
-        <button class="mode-toggle-btn active" id="ruleFiveBtn">5目並べ<span class="sub">15×15マス・5つ並べたら勝ち</span></button>
-      </div>
       <div class="setup-section-label">対戦相手を選ぶ</div>
       <div class="mode-toggle-row" id="modeToggleRow">
         <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
@@ -530,8 +499,6 @@
   </div>
 
   <div id="gameScreen" class="game-screen hidden">
-
-    <div id="ruleBadge" class="rule-badge"></div>
 
     <div class="turn-wrap">
       <div id="turnStone" class="turn-stone white"></div>
@@ -554,8 +521,8 @@
     <div id="rules" class="rules">
       <h2>遊び方</h2>
       <ul>
-        <li>選んだルールに応じた大きさの盤に、白と黒が交互に石を置いていきます</li>
-        <li>縦・横・斜め、いずれかの向きで<span id="rulesWinCount">5</span>つ以上石を並べたら勝利です</li>
+        <li>15×15の盤に、白と黒が交互に石を置いていきます</li>
+        <li>縦・横・斜め、いずれかの向きで5つ以上石を並べたら勝利です</li>
         <li>一度置いた石は動かせません</li>
         <li>全マスが埋まって誰も揃わなければ引き分けです</li>
         <li>「CPU対戦」を選ぶと黒をCPUが担当します。1人でも遊べます</li>
@@ -586,23 +553,9 @@
 
 <script>
 (function(){
-  const RULES = {
-    three: { size:5,  win:3, label:'3目並べ' },
-    four:  { size:7,  win:4, label:'4目並べ' },
-    five:  { size:15, win:5, label:'5目並べ' },
-  };
-  let ruleKey = 'five';
-  let SIZE = RULES[ruleKey].size;
-  let WIN_LEN = RULES[ruleKey].win;
-
-  function starPointsForSize(size){
-    // 15×15（本来の五目並べ）だけ、天元＋星の伝統的な5点配置。
-    // それ以外の盤は中央に1点だけ置く。
-    if(size === 15) return [[3,3],[3,11],[7,7],[11,3],[11,11]];
-    const mid = Math.floor(size / 2);
-    return [[mid, mid]];
-  }
-  let STAR_POINTS = starPointsForSize(SIZE);
+  const SIZE = 15;
+  const WIN_LEN = 5;
+  const STAR_POINTS = [[3,3],[3,11],[7,7],[11,3],[11,11]];
 
   let grid, turn, gameOver, filledCount;
   let vsCPU = false;
@@ -725,11 +678,6 @@
   }
 
   function resetAll(){
-    STAR_POINTS = starPointsForSize(SIZE);
-    document.getElementById('board').style.setProperty('--board-size', SIZE);
-    document.getElementById('ruleBadge').textContent = RULES[ruleKey].label + '（' + SIZE + '×' + SIZE + '）';
-    document.getElementById('rulesWinCount').textContent = WIN_LEN;
-
     grid = Array.from({length:SIZE}, () => Array(SIZE).fill(null));
     turn = 'white';
     gameOver = false;
@@ -862,16 +810,12 @@
     }
   }
 
-  // --- setup screen: pick the rule (board size / win length) and the mode, commit with はじめる ---
-  let setupRuleKey = 'five';
+  // --- setup screen: pick the mode, commit with はじめる ---
   let setupVsCPU = false;
   let setupCpuDifficulty = 'normal';
   let setupHumanSide = 'white';
 
   function updateSetupUI(){
-    document.getElementById('ruleThreeBtn').classList.toggle('active', setupRuleKey === 'three');
-    document.getElementById('ruleFourBtn').classList.toggle('active', setupRuleKey === 'four');
-    document.getElementById('ruleFiveBtn').classList.toggle('active', setupRuleKey === 'five');
     document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !setupVsCPU);
     document.getElementById('modeCPUBtn').classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'normal');
     document.getElementById('modeCPUMasterBtn').classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'master');
@@ -879,10 +823,6 @@
     document.getElementById('sideWhiteBtn').classList.toggle('active', setupHumanSide === 'white');
     document.getElementById('sideBlackBtn').classList.toggle('active', setupHumanSide === 'black');
   }
-
-  document.getElementById('ruleThreeBtn').addEventListener('click', () => { setupRuleKey = 'three'; updateSetupUI(); });
-  document.getElementById('ruleFourBtn').addEventListener('click', () => { setupRuleKey = 'four'; updateSetupUI(); });
-  document.getElementById('ruleFiveBtn').addEventListener('click', () => { setupRuleKey = 'five'; updateSetupUI(); });
 
   document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => {
     setupVsCPU = false;
@@ -909,7 +849,6 @@
   });
 
   function openSetupScreen(){
-    setupRuleKey = ruleKey;
     setupVsCPU = vsCPU;
     setupCpuDifficulty = cpuDifficulty;
     setupHumanSide = humanSide;
@@ -920,9 +859,6 @@
   }
 
   document.getElementById('startGameBtn').addEventListener('click', () => {
-    ruleKey = setupRuleKey;
-    SIZE = RULES[ruleKey].size;
-    WIN_LEN = RULES[ruleKey].win;
     vsCPU = setupVsCPU;
     cpuDifficulty = setupCpuDifficulty;
     humanSide = setupHumanSide;
@@ -1026,7 +962,7 @@
   })();
 
   // モード選択画面のどのボタンを最初に押しても、その瞬間にBGMが鳴り始めるようにする
-  ['ruleThreeBtn','ruleFourBtn','ruleFiveBtn','modeTwoPlayerBtn','modeCPUBtn','modeCPUMasterBtn','sideWhiteBtn','sideBlackBtn','startGameBtn'].forEach(id => {
+  ['modeTwoPlayerBtn','modeCPUBtn','modeCPUMasterBtn','sideWhiteBtn','sideBlackBtn','startGameBtn'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('click', () => { if(window.hitotokiBGM) window.hitotokiBGM.play(); });
   });
