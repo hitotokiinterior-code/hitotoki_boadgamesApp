@@ -117,6 +117,10 @@
   }
   .undo-btn:hover:not(:disabled){ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
   .undo-btn:disabled{ opacity:0.62; cursor:default; }
+  /* Each player's own 待った button sits at their near-left corner. Whichever
+     side is currently seated at the bottom of the screen gets the bottom-left
+     spot; the other side (seated at the top, viewing everything upside down)
+     gets its near-left, which on screen is the top-right corner. */
   .undo-btn-seat-bottom-left{ top:auto; right:auto; bottom: clamp(20px, 8vh, 90px); left: 14px; transform:none; }
   .undo-btn-seat-top-right{ bottom:auto; left:auto; top: clamp(20px, 8vh, 90px); right: 14px; transform: rotate(180deg); }
   .undo-btn-seat-top-right:hover:not(:disabled){ transform: rotate(180deg); }
@@ -196,7 +200,6 @@
   #turnWrap{ order: 0; }
   #boardRow{ order: 1; }
   #controlsWrap{ order: 2; }
-  #rules{ order: 3; }
 
   header{
     text-align:center;
@@ -221,6 +224,7 @@
     text-transform: uppercase;
   }
 
+  /* --- turn indicator: an edge glow now carries whose turn it is; this bar only shows contextual messages --- */
   .turn-wrap{
     display:flex;
     align-items:center;
@@ -236,6 +240,8 @@
     min-height: 1em;
   }
 
+  /* --- edge glow: top edge glows for the player whose zone is at the top of the screen,
+       bottom edge glows for whoever's zone is at the bottom --- */
   .turn-edge-glow{
     position:fixed;
     left:0; right:0;
@@ -267,6 +273,7 @@
     100%{ opacity:0.85; }
   }
 
+  /* --- board row: opponent's tray above, your tray below the board --- */
   .board-row{
     display:flex;
     flex-direction: column;
@@ -281,6 +288,7 @@
   .board-row.swap-trays #goteKomadai{ order: 3; }
   .board-row.swap-trays #senteKomadai{ order: 1; }
 
+  /* --- komadai (captured pieces trays) --- */
   .komadai{
     width:100%;
     max-width: 340px;
@@ -325,6 +333,7 @@
   .komadai-flipped{ transform: rotate(180deg); }
   .board-frame.flipped{ transform: rotate(180deg); }
 
+  /* --- board --- */
   .board-frame{
     position:relative;
     padding: 10px;
@@ -370,6 +379,8 @@
     border-radius:50%;
     background: rgba(255,255,255,0.35);
   }
+  /* Squares a piece could physically reach but can't legally move to,
+     because it would leave (or fail to resolve) check on its own king. */
   .cell.illegal-highlight{
     box-shadow: inset 0 0 0 2px rgba(214,64,64,0.8);
   }
@@ -400,6 +411,7 @@
     50%{ box-shadow: inset 0 0 0 2px rgba(214,64,64,0.95), 0 0 14px 4px rgba(214,64,64,0.55); }
   }
 
+  /* --- check (王手) popup --- */
   .check-popup{
     position:fixed;
     top: 40%;
@@ -420,6 +432,8 @@
     opacity: 0;
     pointer-events: none;
   }
+  /* Whichever seat is at the top of the screen reads everything upside down,
+     so their 王手 stamp gets an extra 180° on top of the usual tilt. */
   .check-popup.flipped{ --check-rot: 174deg; }
   .check-popup.show{
     animation: check-stamp 1.1s cubic-bezier(.2,.9,.3,1) forwards;
@@ -440,6 +454,7 @@
     color: #f1e3b0;
   }
 
+  /* --- 鬼 mode: 20-second turn clock --- */
   .turn-timer-badge{
     display:none;
     position:fixed;
@@ -474,6 +489,7 @@
     50%{ transform: translateX(-50%) scale(1.12); }
   }
 
+  /* --- shogi koma piece (pentagon) --- */
   .koma{
     position:relative;
     width: 78%; height: 82%;
@@ -522,6 +538,7 @@
   .koma.king .kanji{ font-weight:800; }
   .cell .koma{ font-size: clamp(0.85rem, 4.6vw, 1.15rem); }
 
+  /* --- controls --- */
   .controls{
     display:flex;
     gap:10px;
@@ -553,18 +570,32 @@
   }
 
   .rules{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 210;
+    padding: 20px;
+  }
+  .rules.open{ display:flex; }
+  .rules-card{
     width:100%;
     max-width: 400px;
-    background: rgba(255,255,255,0.03);
+    max-height: 53vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
     border: 1px solid var(--hairline);
-    border-radius: 4px;
-    padding: 12px 16px;
+    border-radius: 6px;
+    padding: 18px 20px;
     font-size:0.76rem;
     line-height:1.8;
     color:#cfcfcf;
-    display:none;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.65);
   }
-  .rules.open{ display:block; }
   .rules h2{
     font-family:'Kaisei Decol', serif;
     font-weight:500;
@@ -630,6 +661,8 @@
     margin:0;
   }
 
+  /* --- setup screen (mode selection), styled after ウサギと猟犬's mode-select:
+     no boxed frame — a plain title + a small section label above the buttons --- */
   .setup-screen{
     display:flex;
     flex-direction:column;
@@ -715,6 +748,13 @@
     border-color:#fff;
   }
   .start-btn:hover{ background:#eee; border-color:#eee; }
+  .setup-rules-btn{
+    background: transparent;
+    color: var(--silver);
+    border-color: var(--silver-dim);
+    margin-top: -6px;
+  }
+  .setup-rules-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
   .game-screen{
     display:flex;
     flex-direction:column;
@@ -727,6 +767,13 @@
     padding-bottom: 4vh;
   }
 
+  /* ============================================================
+     横画面（スマホを横向きに持った時）向けレイアウト。
+     縦のスペースが少ないので、状態表示帯を隠し、持ち駒トレイを盤の
+     上下から左右へ移動、操作ボタンは右下にまとめて小さく表示する。
+     後ろに書くルールが同じ詳細度なら勝つ性質を使い、通常時のルールを
+     上書きするため、必ずスタイルシートの最後に置くこと。
+     ============================================================ */
   @media (orientation: landscape) and (max-height: 600px){
     body{ padding: 6px; }
     .app{ gap:4px; }
@@ -765,6 +812,14 @@
       text-orientation: upright;
       line-height: 1;
     }
+    /* The far-seat tray's whole card is rotated 180° so its pieces face the
+       right way for whoever's "up top" — but that same rotation makes
+       vertical text read backwards and look garbled. Counter-rotate just the
+       label (and empty-hint) so both trays' text stays upright, while the
+       piece icons keep their intentional flip. The 180° rotation also
+       reverses which end of the stack appears "first" visually, so we
+       reverse the child order too — the two reversals cancel out, landing
+       the label at the top of both trays, matching the near-seat tray. */
     .komadai-flipped{
       flex-direction: column-reverse;
     }
@@ -773,6 +828,7 @@
       transform: rotate(180deg);
     }
 
+    /* Turn edge-glow: full-width like normal, just dimmer than default. */
     .turn-edge-glow{
       left: 0;
       right: 0;
@@ -817,7 +873,7 @@
 </style>
 </head>
 <body>
-<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<button type="button" id="homeBtn" class="home-btn" aria-label="ホームへ戻る">← ホーム</button>
 <button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
 <div id="bgSwitchPanel" class="bg-switch-panel hidden">
   <button class="bg-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
@@ -854,6 +910,7 @@
         <button class="mode-toggle-btn" id="sideGoteBtn">後手で対戦</button>
       </div>
       <button id="startGameBtn" class="start-btn">はじめる</button>
+      <button id="setupRulesBtn" class="start-btn setup-rules-btn ghost">遊び方</button>
     </div>
   </div>
 
@@ -871,31 +928,6 @@
       </div>
 
       <div id="senteKomadai" class="komadai"></div>
-    </div>
-
-    <div class="controls" id="controlsWrap">
-      <button id="newGameBtn">はじめから</button>
-      <button id="rulesBtn" class="ghost">遊び方</button>
-      <button id="changeModeBtn" class="ghost">モード変更</button>
-    </div>
-
-    <div id="rules" class="rules">
-      <h2>遊び方</h2>
-      <ul>
-        <li><b>王</b>：全方向に1マス</li>
-        <li><b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）</li>
-        <li><b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）</li>
-        <li><b>角</b>：斜め4方向にどこまでも（成ると「馬」になり、上下左右にも1マス動ける）</li>
-        <li><b>飛</b>：上下左右にどこまでも（成ると「龍」になり、斜め4方向にも1マス動ける）</li>
-        <li><b>歩</b>：前に1マスのみ</li>
-        <li>敵陣（一番奥の列）に入る・出るときに成るかどうかを選べる（歩が最終列に進む時のみ、成りが必須）</li>
-        <li>相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）</li>
-        <li>歩は同じ列に自分の歩がある時は打てない（二歩）、敵陣の最終列にも打てない</li>
-        <li>自分の王が王手されたままになる手は指せない（王手放置反則）</li>
-        <li>打った歩で相手を詰ませることはできない（打ち歩詰め）</li>
-        <li>同一局面が4回現れたら千日手となり、先手の負け（連続王手による場合はその手を選べない）</li>
-        <li><b>相手の「王」を詰ませたら勝利</b></li>
-      </ul>
     </div>
 
   </div>
@@ -916,6 +948,27 @@
 </div>
 
 <div id="checkPopup" class="check-popup">王手！</div>
+
+<div id="rules" class="rules">
+  <div class="rules-card">
+    <h2>遊び方</h2>
+    <ul>
+      <li><b>王</b>：全方向に1マス</li>
+      <li><b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）</li>
+      <li><b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）</li>
+      <li><b>角</b>：斜め4方向にどこまでも（成ると「馬」になり、上下左右にも1マス動ける）</li>
+      <li><b>飛</b>：上下左右にどこまでも（成ると「龍」になり、斜め4方向にも1マス動ける）</li>
+      <li><b>歩</b>：前に1マスのみ</li>
+      <li>敵陣（一番奥の列）に入る・出るときに成るかどうかを選べる（歩が最終列に進む時のみ、成りが必須）</li>
+      <li>相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）</li>
+      <li>歩は同じ列に自分の歩がある時は打てない（二歩）、敵陣の最終列にも打てない</li>
+      <li>自分の王が王手されたままになる手は指せない（王手放置反則）</li>
+      <li>打った歩で相手を詰ませることはできない（打ち歩詰め）</li>
+      <li>同一局面が4回現れたら千日手となり、先手の負け（連続王手による場合はその手を選べない）</li>
+      <li><b>相手の「王」を詰ませたら勝利</b></li>
+    </ul>
+  </div>
+</div>
 
 <div id="promotionOverlay" class="confirm-overlay">
   <div class="confirm-card" id="promotionCard">
@@ -983,6 +1036,8 @@
     return 'CPU';
   }
 
+  // Only 鬼 mode runs a per-turn clock, and only against the human's own turns
+  // (the CPU already operates inside its own short time budget).
   function turnTimeLimitSeconds(){
     return cpuDifficulty === 'oni' ? 20 : null;
   }
@@ -993,6 +1048,9 @@
     return Infinity;
   }
 
+  // Standard 5五将棋 (minishogi) starting position — 180°-rotationally symmetric:
+  //   gote:  飛 角 銀 金 王  (row 0)         .  .  .  .  歩  (row 1)
+  //   sente: 王 金 銀 角 飛  (row ROWS-1)    歩  .  .  .  .  (row ROWS-2)
   function initialBoard(){
     const b = Array.from({length:ROWS}, () => Array(COLS).fill(null));
     b[0][0] = {owner:'gote', type:'rook'};
@@ -1093,6 +1151,9 @@
 
   function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
 
+  // Single-step offsets. 王/金/成銀/と/歩/銀 keep their classic shogi moves;
+  // 馬(uma)/龍(ryu) add the one-square moves their promotion grants on top
+  // of the bishop/rook slide they already have.
   function stepOffsets(type, owner){
     const fwd = owner === 'sente' ? -1 : 1;
     if(type === 'king'){
@@ -1113,12 +1174,14 @@
     if(type === 'ryu'){ return [[-1,-1],[-1,1],[1,-1],[1,1]]; }
     return [];
   }
+  // Sliding directions (any distance until blocked/capture) for 飛/角 and their promotions.
   function slideDirs(type){
     if(type === 'bishop' || type === 'uma') return [[-1,-1],[-1,1],[1,-1],[1,1]];
     if(type === 'rook' || type === 'ryu') return [[-1,0],[1,0],[0,-1],[0,1]];
     return [];
   }
 
+  // Raw "physically possible" moves, ignoring whether they'd leave your own king in check.
   function pseudoMovesFrom(board, r, c){
     const piece = board[r][c];
     if(!piece) return [];
@@ -1160,8 +1223,8 @@
       for(let c=0;c<COLS;c++){
         if(board[r][c]) continue;
         if(type === 'pawn'){
-          if(r === lastRow) continue;
-          if(hasOwnPawnInCol[c]) continue;
+          if(r === lastRow) continue;          // 行きどころのない駒
+          if(hasOwnPawnInCol[c]) continue;      // 二歩
         }
         out.push([r,c]);
       }
@@ -1202,6 +1265,7 @@
   function isPromotionEligible(piece, fromRow, toRow){
     return !!PROMOTED[piece.type] && (isInPromotionZone(fromRow, piece.owner) || isInPromotionZone(toRow, piece.owner));
   }
+  // A pawn landing on the very last row has no legal forward move left unless it promotes.
   function mustPromote(piece, toRow){
     if(piece.type !== 'pawn') return false;
     const lastRow = piece.owner === 'sente' ? 0 : ROWS-1;
@@ -1238,6 +1302,8 @@
     return isKingInCheck(b2, player);
   }
 
+  // Self-check-legal move list (fast — no 打ち歩詰め / 千日手 filtering). Used
+  // both for checkmate/escape detection and as the base for full legality.
   function generateMoves(board, hands, player){
     const moves = [];
     for(let r=0;r<ROWS;r++){
@@ -1285,20 +1351,25 @@
     positionHistory.set(key, (positionHistory.get(key) || 0) + 1);
   }
 
+  // Fully legal moves: adds 打ち歩詰め (illegal mating pawn drop) and blocks a
+  // move that would create a 4th repeated position while giving check
+  // (連続王手の千日手 — the checking side must play something else). A
+  // non-check repetition is allowed through and ends the game via 千日手
+  // (先手の負け) once actually played, matching the reference rules.
   function generateFullyLegalMoves(board, hands, player){
     return generateMoves(board, hands, player).filter(move => {
       const opponent = player === 'sente' ? 'gote' : 'sente';
       if(move.kind === 'drop' && move.type === 'pawn'){
         const b2 = cloneBoard(board), h2 = cloneHands(hands);
         applyDrop(b2, h2, move, player);
-        if(isCheckmate(b2, h2, opponent)) return false;
+        if(isCheckmate(b2, h2, opponent)) return false; // 打ち歩詰め
       }
       const b2 = cloneBoard(board), h2 = cloneHands(hands);
       if(move.kind === 'move') applyMove(b2, h2, move, player, move.mustPromote);
       else applyDrop(b2, h2, move, player);
       if(isKingInCheck(b2, opponent)){
         const key = encodePosition(b2, h2, opponent);
-        if((positionHistory.get(key) || 0) >= 3) return false;
+        if((positionHistory.get(key) || 0) >= 3) return false; // would be a 4th repeat via continuous check
       }
       return true;
     });
@@ -1327,6 +1398,10 @@
     return score;
   }
 
+  // Recursive search uses the cheaper self-check-only move list (generateMoves)
+  // for speed; 打ち歩詰め and 千日手 are rare edge cases that only matter for
+  // the move actually played, which is validated separately via
+  // generateFullyLegalMoves at the root.
   function minimaxSearch(board, hands, player, depth, alpha, beta){
     const moves = generateMoves(board, hands, player);
     if(depth === 0 || moves.length === 0) return evaluatePosition(board, hands);
@@ -1356,6 +1431,8 @@
     }
   }
 
+  // 難易度ごとの思考時間の上限。読みを深くする分、達人・鬼には少し多めに時間を渡す
+  // （反復深化なので、時間切れなら手前で完了した depth の最善手にフォールバックする＝UIは固まらない）
   function cpuTimeBudgetMs(){
     if(cpuDifficulty === 'oni') return 900;
     if(cpuDifficulty === 'master') return 550;
@@ -1365,6 +1442,10 @@
   function cpuChooseMove(){
     const side = cpuSide();
     const opponent = side === 'sente' ? 'gote' : 'sente';
+    // 通常CPU=2手先、達人CPU=4手先、鬼CPU=6手先。
+    // 達人はこれまで3手先＋駒の損得計算だけだったため「見えている範囲が浅く、
+    // 数手先の罠にかかりやすい」＝ミスが多いように感じられていた。深さを1つ上げて
+    // 実力差をはっきりさせる。
     const maxDepth = cpuDifficulty === 'oni' ? 6 : (cpuDifficulty === 'master' ? 4 : 2);
     const CPU_TIME_BUDGET_MS = cpuTimeBudgetMs();
     const moves = generateFullyLegalMoves(board, hands, side);
@@ -1373,6 +1454,9 @@
     const startTime = performance.now();
     let bestMove = moves[0];
 
+    // Iterative deepening: search depth 1, 2, 3... keeping the best result
+    // from the deepest COMPLETED depth, and bail out once the time budget
+    // is used up so the UI never freezes.
     for(let depth = 1; depth <= maxDepth; depth++){
       if(performance.now() - startTime > CPU_TIME_BUDGET_MS) break;
 
@@ -1407,6 +1491,9 @@
     if(gameOver || !vsCPU || turn !== cpuSide()) return;
     const move = cpuChooseMove();
     if(!move){
+      // Defensive fallback: the CPU has no legal move. endTurn()'s
+      // checkmate/no-move detection should already have ended the game
+      // before this point is ever reached, but handle it safely regardless.
       gameOver = true;
       const winner = turn === 'sente' ? 'gote' : 'sente';
       showWinner(winner, '動かせる手がありません');
@@ -1414,6 +1501,8 @@
       return;
     }
     pushHistorySnapshot();
+    // The CPU always promotes when eligible — correct in the overwhelming
+    // majority of real minishogi positions.
     if(move.kind === 'move') applyMove(board, hands, move, turn, true);
     else applyDrop(board, hands, move, turn);
     cpuMovesMade++;
@@ -1426,6 +1515,7 @@
     if(move.kind === 'move') kingCaptured = applyMove(board, hands, move, turn, promote);
     else { applyDrop(board, hands, move, turn); kingCaptured = false; }
     if(kingCaptured){
+      // Shouldn't happen under fully-legal (self-check-illegal) play, but guard anyway.
       gameOver = true;
       showWinner(turn, '玉を討ち取りました');
       render();
@@ -1489,6 +1579,8 @@
     startTurnTimerIfNeeded();
   }
 
+  // Each seat reads its own outcome the right way up: whichever seat is a
+  // human gets "あなたの勝ち／負け", a CPU-controlled seat gets "CPUの勝ち／負け".
   function seatLabel(owner){
     return (vsCPU && owner === cpuSide()) ? 'CPU' : 'あなた';
   }
@@ -1501,10 +1593,15 @@
       const el = document.getElementById(atBottom ? 'winnerTextBottom' : 'winnerTextTop');
       el.textContent = seatLabel(owner) + (owner === winner ? 'の勝ち！' : 'の負け…');
     });
+    // In 2P local play, the top slot belongs to a second real person sitting
+    // "across the board", so it's rotated to read right-side up for them. In
+    // vsCPU mode the top slot is always the CPU's own status line, which
+    // nobody needs to read upside down, so it stays upright too.
     document.getElementById('winnerPerspectiveTop').classList.toggle('rotated', !vsCPU);
     document.getElementById('winnerReason').textContent = reason || '相手玉を詰ませました';
     overlay.classList.add('show');
 
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく
     if(window.hitotokiStats){
       window.hitotokiStats.recordGameEnd('mini_shogi', 'ミニ将棋', {
         vsCPU: vsCPU,
@@ -1526,6 +1623,8 @@
   function dropsForType(type){
     return generateFullyLegalMoves(board, hands, turn).filter(m => m.kind === 'drop' && m.type === type);
   }
+  // Squares a piece could physically reach but can't legally move to,
+  // because it would leave (or fail to resolve) check on its own king.
   function illegalMovesFromSquare(r, c){
     const legal = movesFromSquare(r, c).map(m => [m.nr, m.nc]);
     return pseudoMovesFrom(board, r, c).filter(([pr,pc]) => !legal.some(([lr,lc]) => lr===pr && lc===pc));
@@ -1538,6 +1637,10 @@
   function selectPiece(r, c){
     selected = [r,c];
     render();
+    // A piece can look selectable but have zero legal destinations if moving
+    // it would leave (or fail to resolve) a check on its own king — most
+    // often because it's pinned. Explain that instead of silently doing
+    // nothing, since it's easy to mistake for a bug.
     if(movesFromSquare(r, c).length === 0){
       document.getElementById('statusText').textContent = 'その駒は動かすと王手放置になるため動かせません';
     }
@@ -1620,6 +1723,13 @@
   function renderKomadai(owner){
     const el = document.getElementById(owner === 'sente' ? 'senteKomadai' : 'goteKomadai');
     el.innerHTML = '';
+    // Whichever tray sits at the top of the screen gets its whole card rotated
+    // (label included) to match how a piece placed in front of the "far" seat
+    // would look to an outside viewer. The piece icon itself is always
+    // rendered with no local rotation of its own, so the container rotation
+    // alone decides upright (bottom tray) vs upside-down (top tray) — this
+    // keeps captured-piece kanji consistent with how the same piece looks on
+    // the board itself.
     const atTop = !isTurnAtBottom(owner);
     el.classList.toggle('komadai-flipped', atTop);
     const label = document.createElement('div');
@@ -1706,11 +1816,17 @@
     status.textContent = (!gameOver && turnInCheck) ? '王手！' : '';
   }
 
+  // Whichever player's zone currently sits at the bottom of the screen (the
+  // comfortable/near side) gets the bottom glow and the bottom-left 待った
+  // button; the other gets the top glow and the top-right button. This tracks
+  // the same top/bottom tray swap used for CPU-as-gote games.
   function isTurnAtBottom(owner){
     const swapped = vsCPU && humanSide === 'gote';
     return swapped ? owner === 'gote' : owner === 'sente';
   }
 
+  // --- 鬼 mode: 20-second turn clock, shown only for the human's own turns
+  // (the CPU already moves within its own short time budget). ---
   function clearTurnTimer(){
     if(turnTimerInterval){ clearInterval(turnTimerInterval); turnTimerInterval = null; }
     const badge = document.getElementById('turnTimerBadge');
@@ -1750,6 +1866,8 @@
     render();
   }
 
+  // --- Generic "stamp" popup, reusing the 王手 popup's visual language for
+  // other mode-specific moments (e.g. hitting the 待った limit). ---
   function showModeStampPopup(text, owner){
     const el = document.getElementById('modeStampPopup');
     el.textContent = text;
@@ -1789,6 +1907,7 @@
     }
   }
 
+  // --- Setup screen: toggle the mode/side like the Connect Four picker, then commit with はじめる ---
   let setupVsCPU = false;
   let setupCpuDifficulty = 'normal';
   let setupHumanSide = 'sente';
@@ -1836,6 +1955,8 @@
   });
 
   function openSetupScreen(){
+    // Reflect whatever mode/side is currently active so the toggle buttons
+    // pick up right where the last game left off.
     setupVsCPU = vsCPU;
     setupCpuDifficulty = cpuDifficulty;
     setupHumanSide = humanSide;
@@ -1861,14 +1982,12 @@
     resetGame();
   });
 
-  document.getElementById('changeModeBtn').addEventListener('click', () => {
-    runOrConfirm(openSetupScreen, 'モード変更', '現在の対局を中断してモードを選び直します。よろしいですか？');
-  });
-
+  // --- Generic confirm-before-interrupting-the-game modal, used by ホーム ---
   let pendingConfirmAction = null;
 
   function runOrConfirm(action, title, message){
     if(moveHistory.length === 0){
+      // Nothing to lose yet, so just proceed without asking.
       action();
       return;
     }
@@ -1889,12 +2008,23 @@
     pendingConfirmAction = null;
   });
 
-  document.getElementById('newGameBtn').addEventListener('click', () => {
-    runOrConfirm(resetGame, 'はじめから', '現在の対局を中断してやり直します。よろしいですか？');
-  });
   document.getElementById('winnerOverlay').addEventListener('click', resetGame);
-  document.getElementById('rulesBtn').addEventListener('click', () => {
-    document.getElementById('rules').classList.toggle('open');
+
+  function openRules(){ document.getElementById('rules').classList.add('open'); }
+  function closeRules(){ document.getElementById('rules').classList.remove('open'); }
+
+  document.getElementById('setupRulesBtn').addEventListener('click', openRules);
+  document.getElementById('rules').addEventListener('click', (e) => {
+    if(e.target.id === 'rules') closeRules();
+  });
+
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    const onGameScreen = !document.getElementById('gameScreen').classList.contains('hidden');
+    if(onGameScreen){
+      runOrConfirm(openSetupScreen, 'ホームへ戻る', '現在の対局を中断してモード選択に戻ります。よろしいですか？');
+      return;
+    }
+    window.location.href = 'index.html';
   });
 
   function openUndoConfirm(requestedBy){
@@ -1915,12 +2045,14 @@
     const responder = requestedBy === 'sente' ? '後手' : '先手';
     document.getElementById('undoConfirmText').textContent =
       '直前の一手を取り消します。' + responder + 'の許可が必要です。よろしいですか？（1手につき待ったは5回まで）';
+    // Rotate the card so whichever side must respond can read it right-side up.
     document.getElementById('undoConfirmCard').classList.toggle('rotated', requestedBy === 'sente');
     document.getElementById('undoConfirmOverlay').classList.add('show');
   }
 
   function undoForCPUMode(){
     undoLastMove();
+    // Undo the CPU's move too, so the human always lands back on their own turn.
     if(moveHistory.length > 0 && turn === cpuSide()){
       undoLastMove();
     }
@@ -1957,6 +2089,9 @@
     if(move) commitMove(move, false);
   });
 
+  // --- user-selectable background color switch (setup screen only; hidden during play) ---
+  // ホーム画面（⚙→ゲーム→背景）と同じ localStorage キーを共有し、
+  // どちらで選んでも全ページに反映されるようにしている
   (function(){
     const BG_STORAGE_KEY = 'pref_bg_gradient';
     const btn = document.getElementById('bgSwitchBtn');
@@ -1971,6 +2106,7 @@
       swatches.forEach(s => s.classList.toggle('active', s.getAttribute('data-grad') === gradStops));
     }
 
+    // ページを開いた時点で、他の画面で選ばれていたテーマがあればそれを反映する
     let savedGrad = null;
     try{ savedGrad = localStorage.getItem(BG_STORAGE_KEY); }catch(e){}
     if(savedGrad){
@@ -1998,16 +2134,6 @@
       }
     });
   })();
-
-  // モード選択画面（設定・対局側の切替、はじめる）のどのボタンを最初に押しても、
-  // その瞬間にBGMが鳴り始めるようにする。ページ遷移直後はブラウザの自動再生が
-  // ブロックされているため、bgm-player.js側の「最初のタップで再試行」だけでは
-  // 「たまたま最初に押したボタンが『はじめる』だった時しか鳴らない」ように見えて
-  // しまう。ここで明示的に呼び出すことで、モード選択の時点で確実に再生を試みる。
-  ['modeTwoPlayerBtn','modeCPUBtn','modeCPUMasterBtn','modeCPUOniBtn','sideSenteBtn','sideGoteBtn','startGameBtn'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('click', () => { if(window.hitotokiBGM) window.hitotokiBGM.play(); });
-  });
 })();
 </script>
 <script src="timer-watcher.js"></script>
