@@ -487,6 +487,104 @@
     font-style:italic;
   }
 
+  /* --- お知らせポップアップ --- */
+  .notice-modal{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background: rgba(6,6,6,0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 28px;
+  }
+  .notice-modal.open{
+    display:flex;
+  }
+  .notice-modal-card{
+    position:relative;
+    width:100%;
+    max-width:340px;
+    max-height:66vh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    background: rgba(28,28,28,0.62);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:30px 22px 26px;
+    box-shadow: 0 18px 44px rgba(0,0,0,0.5);
+    text-align:left;
+  }
+  .notice-modal-card::-webkit-scrollbar{
+    display:none;
+  }
+  .notice-modal-close{
+    position:absolute;
+    top:10px; right:10px;
+    width:26px; height:26px;
+    border-radius:50%;
+    border:1px solid var(--hairline);
+    background: rgba(255,255,255,0.06);
+    color: var(--silver);
+    font-family:'Jost', sans-serif;
+    font-size:0.8rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .notice-modal-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.05rem;
+    letter-spacing:0.04em;
+    color:#ece4d1;
+    margin-bottom:16px;
+    text-align:center;
+  }
+  .notice-list{
+    display:flex;
+    flex-direction:column;
+  }
+  .notice-item{
+    padding:12px 2px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .notice-item:last-child{
+    border-bottom:none;
+  }
+  .notice-item .notice-date{
+    font-family:'Jost', sans-serif;
+    font-size:0.62rem;
+    letter-spacing:0.04em;
+    color: var(--silver-dim);
+    margin-bottom:4px;
+  }
+  .notice-item .notice-text{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.78rem;
+    line-height:1.75;
+    letter-spacing:0.03em;
+    color: var(--silver);
+  }
+  .notice-item .notice-link{
+    display:inline-block;
+    margin-top:6px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.72rem;
+    letter-spacing:0.03em;
+    color:#ece4d1;
+    text-decoration:underline;
+  }
+  .notice-empty{
+    text-align:center;
+    padding:20px 4px;
+    font-size:0.74rem;
+    color: var(--silver-dim);
+    letter-spacing:0.03em;
+  }
+
   /* 全体パネル：ドーナツ＋統計リスト */
   .records-donut-card{
     width:100%;
@@ -1786,6 +1884,15 @@ body.panel-open .setting-btn{
   </div>
 </div>
 
+<!-- お知らせポップアップ -->
+<div class="notice-modal" id="noticeModal">
+  <div class="notice-modal-card">
+    <button class="notice-modal-close" id="noticeModalClose">×</button>
+    <div class="notice-modal-title">お知らせ</div>
+    <div class="notice-list" id="noticeList"></div>
+  </div>
+</div>
+
 <nav class="bottom-nav" id="bottomNav">
   <button class="nav-btn active" id="navHome" data-view="homeView">
     <img class="nav-icon-img" src="assets/icons/nav_home.png" alt="">
@@ -1801,6 +1908,7 @@ body.panel-open .setting-btn{
   </button>
 </nav>
 
+<script src="notices.js"></script>
 <script src="stats-tracker.js"></script>
 <script src="bgm-player.js?v=2"></script>
 <script>
@@ -2115,9 +2223,66 @@ const gearBtn = document.getElementById("gearBtn");
   const closeBtn = document.getElementById("closeBtn");
 const settingPanel = document.getElementById("settingPanel");
 
-// お知らせボタン（⚙のすぐ左）：見た目のみ先行実装。中身のページ・処理は後で追加予定。
+// お知らせボタン（⚙のすぐ左）：タップで半透明のポップアップを表示する
+// 中身は notices.js に定義された NOTICES 配列から、開くたびに毎回組み立てる
+// （notices.js を書き換えるだけで、ここのコードは触らなくてよい）
 const noticeBtn = document.getElementById("noticeBtn");
-// noticeBtn.addEventListener("click", () => { /* TODO: お知らせページ／パネルを開く処理 */ });
+const noticeModal = document.getElementById("noticeModal");
+const noticeModalClose = document.getElementById("noticeModalClose");
+const noticeList = document.getElementById("noticeList");
+
+function renderNoticeList(){
+  noticeList.innerHTML = '';
+  const notices = (typeof NOTICES !== 'undefined' && Array.isArray(NOTICES)) ? NOTICES : [];
+
+  if(notices.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'notice-empty';
+    empty.textContent = '現在、新しいお知らせはありません。';
+    noticeList.appendChild(empty);
+    return;
+  }
+
+  notices.forEach(n => {
+    const item = document.createElement('div');
+    item.className = 'notice-item';
+
+    if(n.date){
+      const date = document.createElement('div');
+      date.className = 'notice-date';
+      date.textContent = n.date;
+      item.appendChild(date);
+    }
+
+    const text = document.createElement('div');
+    text.className = 'notice-text';
+    text.textContent = n.text || '';
+    item.appendChild(text);
+
+    if(n.url){
+      const link = document.createElement('a');
+      link.className = 'notice-link';
+      link.href = n.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'くわしく見る ›';
+      item.appendChild(link);
+    }
+
+    noticeList.appendChild(item);
+  });
+}
+
+noticeBtn.addEventListener("click", () => {
+  renderNoticeList();
+  noticeModal.classList.add("open");
+});
+noticeModalClose.addEventListener("click", () => {
+  noticeModal.classList.remove("open");
+});
+noticeModal.addEventListener("click", (e) => {
+  if(e.target === noticeModal) noticeModal.classList.remove("open"); // 背景タップでも閉じる
+});
 
 // メニューパネル（☰：左からスライドイン。「GAME」見出し＋ゲーム名の一覧）
 const menuBtn = document.getElementById("menuBtn");
