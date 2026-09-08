@@ -242,6 +242,15 @@
   <!-- GAME -->
   <div class="screen" id="screen-game">
     <button class="home-btn" id="home-btn-game">← ホーム</button>
+    <button id="gameBgSwitchBtn" class="bg-switch-btn hidden" aria-label="ゲーム背景を変更">背景</button>
+    <div id="gameBgSwitchPanel" class="bg-switch-panel hidden">
+      <button class="bg-swatch active" data-grad="__IMAGE__" style="background-image:url('assets/images/rabbit_and_hounds_bg.jpg'); background-size:cover; background-position:center;" aria-label="オリジナル画像"></button>
+      <button class="bg-swatch" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
+      <button class="bg-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
+      <button class="bg-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
+      <button class="bg-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
+      <button class="bg-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
+    </div>
     <div class="turnbar">
       <div class="turn-chip" id="chip-hare"><span class="dot"></span>ウサギ</div>
       <div class="turn-chip" id="chip-hound"><span class="ring"></span>猟犬</div>
@@ -642,8 +651,11 @@
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     const isModeScreen = (id === 'screen-mode');
+    const isGameScreen = (id === 'screen-game');
     document.getElementById('bgSwitchBtn').classList.toggle('hidden', !isModeScreen);
     if(!isModeScreen) document.getElementById('bgSwitchPanel').classList.add('hidden');
+    document.getElementById('gameBgSwitchBtn').classList.toggle('hidden', !isGameScreen);
+    if(!isGameScreen) document.getElementById('gameBgSwitchPanel').classList.add('hidden');
   }
 
   document.getElementById('home-btn-game').addEventListener('click', ()=> showScreen('screen-mode'));
@@ -696,7 +708,7 @@
     const BG_STORAGE_KEY = 'pref_bg_gradient';
     const btn = document.getElementById('bgSwitchBtn');
     const panel = document.getElementById('bgSwitchPanel');
-    const swatches = document.querySelectorAll('.bg-swatch[data-grad]');
+    const swatches = document.querySelectorAll('#bgSwitchPanel .bg-swatch[data-grad]');
 
     function applyBg(gradStops){
       document.documentElement.style.setProperty('--bg', 'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')');
@@ -723,6 +735,57 @@
         applyBg(grad);
         setActiveSwatch(grad);
         try{ localStorage.setItem(BG_STORAGE_KEY, grad); }catch(e){}
+        panel.classList.add('hidden');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn){
+        panel.classList.add('hidden');
+      }
+    });
+  })();
+
+  // --- ゲーム画面専用の背景切り替え ---
+  // ホーム画面や他のゲームと共有する 'pref_bg_gradient' とは別のキーを使い、
+  // このゲーム画面の背景だけを独立して切り替えられるようにしている。
+  // デフォルトは元のイラスト画像("__IMAGE__")。
+  (function(){
+    const GAME_BG_KEY = 'rabbit_hounds_game_bg';
+    const IMAGE_BG = 'linear-gradient(rgba(0,0,0,.52), rgba(0,0,0,.58)), url("assets/images/rabbit_and_hounds_bg.jpg")';
+    const btn = document.getElementById('gameBgSwitchBtn');
+    const panel = document.getElementById('gameBgSwitchPanel');
+    const screenGame = document.getElementById('screen-game');
+    const swatches = panel.querySelectorAll('.bg-swatch[data-grad]');
+
+    function applyGameBg(gradStops){
+      if(gradStops === '__IMAGE__'){
+        screenGame.style.backgroundImage = IMAGE_BG;
+      } else {
+        screenGame.style.backgroundImage = 'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')';
+      }
+    }
+    function setActiveSwatch(gradStops){
+      swatches.forEach(s => s.classList.toggle('active', s.getAttribute('data-grad') === gradStops));
+    }
+
+    let saved = null;
+    try{ saved = localStorage.getItem(GAME_BG_KEY); }catch(e){}
+    if(saved){
+      applyGameBg(saved);
+      setActiveSwatch(saved);
+    }
+
+    btn.addEventListener('click', () => {
+      panel.classList.toggle('hidden');
+    });
+
+    swatches.forEach(sw => {
+      sw.addEventListener('click', () => {
+        const grad = sw.getAttribute('data-grad');
+        applyGameBg(grad);
+        setActiveSwatch(grad);
+        try{ localStorage.setItem(GAME_BG_KEY, grad); }catch(e){}
         panel.classList.add('hidden');
       });
     });
