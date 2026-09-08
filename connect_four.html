@@ -1426,12 +1426,15 @@
   document.getElementById('startGameBtn').addEventListener('click', () => {
     document.getElementById('setupScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
+    document.getElementById('bgSwitchBtn').classList.add('hidden');
+    document.getElementById('bgSwitchPanel').classList.add('hidden');
     resetAll();
   });
   document.getElementById('changeModeBtn').addEventListener('click', () => {
     runOrConfirm(() => {
       document.getElementById('gameScreen').classList.add('hidden');
       document.getElementById('setupScreen').classList.remove('hidden');
+      document.getElementById('bgSwitchBtn').classList.remove('hidden');
     });
   });
 
@@ -1531,6 +1534,13 @@
       }
     });
   })();
+
+  // モード選択画面（設定・対局側の切替、はじめる）のどのボタンを最初に押しても、
+  // その瞬間にBGMが鳴り始めるようにする。ミニ将棋と同じ考え方の修正。
+  ['modeTwoPlayerBtn','modeCPUBtn','modeCPUMasterBtn','sideWhiteBtn','sideBlackBtn','startGameBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('click', () => { if(window.hitotokiBGM) window.hitotokiBGM.play(); });
+  });
 })();
 </script>
 <script src="timer-watcher.js"></script>
