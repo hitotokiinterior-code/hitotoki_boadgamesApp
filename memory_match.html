@@ -433,7 +433,7 @@
 </style>
 </head>
 <body>
-<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<button type="button" class="home-btn" id="homeBtn" aria-label="ホームへ戻る">← ホーム</button>
 <button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
 <div id="bgSwitchPanel" class="bg-switch-panel hidden">
   <button class="bg-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
@@ -892,6 +892,15 @@
   }
 
   document.getElementById('changeModeBtn').addEventListener('click', () => {
+    runOrConfirm(goToSetupScreen);
+  });
+
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    const onSetupScreen = !document.getElementById('setupScreen').classList.contains('hidden');
+    if(onSetupScreen){
+      window.location.href = 'index.html';
+      return;
+    }
     runOrConfirm(goToSetupScreen);
   });
 
