@@ -179,6 +179,8 @@
   }
 
   .mode-toggle-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  #modeToggleRow{ width:100%; flex-wrap:nowrap; }
+  #modeToggleRow .mode-toggle-btn{ flex:1; text-align:center; }
   .mode-toggle-btn{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
@@ -188,11 +190,12 @@
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--gold-dim);
     border-radius:3px;
-    padding: 6px 11px;
+    padding: 12px 11px;
     cursor:pointer;
     transition: all .15s ease;
   }
   .mode-toggle-btn.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
+  .full-width-btn{ width:100%; text-align:center; }
   .seal{
     display:flex;
     align-items:center;
@@ -574,7 +577,7 @@
       <button class="mode-toggle-btn active" id="sideSenteBtn">先行で対戦</button>
       <button class="mode-toggle-btn" id="sideGoteBtn">後攻で対戦</button>
     </div>
-    <button class="main-btn" id="modeStartBtn">ゲーム開始</button>
+    <button class="main-btn full-width-btn" id="modeStartBtn">ゲーム開始</button>
     <button class="main-btn" id="modeRulesBtn">遊び方</button>
   </div>
 
