@@ -561,7 +561,7 @@
     }
     // hit targets (clickable, invisible, larger)
     Object.keys(NODES).forEach(p=>{
-      const t = el('circle',{class:'node-hit', cx:px(p), cy:py(p), r:16, 'data-point':p});
+      const t = el('circle',{class:'node-hit', cx:px(p), cy:py(p), r:24, 'data-point':p});
       t.style.cursor='pointer';
       t.addEventListener('click', ()=>onPointClick(p));
       svg.appendChild(t);
