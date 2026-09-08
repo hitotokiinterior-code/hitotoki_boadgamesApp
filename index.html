@@ -300,6 +300,7 @@
     flex-direction:column;
     gap:18px;
     padding-bottom:8px;
+    touch-action: pan-y; /* 縦スクロールは許可しつつ、横方向はJSでスワイプ検知する */
   }
 
   /* サブタブ（全体／ゲーム別／履歴） */
@@ -2581,6 +2582,59 @@ recordsSubtabBtns.forEach(btn => {
     });
   });
 });
+
+// --- 記録タブ：横スワイプでも「全体／ゲーム別／履歴」を切り替えられるようにする ---
+(function initRecordsSwipe(){
+  const container = document.querySelector('.records-view');
+  if(!container) return;
+
+  // タブボタンの並び順 = パネルを切り替える順番
+  const tabOrder = Array.from(recordsSubtabBtns).map(btn => btn.dataset.panel);
+
+  function currentIndex(){
+    const activeBtn = document.querySelector('.records-subtab-btn.active');
+    const idx = tabOrder.indexOf(activeBtn ? activeBtn.dataset.panel : tabOrder[0]);
+    return idx === -1 ? 0 : idx;
+  }
+
+  function goToIndex(idx){
+    idx = Math.max(0, Math.min(tabOrder.length - 1, idx));
+    const targetPanel = tabOrder[idx];
+    recordsSubtabBtns.forEach(b => b.classList.toggle('active', b.dataset.panel === targetPanel));
+    document.querySelectorAll('.records-panel').forEach(p => {
+      p.classList.toggle('active', p.id === targetPanel);
+    });
+  }
+
+  let startX = 0, startY = 0, tracking = false;
+  const SWIPE_THRESHOLD = 50; // これ未満の移動はスワイプとみなさない
+
+  container.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, { passive:true });
+
+  container.addEventListener('touchend', (e) => {
+    if(!tracking) return;
+    tracking = false;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+
+    // 縦方向の動きの方が大きい場合はスクロール操作とみなし、何もしない
+    if(Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return;
+
+    const idx = currentIndex();
+    if(deltaX < 0){
+      goToIndex(idx + 1); // 左スワイプ → 次のタブへ
+    } else {
+      goToIndex(idx - 1); // 右スワイプ → 前のタブへ
+    }
+  }, { passive:true });
+})();
 
 // --- コレクションタブのサブタブ（ゲームの歴史／アチーブメント）切り替え ---
 const collectionSubtabBtns = document.querySelectorAll('.collection-subtab-btn');
