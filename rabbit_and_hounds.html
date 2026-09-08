@@ -43,7 +43,7 @@
   .btn{
     font-family:inherit; font-size:15px; letter-spacing:.18em;
     background:transparent; color:var(--ink);
-    border:1px solid var(--white); padding:11px 34px;
+    border:0.5px solid rgba(255,255,255,0.6); padding:9px 34px;
     cursor:pointer; border-radius:8px;
   }
   .btn.solid{ background:var(--white); color:#000; border-color:var(--white); font-weight:700; }
@@ -136,11 +136,19 @@
 
   /* ---------- MODE SELECT ---------- */
   #screen-mode{padding:78px 22px 0; justify-content:flex-start;}
+  .game-title{
+    font-size:22px; letter-spacing:.14em; font-weight:700; color:var(--ink);
+    text-align:center; margin:0 0 22px;
+  }
+  .game-title .small{
+    display:block; font-size:10px; letter-spacing:.32em; font-weight:500;
+    color:var(--ink-dim); margin-top:6px; text-transform:uppercase;
+  }
   .mode-title{font-size:18px; letter-spacing:.2em; margin-bottom:26px; font-weight:700;}
   .section-label{font-size:11px; letter-spacing:.25em; color:var(--ink-dim); margin-bottom:8px; align-self:flex-start;}
   .pair-row{display:flex; gap:10px; width:100%; max-width:320px; margin-bottom:22px;}
   .opt-card{
-    flex:1; text-align:center; padding:13px 4px; border:1px solid var(--white);
+    flex:1; text-align:center; padding:10px 4px; border:0.5px solid rgba(255,255,255,0.6);
     font-size:13px; letter-spacing:.12em; cursor:pointer; color:var(--ink-dim);
     border-radius:8px;
   }
@@ -183,6 +191,7 @@
   .node-bg{ fill:#0a0a0a; stroke:var(--line); stroke-width:1.5; }
   .node-hit{ fill:transparent; }
   .legal-mark{ fill:none; stroke:var(--white); stroke-width:2; filter:drop-shadow(0 0 5px rgba(255,255,255,.9)); }
+  .hint-mark{ fill:none; stroke:rgba(255,255,255,0.5); stroke-width:1.5; filter:drop-shadow(0 0 3px rgba(255,255,255,.4)); }
   .piece-hare{ filter:drop-shadow(0 0 6px rgba(255,255,255,.85)); }
   .piece-hound{ filter:drop-shadow(0 0 5px rgba(255,255,255,.7)); }
   .piece-hound.selected, .piece-hare.selected{ filter:drop-shadow(0 0 12px rgba(255,255,255,1)); }
@@ -215,6 +224,7 @@
   <!-- MODE SELECT -->
   <div class="screen active" id="screen-mode">
     <a class="home-btn" id="home-btn-mode" href="index.html">← ホーム</a>
+    <div class="game-title">ウサギと猟犬<span class="small">RABBIT AND HOUNDS</span></div>
     <div class="mode-title">対戦モード</div>
     <div class="mode-wrap">
       <div class="section-label">モードを選ぶ</div>
@@ -233,8 +243,8 @@
       </div>
 
       <div style="display:flex; gap:10px; margin-top:8px; width:100%;">
-        <button class="btn solid" id="btn-start-game" style="flex:1; padding:8px 34px; line-height:1.3;">はじめる</button>
-        <button class="btn" id="btn-random-hare" style="flex:1; padding:8px 12px; line-height:1.25; font-size:11px;">ウサギ<br>ランダム</button>
+        <button class="btn solid" id="btn-start-game" style="flex:1; padding:6px 34px; line-height:1.3;">はじめる</button>
+        <button class="btn" id="btn-random-hare" style="flex:1; padding:6px 12px; line-height:1.25; font-size:11px;">ウサギ<br>ランダム</button>
       </div>
     </div>
   </div>
@@ -315,6 +325,8 @@
 
   /* ---------------- game state ---------------- */
   let state, config, selected=null, animating=false, randomHareStart=false;
+  let hintTimer=null, hintActive=false, suppressHintArm=false;
+  const HINT_IDLE_MS = 5000;
 
   function initState(){
     const houndStart = ['D','A','I'];
@@ -471,6 +483,29 @@
     return state.turn === config.playerRole;
   }
 
+  function allLegalDestsForCurrentPlayer(){
+    const set = new Set();
+    if(state.turn==='hound'){
+      state.hounds.forEach((h,idx)=> houndMoves(state.hounds, state.hare, idx).forEach(d=>set.add(d)));
+    } else {
+      hareMoves(state.hounds, state.hare).forEach(d=>set.add(d));
+    }
+    return Array.from(set);
+  }
+
+  function armHintTimer(){
+    if(hintTimer){ clearTimeout(hintTimer); hintTimer=null; }
+    const gameScreenActive = document.getElementById('screen-game').classList.contains('active');
+    const resultShown = document.getElementById('screen-result').classList.contains('active');
+    if(!isHumanTurn() || animating || !gameScreenActive || resultShown) return;
+    hintTimer = setTimeout(()=>{
+      hintActive = true;
+      suppressHintArm = true;
+      render();
+      suppressHintArm = false;
+    }, HINT_IDLE_MS);
+  }
+
   function render(){
     svg.innerHTML='';
     ensureGlowDef();
@@ -484,9 +519,18 @@
       if(state.turn==='hound') legalDests = houndMoves(state.hounds, state.hare, selected);
       else legalDests = hareMoves(state.hounds, state.hare);
     }
+    // idle hint: after 5s with no action, softly mark every square any of
+    // the current player's pieces could move to (only when nothing selected)
+    let hintDests = [];
+    if(selected===null && hintActive && isHumanTurn()){
+      hintDests = allLegalDestsForCurrentPlayer();
+    }
     // node background dots
     Object.keys(NODES).forEach(p=>{
       svg.appendChild(el('circle',{class:'node-bg', cx:px(p), cy:py(p), r:6}));
+    });
+    hintDests.forEach(d=>{
+      svg.appendChild(el('circle',{class:'hint-mark', cx:px(d), cy:py(d), r:11, 'data-hint':d}));
     });
     legalDests.forEach(d=>{
       svg.appendChild(el('circle',{class:'legal-mark', cx:px(d), cy:py(d), r:12, 'data-dest':d}));
@@ -542,6 +586,11 @@
       statusEl.textContent = isHumanTurn() ? 'あなたの番です' : (config.mode==='master' ? '達人CPU思考中…' : 'CPU思考中…');
     } else {
       statusEl.textContent='';
+    }
+
+    if(!suppressHintArm){
+      hintActive = false;
+      armHintTimer();
     }
   }
 
@@ -656,6 +705,7 @@
     if(!isModeScreen) document.getElementById('bgSwitchPanel').classList.add('hidden');
     document.getElementById('gameBgSwitchBtn').classList.toggle('hidden', !isGameScreen);
     if(!isGameScreen) document.getElementById('gameBgSwitchPanel').classList.add('hidden');
+    if(!isGameScreen && hintTimer){ clearTimeout(hintTimer); hintTimer=null; hintActive=false; }
   }
 
   document.getElementById('home-btn-game').addEventListener('click', ()=> showScreen('screen-mode'));
