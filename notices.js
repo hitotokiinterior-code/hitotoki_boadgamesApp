@@ -20,5 +20,5 @@
 
 const NOTICES = [
   { date: '2026.09.08', text: '白井はお腹が空きました。', url: 'https://example.com/blog/123' },
-  { date: '2026.09.01', text: 'アプリがバグばかりでウケる😂。' },
+  { date: '2026.09.01', text: 'アプリがバグばかりでウケる😂' },
 ];
