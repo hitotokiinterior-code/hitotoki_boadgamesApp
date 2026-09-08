@@ -300,7 +300,6 @@
     flex-direction:column;
     gap:18px;
     padding-bottom:8px;
-    touch-action: pan-y; /* 縦スクロールは許可しつつ、横方向はJSでスワイプ検知する */
   }
 
   /* サブタブ（全体／ゲーム別／履歴） */
@@ -334,14 +333,29 @@
     border-radius:2px;
   }
 
-  .records-panel{
-    display:none;
+  /* パネル3枚を横に並べて、指の動きに合わせてトラックごとスライドさせるカルーセル方式。
+     wrap側ではみ出た分を隠し、track側を translateX で動かす。 */
+  .records-track-wrap{
     width:100%;
+    overflow:hidden;
+    touch-action: pan-y; /* 縦スクロールは許可しつつ、横方向はJSでドラッグ検知する */
+  }
+  .records-track{
+    display:flex;
+    width:300%;
+    transition: transform .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .records-track.dragging{
+    transition:none; /* ドラッグ中は追従させたいのでアニメーションを切る */
+  }
+
+  .records-panel{
+    flex:0 0 33.3333%;
+    width:33.3333%;
+    box-sizing:border-box;
+    display:flex;
     flex-direction:column;
     gap:18px;
-  }
-  .records-panel.active{
-    display:flex;
   }
 
   /* --- コレクション：サブタブ（ゲームの歴史／アチーブメント） --- */
@@ -411,6 +425,69 @@
   .history-card .title.nowrap-small{
     font-size:0.78rem;
     white-space:nowrap;
+  }
+
+  /* --- プレイ回数によるカードの「進化」演出 ---
+     10回でシルバー、20回でゴールド。単色の縁取りにせず、光沢のある二重グロー＋
+     斜めのハイライトを重ねて「豪華になった」感を出す。ゴールドはさらに常時ゆっくり
+     輝きが明滅するアニメーション付き。 */
+  .history-card.tier-silver{
+    border: 1.5px solid #e2e2e2;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.4) inset,
+      0 6px 14px rgba(0,0,0,0.45),
+      0 0 16px rgba(220,220,220,0.35);
+  }
+  .history-card.tier-silver::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:8px;
+    pointer-events:none;
+    background: linear-gradient(125deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 32%);
+  }
+
+  .history-card.tier-gold{
+    border: 1.5px solid #e8c565;
+    box-shadow:
+      0 0 0 1px rgba(255,232,170,0.45) inset,
+      0 6px 16px rgba(0,0,0,0.5),
+      0 0 20px rgba(232,197,101,0.45);
+  }
+  .history-card.tier-gold::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:8px;
+    pointer-events:none;
+    background: linear-gradient(125deg, rgba(255,232,170,0.32) 0%, rgba(255,232,170,0) 36%);
+    animation: goldCardShine 2.6s ease-in-out infinite;
+  }
+  @keyframes goldCardShine{
+    0%, 100%{ opacity:0.55; }
+    50%{ opacity:1; }
+  }
+
+  /* 右上に乗せる達成バッジ（🥈／🥇） */
+  .history-card .tier-badge{
+    position:absolute;
+    top:6px; right:6px;
+    z-index:5;
+    width:21px; height:21px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.72rem;
+    background: rgba(10,10,10,0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .history-card.tier-silver .tier-badge{
+    box-shadow: 0 0 8px rgba(220,220,220,0.5);
+  }
+  .history-card.tier-gold .tier-badge{
+    box-shadow: 0 0 10px rgba(232,197,101,0.6);
   }
 
   /* タップ時に開く、半透明のウィンドウ風モーダル */
@@ -584,6 +661,108 @@
     font-size:0.74rem;
     color: var(--silver-dim);
     letter-spacing:0.03em;
+  }
+
+  /* --- アチーブメント：バッジのグリッド表示 --- */
+  .achievement-grid{
+    width:100%;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+  .achievement-badge{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:22px 10px;
+    border-radius:10px;
+    border:1px solid var(--hairline);
+    background: linear-gradient(160deg, #202020, #101010 55%, #030303);
+    text-align:center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    transition: opacity .2s ease, filter .2s ease;
+  }
+  .achievement-badge .badge-icon{
+    font-size:1.6rem;
+    line-height:1;
+  }
+  .achievement-badge .badge-title{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.72rem;
+    letter-spacing:0.02em;
+    color:#ece4d1;
+    line-height:1.45;
+  }
+  .achievement-badge.locked{
+    opacity:0.4;
+    filter: grayscale(70%);
+  }
+  .achievement-badge.locked .badge-title{
+    color: var(--silver-dim);
+  }
+  .achievement-badge.unlocked{
+    border-color: rgba(255,214,140,0.4);
+    box-shadow: 0 6px 18px rgba(200,168,90,0.16);
+  }
+
+  /* --- アチーブメント解除トースト：画面右上から出て、少し待って消える --- */
+  .achievement-toast-container{
+    position:fixed;
+    right:14px;
+    top: calc(env(safe-area-inset-top) + 78px); /* ヘッダー（⚙・☰・お知らせ）の下に来る位置 */
+    z-index:9998;
+    display:flex;
+    flex-direction:column; /* 新しい要素ほど上、既存のものは下にずれる */
+    gap:8px;
+    pointer-events:none;
+    max-width: 78vw;
+  }
+  .achievement-toast{
+    pointer-events:none;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background: linear-gradient(160deg, #242015, #141210 60%, #030302);
+    border:1px solid rgba(255,214,140,0.4);
+    border-radius:10px;
+    padding:10px 16px 10px 12px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+    transform: translateX(130%);
+    opacity:0;
+    animation: achToastIn .35s cubic-bezier(.2,.8,.2,1) forwards,
+               achToastOut .35s cubic-bezier(.4,0,1,1) forwards 2.65s;
+  }
+  @keyframes achToastIn{
+    to{ transform: translateX(0); opacity:1; }
+  }
+  @keyframes achToastOut{
+    to{ transform: translateX(130%); opacity:0; }
+  }
+  .achievement-toast .toast-icon{
+    font-size:1.3rem;
+    flex-shrink:0;
+  }
+  .achievement-toast .toast-text{
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+    white-space:nowrap;
+  }
+  .achievement-toast .toast-label{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.56rem;
+    letter-spacing:0.14em;
+    color:#d8b878;
+  }
+  .achievement-toast .toast-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.8rem;
+    color:#fff;
+    letter-spacing:0.02em;
   }
 
   /* 全体パネル：ドーナツ＋統計リスト */
@@ -1778,75 +1957,82 @@ body.panel-open .setting-btn{
         <button class="records-subtab-btn" id="recordsTabHistory" data-panel="recordsPanelHistory">履歴</button>
       </div>
 
-      <!-- 全体 -->
-      <div class="records-panel active" id="recordsPanelOverall">
+      <!-- パネル3枚を横に並べたトラック。wrap側で枠外を隠し、track側をJSでスライドさせる -->
+      <div class="records-track-wrap" id="recordsTrackWrap">
+        <div class="records-track" id="recordsTrack">
 
-        <div class="records-donut-card">
-          <svg viewBox="0 0 120 120" width="96" height="96">
-            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="14"/>
-            <circle id="recordsDonutArc" cx="60" cy="60" r="50" fill="none" stroke="#ece4d1" stroke-width="14"
-              stroke-linecap="round" stroke-dasharray="0 314.16" transform="rotate(-90 60 60)"/>
-          </svg>
-          <div class="records-donut-text">
-            <div class="dt-row">
-              <span class="dt-label">総プレイ数</span>
-              <span class="dt-value" id="recordsTotalPlays">0回</span>
+          <!-- 全体 -->
+          <div class="records-panel" id="recordsPanelOverall">
+
+            <div class="records-donut-card">
+              <svg viewBox="0 0 120 120" width="96" height="96">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="14"/>
+                <circle id="recordsDonutArc" cx="60" cy="60" r="50" fill="none" stroke="#ece4d1" stroke-width="14"
+                  stroke-linecap="round" stroke-dasharray="0 314.16" transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="records-donut-text">
+                <div class="dt-row">
+                  <span class="dt-label">総プレイ数</span>
+                  <span class="dt-value" id="recordsTotalPlays">0回</span>
+                </div>
+                <div class="dt-row">
+                  <span class="dt-label">対CPU勝率（直近50戦）</span>
+                  <span class="dt-value" id="recordsOverallWinRate">記録なし</span>
+                </div>
+              </div>
             </div>
-            <div class="dt-row">
-              <span class="dt-label">対CPU勝率（直近50戦）</span>
-              <span class="dt-value" id="recordsOverallWinRate">記録なし</span>
+
+            <div class="records-stat-list">
+              <div class="records-stat-item">
+                <span class="stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </span>
+                <span class="stat-name">連勝記録（対CPU）</span>
+                <span class="stat-val" id="recordsBestStreak">0連勝</span>
+              </div>
+              <div class="records-stat-item">
+                <span class="stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+                </span>
+                <span class="stat-name">最長プレイ時間</span>
+                <span class="stat-val" id="recordsLongestTime">記録なし</span>
+              </div>
+              <div class="records-stat-item">
+                <span class="stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <span class="stat-name">今月のプレイ数</span>
+                <span class="stat-val" id="recordsMonthlyPlays">0回</span>
+              </div>
+              <div class="records-stat-item">
+                <span class="stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </span>
+                <span class="stat-name">一番遊んだゲーム</span>
+                <span class="stat-val" id="recordsFavoriteGame">まだありません</span>
+              </div>
+              <div class="records-stat-item">
+                <span class="stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                </span>
+                <span class="stat-name">はじめた日</span>
+                <span class="stat-val" id="recordsFirstPlayed">まだ記録がありません</span>
+              </div>
             </div>
+
           </div>
+
+          <!-- ゲーム別 -->
+          <div class="records-panel" id="recordsPanelByGame">
+            <div class="records-winrate-list" id="recordsWinrateList"></div>
+          </div>
+
+          <!-- 履歴 -->
+          <div class="records-panel" id="recordsPanelHistory">
+            <div class="records-history-list" id="recordsHistoryList"></div>
+          </div>
+
         </div>
-
-        <div class="records-stat-list">
-          <div class="records-stat-item">
-            <span class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </span>
-            <span class="stat-name">連勝記録（対CPU）</span>
-            <span class="stat-val" id="recordsBestStreak">0連勝</span>
-          </div>
-          <div class="records-stat-item">
-            <span class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
-            </span>
-            <span class="stat-name">最長プレイ時間</span>
-            <span class="stat-val" id="recordsLongestTime">記録なし</span>
-          </div>
-          <div class="records-stat-item">
-            <span class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </span>
-            <span class="stat-name">今月のプレイ数</span>
-            <span class="stat-val" id="recordsMonthlyPlays">0回</span>
-          </div>
-          <div class="records-stat-item">
-            <span class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </span>
-            <span class="stat-name">一番遊んだゲーム</span>
-            <span class="stat-val" id="recordsFavoriteGame">まだありません</span>
-          </div>
-          <div class="records-stat-item">
-            <span class="stat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-            </span>
-            <span class="stat-name">はじめた日</span>
-            <span class="stat-val" id="recordsFirstPlayed">まだ記録がありません</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ゲーム別 -->
-      <div class="records-panel" id="recordsPanelByGame">
-        <div class="records-winrate-list" id="recordsWinrateList"></div>
-      </div>
-
-      <!-- 履歴 -->
-      <div class="records-panel" id="recordsPanelHistory">
-        <div class="records-history-list" id="recordsHistoryList"></div>
       </div>
 
     </div>
@@ -1863,13 +2049,9 @@ body.panel-open .setting-btn{
       <div class="history-grid" id="historyGrid"></div>
     </div>
 
-    <!-- アチーブメント：今回は枠のみ、中身は準備中 -->
+    <!-- アチーブメント：バッジのグリッド表示。中身は JS の ACHIEVEMENTS から生成する -->
     <div class="collection-panel" id="collectionPanelAchievement">
-      <div class="view-placeholder">
-        <div class="icon">🏆</div>
-        <div class="title">アチーブメント</div>
-        <div class="desc">アチーブメント機能は準備中です。<br>もうしばらくお待ちください。</div>
-      </div>
+      <div class="achievement-grid" id="achievementGrid"></div>
     </div>
   </div>
 
@@ -1893,6 +2075,9 @@ body.panel-open .setting-btn{
     <div class="notice-list" id="noticeList"></div>
   </div>
 </div>
+
+<!-- アチーブメント解除トースト：右からシュッと出て、複数あれば上に積み上がる -->
+<div class="achievement-toast-container" id="achievementToastContainer"></div>
 
 <nav class="bottom-nav" id="bottomNav">
   <button class="nav-btn active" id="navHome" data-view="homeView">
@@ -2137,6 +2322,7 @@ body.panel-open .setting-btn{
   function buildHistoryCardEl(game){
     const card = document.createElement('div');
     card.className = 'game-card history-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
+    card.dataset.gameId = game.href.replace('.html', '');
 
     const info = document.createElement('div');
     const num = document.createElement('div');
@@ -2172,9 +2358,53 @@ body.panel-open .setting-btn{
       card.appendChild(info);
     }
 
+    // プレイ回数バッジ（シルバー／ゴールドになった時だけ中身が入る。位置は絶対配置なのでDOM順は自由）
+    const tierBadge = document.createElement('div');
+    tierBadge.className = 'tier-badge';
+    card.appendChild(tierBadge);
+
     card.addEventListener('click', () => openHistoryModal(game));
 
     return card;
+  }
+
+  // --- プレイ回数によるカードの「進化」演出 ---
+  // 10回でシルバー、20回でゴールド。ゲームごとの回数は stats-tracker.js の履歴を
+  // gameId（ファイル名から.htmlを除いたもの）で数えるだけ。record タブの「ゲーム別」と同じ数え方。
+  function getGamePlayCount(gameId){
+    if(!window.hitotokiStats) return 0;
+    const stats = window.hitotokiStats.load();
+    return (stats.history || []).filter(h => h.gameId === gameId).length;
+  }
+
+  function getPlayTier(count){
+    if(count >= 20) return 'gold';
+    if(count >= 10) return 'silver';
+    return null;
+  }
+
+  const TIER_BADGE_ICON = { silver: '🥈', gold: '🥇' };
+
+  function applyCardTier(card){
+    const gameId = card.dataset.gameId;
+    const count = getGamePlayCount(gameId);
+    const tier = getPlayTier(count);
+
+    card.classList.remove('tier-silver', 'tier-gold');
+    const badge = card.querySelector('.tier-badge');
+
+    if(tier){
+      card.classList.add('tier-' + tier);
+      if(badge) badge.textContent = TIER_BADGE_ICON[tier];
+    } else if(badge){
+      badge.textContent = '';
+    }
+  }
+
+  // コレクション画面を開くたびに呼ばれる。カード自体は使い回し、縁取りの見た目だけ更新する
+  function updateAllHistoryCardTiers(){
+    if(!historyGrid) return;
+    historyGrid.querySelectorAll('.history-card').forEach(applyCardTier);
   }
 
   function renderHistoryGrid(){
@@ -2182,9 +2412,109 @@ body.panel-open .setting-btn{
     historyGrid.innerHTML = '';
     // COMING SOON（未実装）のダミーカードは、歴史を書きようがないので除外する
     GAMES.filter(game => !game.comingSoon).forEach(game => {
-      historyGrid.appendChild(buildHistoryCardEl(game));
+      const card = buildHistoryCardEl(game);
+      applyCardTier(card);
+      historyGrid.appendChild(card);
     });
     historyGrid.dataset.rendered = 'true';
+  }
+
+  // --- アチーブメント ---
+  // 判定基準は「記録」タブの総プレイ数（stats-tracker.js が蓄積した全ゲーム合算の履歴件数）と同じ。
+  // ダウンロード実績だけは条件なし＝常に達成済み扱い（アプリを開いた時点で解除）。
+  const ACHIEVEMENTS = [
+    { id:'download_thanks', title:'ダウンロードありがとう！', threshold:null },
+    { id:'play_1',   title:'ゲーム1回PLAY',   threshold:1   },
+    { id:'play_10',  title:'ゲーム10回PLAY',  threshold:10  },
+    { id:'play_15',  title:'ゲーム15回PLAY',  threshold:15  },
+    { id:'play_30',  title:'ゲーム30回PLAY',  threshold:30  },
+    { id:'play_50',  title:'ゲーム50回PLAY',  threshold:50  },
+    { id:'play_70',  title:'ゲーム70回PLAY',  threshold:70  },
+    { id:'play_100', title:'ゲーム100回PLAY', threshold:100 },
+  ];
+
+  const ACH_SEEN_KEY = 'hitotoki_ach_seen'; // 「もう解除演出を見せた」実績idの一覧を保存しておくキー
+
+  function getSeenAchievementIds(){
+    try{
+      const arr = JSON.parse(localStorage.getItem(ACH_SEEN_KEY) || '[]');
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveSeenAchievementIds(ids){
+    try{ localStorage.setItem(ACH_SEEN_KEY, JSON.stringify(ids)); }catch(e){}
+  }
+
+  function getTotalPlays(){
+    if(!window.hitotokiStats) return 0;
+    const stats = window.hitotokiStats.load();
+    return (stats.history || []).length;
+  }
+
+  function getUnlockedAchievementIds(){
+    const totalPlays = getTotalPlays();
+    return ACHIEVEMENTS
+      .filter(a => a.threshold === null || totalPlays >= a.threshold)
+      .map(a => a.id);
+  }
+
+  function renderAchievementGrid(){
+    const grid = document.getElementById('achievementGrid');
+    if(!grid) return;
+    const unlockedIds = getUnlockedAchievementIds();
+    grid.innerHTML = '';
+    ACHIEVEMENTS.forEach(a => {
+      const unlocked = unlockedIds.includes(a.id);
+      const badge = document.createElement('div');
+      badge.className = 'achievement-badge ' + (unlocked ? 'unlocked' : 'locked');
+      const icon = document.createElement('div');
+      icon.className = 'badge-icon';
+      icon.textContent = unlocked ? '🏆' : '🔒';
+      const title = document.createElement('div');
+      title.className = 'badge-title';
+      title.textContent = a.title;
+      badge.appendChild(icon);
+      badge.appendChild(title);
+      grid.appendChild(badge);
+    });
+  }
+
+  // 右からシュッと入って、約3秒後に消えるトーストを1つ表示する
+  function showAchievementToast(ach){
+    const container = document.getElementById('achievementToastContainer');
+    if(!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML =
+      '<div class="toast-icon">🏆</div>' +
+      '<div class="toast-text">' +
+        '<div class="toast-label">実績解除</div>' +
+        '<div class="toast-title"></div>' +
+      '</div>';
+    toast.querySelector('.toast-title').textContent = ach.title;
+    // 先頭に挿入する＝一番上に出て、既存のトーストは自動的に下へ押し出される
+    container.prepend(toast);
+    // アニメーション（CSS側で合計3秒に設定済み）が終わったら要素ごと片付ける
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  // 複数同時に解除された場合は、少しずつ間を空けて順番に出す
+  // （column-reverse で積んでいるので、後から出したものほど上に表示される）
+  function queueAchievementToasts(achList){
+    achList.forEach((ach, i) => {
+      setTimeout(() => showAchievementToast(ach), i * 260);
+    });
+  }
+
+  // コレクション画面を開くたびに呼ばれる。新しく達成した実績があれば通知して「既読」にする
+  function checkAndNotifyAchievements(){
+    const unlockedIds = getUnlockedAchievementIds();
+    const seenIds = getSeenAchievementIds();
+    const newlyUnlocked = ACHIEVEMENTS.filter(a => unlockedIds.includes(a.id) && !seenIds.includes(a.id));
+    if(newlyUnlocked.length > 0){
+      queueAchievementToasts(newlyUnlocked);
+      saveSeenAchievementIds(seenIds.concat(newlyUnlocked.map(a => a.id)));
+    }
   }
 
 
@@ -2566,74 +2896,116 @@ function switchView(viewId){
   }
   if(viewId === 'recordsView'){
     renderRecordsView();
+    recordsCarousel.recalc();
   }
   if(viewId === 'collectionView'){
     renderHistoryGrid();
+    updateAllHistoryCardTiers();
+    renderAchievementGrid();
+    checkAndNotifyAchievements();
   }
 }
 
-// --- 記録タブのサブタブ（全体／ゲーム別／履歴）切り替え ---
+// --- 記録タブ：全体／ゲーム別／履歴を、指の動きに追従するカルーセルで切り替える ---
+// パネル3枚を横に並べたトラックをドラッグ量に応じてリアルタイムで動かし、
+// 指を離した時に一定量を超えていれば隣のタブへ、超えていなければ元の位置へスナップバックする。
 const recordsSubtabBtns = document.querySelectorAll('.records-subtab-btn');
-recordsSubtabBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    recordsSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('.records-panel').forEach(p => {
-      p.classList.toggle('active', p.id === btn.dataset.panel);
-    });
-  });
-});
 
-// --- 記録タブ：横スワイプでも「全体／ゲーム別／履歴」を切り替えられるようにする ---
-(function initRecordsSwipe(){
-  const container = document.querySelector('.records-view');
-  if(!container) return;
+const recordsCarousel = (function initRecordsCarousel(){
+  const wrap = document.getElementById('recordsTrackWrap');
+  const track = document.getElementById('recordsTrack');
+  if(!wrap || !track) return { recalc(){}, goToIndex(){} };
 
-  // タブボタンの並び順 = パネルを切り替える順番
   const tabOrder = Array.from(recordsSubtabBtns).map(btn => btn.dataset.panel);
+  let currentIndex = 0;
+  let wrapWidth = 0;
+  let dragging = false;
+  let axisLocked = null; // 'x'（横スワイプ確定） | 'y'（縦スクロールなので何もしない） | null（未確定）
+  let startX = 0, startY = 0, dragDeltaPx = 0;
 
-  function currentIndex(){
-    const activeBtn = document.querySelector('.records-subtab-btn.active');
-    const idx = tabOrder.indexOf(activeBtn ? activeBtn.dataset.panel : tabOrder[0]);
-    return idx === -1 ? 0 : idx;
+  function applyTransform(px, animate){
+    track.classList.toggle('dragging', !animate);
+    track.style.transform = `translateX(${px}px)`;
   }
 
   function goToIndex(idx){
     idx = Math.max(0, Math.min(tabOrder.length - 1, idx));
+    currentIndex = idx;
+    wrapWidth = wrap.clientWidth;
+    applyTransform(-idx * wrapWidth, true);
     const targetPanel = tabOrder[idx];
     recordsSubtabBtns.forEach(b => b.classList.toggle('active', b.dataset.panel === targetPanel));
-    document.querySelectorAll('.records-panel').forEach(p => {
-      p.classList.toggle('active', p.id === targetPanel);
-    });
   }
 
-  let startX = 0, startY = 0, tracking = false;
-  const SWIPE_THRESHOLD = 50; // これ未満の移動はスワイプとみなさない
+  // タブボタンをタップした時も同じ関数でスライドさせる
+  recordsSubtabBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => goToIndex(i));
+  });
 
-  container.addEventListener('touchstart', (e) => {
-    if(e.touches.length !== 1) return;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    tracking = true;
-  }, { passive:true });
+  function onStart(e){
+    if(e.touches && e.touches.length !== 1) return;
+    dragging = true;
+    axisLocked = null;
+    dragDeltaPx = 0;
+    wrapWidth = wrap.clientWidth;
+    const t = e.touches ? e.touches[0] : e;
+    startX = t.clientX;
+    startY = t.clientY;
+  }
 
-  container.addEventListener('touchend', (e) => {
-    if(!tracking) return;
-    tracking = false;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
+  function onMove(e){
+    if(!dragging) return;
+    const t = e.touches ? e.touches[0] : e;
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
 
-    // 縦方向の動きの方が大きい場合はスクロール操作とみなし、何もしない
-    if(Math.abs(deltaX) < SWIPE_THRESHOLD || Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return;
-
-    const idx = currentIndex();
-    if(deltaX < 0){
-      goToIndex(idx + 1); // 左スワイプ → 次のタブへ
-    } else {
-      goToIndex(idx - 1); // 右スワイプ → 前のタブへ
+    if(axisLocked === null){
+      if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return; // 判定するにはまだ動きが小さすぎる
+      axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
     }
-  }, { passive:true });
+    if(axisLocked !== 'x') return; // 縦方向の動きは通常のスクロールに任せる
+
+    // 端のタブでさらに外側へ引っ張った場合は、少ししか動かないよう抵抗をつける
+    let limitedDx = dx;
+    if((currentIndex === 0 && dx > 0) || (currentIndex === tabOrder.length - 1 && dx < 0)){
+      limitedDx = dx * 0.35;
+    }
+    dragDeltaPx = limitedDx;
+    applyTransform(-currentIndex * wrapWidth + limitedDx, false);
+  }
+
+  function onEnd(){
+    if(!dragging) return;
+    dragging = false;
+
+    if(axisLocked === 'x'){
+      const threshold = wrapWidth * 0.22; // これ以上動かせば切り替え確定。届かなければ元の位置へ戻す
+      if(dragDeltaPx <= -threshold && currentIndex < tabOrder.length - 1){
+        goToIndex(currentIndex + 1);
+      } else if(dragDeltaPx >= threshold && currentIndex > 0){
+        goToIndex(currentIndex - 1);
+      } else {
+        goToIndex(currentIndex);
+      }
+    }
+    axisLocked = null;
+  }
+
+  wrap.addEventListener('touchstart', onStart, { passive:true });
+  wrap.addEventListener('touchmove', onMove, { passive:true });
+  wrap.addEventListener('touchend', onEnd, { passive:true });
+  wrap.addEventListener('touchcancel', onEnd, { passive:true });
+
+  window.addEventListener('resize', () => {
+    if(dragging) return;
+    goToIndex(currentIndex);
+  });
+
+  return {
+    // 記録タブが非表示（width:0）の間に読み込まれるため、表示された直後に幅を測り直す
+    recalc(){ goToIndex(currentIndex); },
+    goToIndex,
+  };
 })();
 
 // --- コレクションタブのサブタブ（ゲームの歴史／アチーブメント）切り替え ---
