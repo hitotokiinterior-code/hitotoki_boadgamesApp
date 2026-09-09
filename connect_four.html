@@ -57,7 +57,7 @@
     border: 1px solid rgba(255,255,255,0.4);
     border-radius: 3px;
     padding: 7px 12px;
-    text-decoration:none;
+    cursor:pointer;
     backdrop-filter: blur(4px);
     transition: background .15s ease, color .15s ease, border-color .15s ease;
   }
@@ -502,6 +502,13 @@
     border-color:#fff;
   }
   .start-btn:hover{ background:#eee; border-color:#eee; }
+  .setup-rules-btn{
+    background: transparent;
+    color: var(--silver);
+    border-color: var(--silver-dim);
+    margin-top: -6px;
+  }
+  .setup-rules-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
 
   /* --- game screen --- */
   .game-screen{
@@ -785,7 +792,7 @@
 </style>
 </head>
 <body>
-<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<button type="button" id="homeBtn" class="home-btn" aria-label="ホームへ戻る">← ホーム</button>
 <button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
 <div id="bgSwitchPanel" class="bg-switch-panel hidden">
   <button
@@ -821,6 +828,7 @@
         <button class="mode-toggle-btn" id="sideBlackBtn">後攻で対戦</button>
       </div>
       <button id="startGameBtn" class="main-btn start-btn">はじめる</button>
+      <button id="setupRulesBtn" class="main-btn start-btn setup-rules-btn">遊び方</button>
     </div>
   </div>
 
@@ -849,12 +857,6 @@
           <div id="previewPointer" class="preview-pointer"></div>
         </div>
       </div>
-    </div>
-
-    <div class="controls">
-      <button id="newGameBtn" class="main-btn">はじめから</button>
-      <button id="rulesBtn" class="main-btn">遊び方</button>
-      <button id="changeModeBtn" class="main-btn">モード変更</button>
     </div>
 
     <!-- 横画面専用：左右の手番コイン（白=左／黒=右）。今の手番、決着後は勝った方を強調表示 -->
@@ -1375,14 +1377,12 @@
 
   // --- rules modal ---
   const rulesModal = document.getElementById('rulesModal');
-  document.getElementById('rulesBtn').addEventListener('click', () => {
-    rulesModal.classList.remove('hidden');
-  });
-  document.getElementById('rulesCloseBtn').addEventListener('click', () => {
-    rulesModal.classList.add('hidden');
-  });
+  function openRulesModal(){ rulesModal.classList.remove('hidden'); }
+  function closeRulesModal(){ rulesModal.classList.add('hidden'); }
+  document.getElementById('setupRulesBtn').addEventListener('click', openRulesModal);
+  document.getElementById('rulesCloseBtn').addEventListener('click', closeRulesModal);
   rulesModal.addEventListener('click', (e) => {
-    if(e.target === rulesModal) rulesModal.classList.add('hidden');
+    if(e.target === rulesModal) closeRulesModal();
   });
 
   // --- confirm-before-leaving-game modal ---
@@ -1419,9 +1419,11 @@
     }
   });
 
-  document.getElementById('newGameBtn').addEventListener('click', () => {
-    runOrConfirm(resetAll);
-  });
+  function returnToSetupScreen(){
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('setupScreen').classList.remove('hidden');
+    document.getElementById('bgSwitchBtn').classList.remove('hidden');
+  }
 
   document.getElementById('startGameBtn').addEventListener('click', () => {
     document.getElementById('setupScreen').classList.add('hidden');
@@ -1430,12 +1432,14 @@
     document.getElementById('bgSwitchPanel').classList.add('hidden');
     resetAll();
   });
-  document.getElementById('changeModeBtn').addEventListener('click', () => {
-    runOrConfirm(() => {
-      document.getElementById('gameScreen').classList.add('hidden');
-      document.getElementById('setupScreen').classList.remove('hidden');
-      document.getElementById('bgSwitchBtn').classList.remove('hidden');
-    });
+
+  document.getElementById('homeBtn').addEventListener('click', () => {
+    const onGameScreen = !document.getElementById('gameScreen').classList.contains('hidden');
+    if(onGameScreen){
+      runOrConfirm(returnToSetupScreen);
+      return;
+    }
+    window.location.href = 'index.html';
   });
 
   // --- drag-to-drop: press anywhere on the board frame, slide to a column, release to drop ---
