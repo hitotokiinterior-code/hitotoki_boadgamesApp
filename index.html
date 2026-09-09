@@ -12,6 +12,8 @@
     --silver: #cfcfcf;
     --silver-dim: #6f6f6f;
     --nav-h: 60px;
+    --card-h: 94px;   /* ゲームカードの高さ。.game-card クラスを使う場所すべてで共通 */
+    --card-gap: 6px;
   }
 
   *{ box-sizing:border-box; }
@@ -421,10 +423,19 @@
   .history-card{
     cursor:pointer;
   }
+  /* 右上に固定のバッジの穴と重ならないよう、タイトルを少し下げて一回り小さくする */
+  .history-card .title{
+    margin-top:20px;
+    font-size:0.8rem;
+  }
   /* 神経衰弱など、改行させたくないタイトル用（画像が50%になり幅が狭いため少し縮める） */
   .history-card .title.nowrap-small{
-    font-size:0.78rem;
+    font-size:0.76rem;
     white-space:nowrap;
+  }
+  /* 神経衰弱だけ他より少し大きめに調整（好みで数値を変えてOK） */
+  .history-grid .history-card[data-game-id="memory_match"] .title{
+    font-size:0.83rem;
   }
 
   /* --- プレイ回数によるカードの「進化」演出 ---
@@ -468,24 +479,36 @@
     50%{ opacity:1; }
   }
 
-  /* 右上に乗せる達成バッジ（盾のアイコン画像）。シルバー・ゴールドの枠を常に2つ並べておき、
-     未達成の枠は薄いグレーの「穴が開いた」状態、達成した枠だけくっきり光らせる。 */
+  /* 右上に乗せる達成バッジ。普段は黒い丸の「穴」だけが2つ並んでいて、
+     達成した瞬間だけ盾のバッジ画像がその穴にポコッと差し込まれる。
+     位置はタイトル文字と重ならないよう、少し下げてある。 */
   .history-card .tier-badges{
     position:absolute;
-    top:5px; right:5px;
+    top:5px; right:6px;
     z-index:5;
     display:flex;
-    gap:4px;
+    gap:5px;
+  }
+  .history-card .badge-slot{
+    position:relative;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.05), rgba(0,0,0,0.8) 70%);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,0.85), inset 0 -1px 1px rgba(255,255,255,0.05);
   }
   .history-card .tier-badge{
+    position:absolute;
+    left:50%; top:50%;
     width:26px;
     height:auto;
-    opacity:0.32;
-    filter: grayscale(100%) brightness(0.6);
-    transition: opacity .25s ease, filter .25s ease;
+    transform: translate(-50%, -50%) scale(0.55);
+    opacity:0;
+    transition: opacity .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
   }
   .history-card .tier-badge.unlocked{
     opacity:1;
+    transform: translate(-50%, -50%) scale(1);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
   }
   .history-card .tier-badge.tier-silver-badge.unlocked{
@@ -1038,8 +1061,6 @@
 
   /* --- swipeable list: 全カードを1本の縦リストにして、なめらかに連続スクロール --- */
   .game-grid{
-    --card-h: 94px;
-    --card-gap: 6px;
     width:100%;
     height: calc(var(--card-h) * 4 + var(--card-gap) * 3 + 4px); /* 4px = 上下パディング分。border-boxで内側に食い込む分を補正 */
     display:flex;
@@ -1061,6 +1082,7 @@
     position:relative;
     flex: 0 0 var(--card-h);
     height: var(--card-h);
+    min-height: var(--card-h); /* CSS Gridの中（コレクションのカード等）でも縮まないようにする */
     display:flex;
     flex-direction:column;
     justify-content:space-between;
@@ -2233,7 +2255,7 @@ body.panel-open .setting-btn{
     { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ヒット＆','ブロー'] },
     { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', img:'assets/cards/dots_and_boxes.jpg', noFade:true, tags:[{t:'2人'}], history:'', historyTitleLines:['ドット＆','ボックス'] },
     { num:'06', title:'五目並べ', href:'gomoku.html', img:'assets/cards/gomoku.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' }, // 将来的に名称変更の可能性あり
-    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
+    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleNoWrap:true },
     { num:'08', title:'COMING SOON', comingSoon:true, tags:[], history:'' },
   ];
 
@@ -2363,23 +2385,29 @@ body.panel-open .setting-btn{
       card.appendChild(info);
     }
 
-    // プレイ回数バッジ：シルバー・ゴールドの枠を常に2つ並べておく（未達成の間は薄く「穴」の状態）
+    // プレイ回数バッジ：黒い丸の「穴」を常に2つ並べておき、達成した方だけ画像が差し込まれる
     const gameId = game.href.replace('.html', '');
     const badgeWrap = document.createElement('div');
     badgeWrap.className = 'tier-badges';
 
+    const silverSlot = document.createElement('div');
+    silverSlot.className = 'badge-slot';
     const silverBadge = document.createElement('img');
     silverBadge.className = 'tier-badge tier-silver-badge';
     silverBadge.alt = '';
     silverBadge.src = `assets/badges/${gameId}_silver.png`;
+    silverSlot.appendChild(silverBadge);
 
+    const goldSlot = document.createElement('div');
+    goldSlot.className = 'badge-slot';
     const goldBadge = document.createElement('img');
     goldBadge.className = 'tier-badge tier-gold-badge';
     goldBadge.alt = '';
     goldBadge.src = `assets/badges/${gameId}_gold.png`;
+    goldSlot.appendChild(goldBadge);
 
-    badgeWrap.appendChild(silverBadge);
-    badgeWrap.appendChild(goldBadge);
+    badgeWrap.appendChild(silverSlot);
+    badgeWrap.appendChild(goldSlot);
     card.appendChild(badgeWrap);
 
     card.addEventListener('click', () => openHistoryModal(game));
