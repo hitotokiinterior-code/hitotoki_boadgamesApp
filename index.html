@@ -405,6 +405,7 @@
   .history-grid{
     width:100%;
     max-height: calc(100vh - 300px);
+    max-height: calc(100dvh - 300px); /* スマホのアドレスバー分のズレを補正（対応ブラウザではこちらが優先される） */
     display:grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: min-content;
@@ -431,6 +432,10 @@
   .history-card .card-body{
     justify-content:center;
   }
+  /* 番号をもう少し下げる */
+  .history-card .num{
+    margin-top:10px;
+  }
   /* 右上に固定のバッジの穴と重ならないよう、タイトルは中央揃え＆一回り小さくする */
   .history-card .title{
     margin-top:6px;
@@ -445,6 +450,17 @@
   /* 神経衰弱だけ他より少し大きめに調整（好みで数値を変えてOK） */
   .history-grid .history-card[data-game-id="memory_match"] .title{
     font-size:0.83rem;
+  }
+  /* ミニ将棋／コネクトフォー／ドット＆ボックス／五目並べは、他より少し小さめに調整 */
+  .history-grid .history-card[data-game-id="mini_shogi"] .title,
+  .history-grid .history-card[data-game-id="connect_four"] .title,
+  .history-grid .history-card[data-game-id="dots_and_boxes"] .title,
+  .history-grid .history-card[data-game-id="gomoku"] .title{
+    font-size:0.68rem;
+  }
+  /* ウサギと猟犬は「ウサギ／猟犬」の2行にして、その分少し大きめに調整 */
+  .history-grid .history-card[data-game-id="rabbit_and_hounds"] .title{
+    font-size:0.85rem;
   }
 
   /* --- プレイ回数によるカードの「進化」演出 ---
@@ -2264,7 +2280,7 @@ body.panel-open .setting-btn{
     { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ヒット＆','ブロー'] },
     { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', img:'assets/cards/dots_and_boxes.jpg', noFade:true, tags:[{t:'2人'}], history:'', historyTitleLines:['ドット＆','ボックス'] },
     { num:'06', title:'五目並べ', href:'gomoku.html', img:'assets/cards/gomoku.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' }, // 将来的に名称変更の可能性あり
-    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleNoWrap:true },
+    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ウサギ','猟犬'] },
     { num:'08', title:'COMING SOON', comingSoon:true, tags:[], history:'' },
   ];
 
