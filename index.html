@@ -419,18 +419,27 @@
     display:none;
   }
 
-  /* .game-card の見た目をそのまま流用。カードサイズは固定のまま、タップでモーダルを開く */
+  /* .game-card の見た目をそのまま流用。カードだけホーム画面より少し縦に長くして、
+     中身（番号＋タイトル）は上詰めではなく縦方向に中央寄せにする（＝番号も自然に下がる） */
   .history-card{
     cursor:pointer;
   }
-  /* 右上に固定のバッジの穴と重ならないよう、タイトルを少し下げて一回り小さくする */
+  .history-grid .game-card{
+    height:118px;
+    min-height:118px;
+  }
+  .history-card .card-body{
+    justify-content:center;
+  }
+  /* 右上に固定のバッジの穴と重ならないよう、タイトルは中央揃え＆一回り小さくする */
   .history-card .title{
-    margin-top:20px;
-    font-size:0.8rem;
+    margin-top:6px;
+    font-size:0.74rem;
+    text-align:center;
   }
   /* 神経衰弱など、改行させたくないタイトル用（画像が50%になり幅が狭いため少し縮める） */
   .history-card .title.nowrap-small{
-    font-size:0.76rem;
+    font-size:0.7rem;
     white-space:nowrap;
   }
   /* 神経衰弱だけ他より少し大きめに調整（好みで数値を変えてOK） */
