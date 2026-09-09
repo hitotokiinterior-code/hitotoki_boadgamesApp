@@ -468,26 +468,31 @@
     50%{ opacity:1; }
   }
 
-  /* 右上に乗せる達成バッジ（🥈／🥇） */
-  .history-card .tier-badge{
+  /* 右上に乗せる達成バッジ（盾のアイコン画像）。シルバー・ゴールドの枠を常に2つ並べておき、
+     未達成の枠は薄いグレーの「穴が開いた」状態、達成した枠だけくっきり光らせる。 */
+  .history-card .tier-badges{
     position:absolute;
-    top:6px; right:6px;
+    top:5px; right:5px;
     z-index:5;
-    width:21px; height:21px;
-    border-radius:50%;
     display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:0.72rem;
-    background: rgba(10,10,10,0.55);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    gap:4px;
   }
-  .history-card.tier-silver .tier-badge{
-    box-shadow: 0 0 8px rgba(220,220,220,0.5);
+  .history-card .tier-badge{
+    width:26px;
+    height:auto;
+    opacity:0.32;
+    filter: grayscale(100%) brightness(0.6);
+    transition: opacity .25s ease, filter .25s ease;
   }
-  .history-card.tier-gold .tier-badge{
-    box-shadow: 0 0 10px rgba(232,197,101,0.6);
+  .history-card .tier-badge.unlocked{
+    opacity:1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+  .history-card .tier-badge.tier-silver-badge.unlocked{
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 0 6px rgba(220,220,220,0.6));
+  }
+  .history-card .tier-badge.tier-gold-badge.unlocked{
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)) drop-shadow(0 0 7px rgba(232,197,101,0.65));
   }
 
   /* タップ時に開く、半透明のウィンドウ風モーダル */
@@ -2358,10 +2363,24 @@ body.panel-open .setting-btn{
       card.appendChild(info);
     }
 
-    // プレイ回数バッジ（シルバー／ゴールドになった時だけ中身が入る。位置は絶対配置なのでDOM順は自由）
-    const tierBadge = document.createElement('div');
-    tierBadge.className = 'tier-badge';
-    card.appendChild(tierBadge);
+    // プレイ回数バッジ：シルバー・ゴールドの枠を常に2つ並べておく（未達成の間は薄く「穴」の状態）
+    const gameId = game.href.replace('.html', '');
+    const badgeWrap = document.createElement('div');
+    badgeWrap.className = 'tier-badges';
+
+    const silverBadge = document.createElement('img');
+    silverBadge.className = 'tier-badge tier-silver-badge';
+    silverBadge.alt = '';
+    silverBadge.src = `assets/badges/${gameId}_silver.png`;
+
+    const goldBadge = document.createElement('img');
+    goldBadge.className = 'tier-badge tier-gold-badge';
+    goldBadge.alt = '';
+    goldBadge.src = `assets/badges/${gameId}_gold.png`;
+
+    badgeWrap.appendChild(silverBadge);
+    badgeWrap.appendChild(goldBadge);
+    card.appendChild(badgeWrap);
 
     card.addEventListener('click', () => openHistoryModal(game));
 
@@ -2371,34 +2390,31 @@ body.panel-open .setting-btn{
   // --- プレイ回数によるカードの「進化」演出 ---
   // 10回でシルバー、20回でゴールド。ゲームごとの回数は stats-tracker.js の履歴を
   // gameId（ファイル名から.htmlを除いたもの）で数えるだけ。record タブの「ゲーム別」と同じ数え方。
+  const SILVER_THRESHOLD = 10;
+  const GOLD_THRESHOLD = 20;
+
   function getGamePlayCount(gameId){
     if(!window.hitotokiStats) return 0;
     const stats = window.hitotokiStats.load();
     return (stats.history || []).filter(h => h.gameId === gameId).length;
   }
 
-  function getPlayTier(count){
-    if(count >= 2) return 'gold';
-    if(count >= 1) return 'silver';
-    return null;
-  }
-
-  const TIER_BADGE_ICON = { silver: '🥈', gold: '🥇' };
-
   function applyCardTier(card){
     const gameId = card.dataset.gameId;
     const count = getGamePlayCount(gameId);
-    const tier = getPlayTier(count);
+    const silverUnlocked = count >= SILVER_THRESHOLD;
+    const goldUnlocked = count >= GOLD_THRESHOLD;
 
+    // カード自体の縁取り演出（グロー）は、達成している中で一番高いランクを反映する
     card.classList.remove('tier-silver', 'tier-gold');
-    const badge = card.querySelector('.tier-badge');
+    if(goldUnlocked) card.classList.add('tier-gold');
+    else if(silverUnlocked) card.classList.add('tier-silver');
 
-    if(tier){
-      card.classList.add('tier-' + tier);
-      if(badge) badge.textContent = TIER_BADGE_ICON[tier];
-    } else if(badge){
-      badge.textContent = '';
-    }
+    // バッジは達成した分だけ点灯させる。ゴールドまで届いていれば、シルバーも一緒に光ったままになる
+    const silverBadge = card.querySelector('.tier-silver-badge');
+    const goldBadge = card.querySelector('.tier-gold-badge');
+    if(silverBadge) silverBadge.classList.toggle('unlocked', silverUnlocked);
+    if(goldBadge) goldBadge.classList.toggle('unlocked', goldUnlocked);
   }
 
   // コレクション画面を開くたびに呼ばれる。カード自体は使い回し、縁取りの見た目だけ更新する
