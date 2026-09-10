@@ -1490,6 +1490,22 @@
   right:38px; /* ⚙(32px幅)の右寄せに対して、隙間6pxを空けてすぐ左に並べる */
 }
 
+/* 未読のお知らせがある間だけ、右上に小さな赤丸を表示する */
+.setting-btn.notice-btn .unread-dot{
+  position:absolute;
+  top:1px;
+  right:1px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#e0433c;
+  border:1.5px solid #0a0a0a;
+  display:none;
+}
+.setting-btn.notice-btn.has-unread .unread-dot{
+  display:block;
+}
+
 /* パネルが開いている間は、⚙／☰ボタン自体を隠す
    （もう片方のボタンが見えたままだと紛らわしく、パネルの×ボタンとも位置が被るため） */
 body.panel-open .setting-btn{
@@ -1847,6 +1863,7 @@ body.panel-open .setting-btn{
       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
       <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
     </svg>
+    <span class="unread-dot" id="noticeUnreadDot"></span>
   </button>
   <button class="setting-btn gear-btn" id="gearBtn">
     <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -2735,9 +2752,37 @@ function renderNoticeList(){
   });
 }
 
+// --- お知らせの未読管理 ---
+// NOTICES配列(notices.js)の内容全体をそのまま「前回確認した時の中身」として保存しておき、
+// 今の中身と比較して違っていれば「新しいお知らせがある」＝未読として赤丸を出す。
+// 通知ボタンを押して中身を開いたら、その時点の中身を「既読」として保存する。
+const NOTICE_READ_KEY = 'hitotoki_notice_read_snapshot';
+
+function getNoticesSnapshot(){
+  const notices = (typeof NOTICES !== 'undefined' && Array.isArray(NOTICES)) ? NOTICES : [];
+  try{ return JSON.stringify(notices); }catch(e){ return '[]'; }
+}
+
+function updateNoticeUnreadState(){
+  const currentSnapshot = getNoticesSnapshot();
+  let readSnapshot = null;
+  try{ readSnapshot = localStorage.getItem(NOTICE_READ_KEY); }catch(e){}
+  const hasUnread = currentSnapshot !== '[]' && currentSnapshot !== readSnapshot;
+  noticeBtn.classList.toggle('has-unread', hasUnread);
+}
+
+function markNoticesAsRead(){
+  try{ localStorage.setItem(NOTICE_READ_KEY, getNoticesSnapshot()); }catch(e){}
+  noticeBtn.classList.remove('has-unread');
+}
+
+// ページを開いた時点で、前回確認済みの中身と比べて未読があれば赤丸を出しておく
+updateNoticeUnreadState();
+
 noticeBtn.addEventListener("click", () => {
   renderNoticeList();
   noticeModal.classList.add("open");
+  markNoticesAsRead();
 });
 noticeModalClose.addEventListener("click", () => {
   noticeModal.classList.remove("open");
