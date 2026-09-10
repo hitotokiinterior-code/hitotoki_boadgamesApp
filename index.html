@@ -239,6 +239,13 @@
   .timer-cover.dragging{
     transition:none;
   }
+  /* カバーの中身に円形の「穴」を開けるための下準備。--hole をトランジションできるように登録しておく */
+  @property --hole{
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 0px;
+  }
+
   .timer-cover-fade{
     position:absolute;
     inset:0;
@@ -248,7 +255,14 @@
     background: url('assets/timer/timer_cover.jpg');
     background-size: cover;
     background-position: center;
-    transition: opacity .28s ease;
+    --hole: 0px;
+    /* 中央から半径 --hole ぶんだけ透明にする＝そこだけ写真がくり抜かれて、下の時間表示が見える */
+    mask-image: radial-gradient(circle at 50% 50%, transparent 0, transparent var(--hole), black calc(var(--hole) + 14px), black 100%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0, transparent var(--hole), black calc(var(--hole) + 14px), black 100%);
+    transition: --hole .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .timer-cover-fade.hole-open{
+    --hole: 60px;
   }
   .timer-cover.dragging .timer-cover-fade{
     transition:none;
@@ -3321,6 +3335,9 @@ navButtons.forEach(btn => {
   function setState(next){
     state = next;
     displayEl.classList.toggle('running', state === 'running');
+    // 'open'（設定側が開いて、右側が「設定中の分数＋戻すとスタート」になっている）の時だけ、
+    // カバー中央の穴を開けて、下の文字が見えるようにする
+    if(coverFade) coverFade.classList.toggle('hole-open', state === 'open');
   }
 
   function calcMaxOffset(){
@@ -3330,10 +3347,6 @@ navButtons.forEach(btn => {
 
   function setCoverX(px){
     cover.style.transform = `translateX(${px}px)`;
-    // 右へスライドするほど写真＋グリップ（中身）だけを透明にしていく。
-    // 右端の縁線(border-right)は .timer-cover 側にあるので、常にはっきり見えたまま
-    const t = maxOffset > 0 ? Math.min(1, Math.max(0, px / maxOffset)) : 0;
-    if(coverFade) coverFade.style.opacity = String(1 - t);
   }
 
   function formatClock(){
