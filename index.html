@@ -239,11 +239,16 @@
   .timer-cover.dragging{
     transition:none;
   }
-  /* カバーの中身に円形の「穴」を開けるための下準備。--hole をトランジションできるように登録しておく */
-  @property --hole{
+  /* カバーの中身に楕円形の「穴」を開けるための下準備。--hole-x/--hole-y をトランジションできるように登録しておく */
+  @property --hole-x{
     syntax: '<length>';
     inherits: true;
-    initial-value: 0px;
+    initial-value: 1px;
+  }
+  @property --hole-y{
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 1px;
   }
 
   .timer-cover-fade{
@@ -255,14 +260,16 @@
     background: url('assets/timer/timer_cover.jpg');
     background-size: cover;
     background-position: center;
-    --hole: 0px;
-    /* 中央から半径 --hole ぶんだけ透明にする＝そこだけ写真がくり抜かれて、下の時間表示が見える */
-    mask-image: radial-gradient(circle at 50% 50%, transparent 0, transparent var(--hole), black calc(var(--hole) + 14px), black 100%);
-    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0, transparent var(--hole), black calc(var(--hole) + 14px), black 100%);
-    transition: --hole .32s cubic-bezier(.2,.8,.2,1);
+    --hole-x: 1px;
+    --hole-y: 1px;
+    /* 中央を横長の楕円形にくり抜いて、そこだけ写真が透けて下の時間表示が見える */
+    mask-image: radial-gradient(ellipse var(--hole-x) var(--hole-y) at 50% 50%, transparent 60%, black 100%);
+    -webkit-mask-image: radial-gradient(ellipse var(--hole-x) var(--hole-y) at 50% 50%, transparent 60%, black 100%);
+    transition: --hole-x .32s cubic-bezier(.2,.8,.2,1), --hole-y .32s cubic-bezier(.2,.8,.2,1);
   }
   .timer-cover-fade.hole-open{
-    --hole: 60px;
+    --hole-x: 42px;
+    --hole-y: 24px;
   }
   .timer-cover.dragging .timer-cover-fade{
     transition:none;
