@@ -911,6 +911,7 @@
   let humanSide = 'white';
   let cpuThinking = false;
   let cpuMovesMade = 0;
+  let gameStartedAt = null;
 
   function cpuSide(){
     if(!vsCPU) return null;
@@ -1061,6 +1062,7 @@
     cpuMovesMade = 0;
     lastResult = null;
     dropCooldownUntil = 0;
+    gameStartedAt = Date.now();
     document.getElementById('chipLayer').innerHTML = '';
     hidePreview();
     renderBoardHoles();
@@ -1321,6 +1323,15 @@
 
   function showWinner(winner, draw){
     lastResult = draw ? { winner: null, draw: true } : { winner: winner, draw: false };
+
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく
+    if(window.hitotokiStats){
+      window.hitotokiStats.recordGameEnd('connect_four', 'コネクトフォー', {
+        vsCPU: vsCPU,
+        won: (vsCPU && !draw) ? (winner === humanSide) : undefined,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
+      });
+    }
   }
 
   function setMode(newVsCPU, newDifficulty){
