@@ -1121,6 +1121,12 @@
     padding: 2px 4px;
   }
 
+  /* タイマー機能をOFFにした時：タイマーカードの分だけ空いたスペースを使って、
+     もう1枚ぶんゲームカードが見えるように表示エリアを広げる */
+  .game-grid.timer-off{
+    height: calc(var(--card-h) * 5 + var(--card-gap) * 4 + 4px);
+  }
+
   .game-grid::-webkit-scrollbar{
     display:none;
   }
@@ -2995,6 +3001,8 @@ function isTimerFeatureEnabled(){
 
 function applyTimerFeatureVisibility(enabled){
   if(timerCardEl) timerCardEl.style.display = enabled ? '' : 'none';
+  // タイマーが消えた分の縦スペースを使って、ゲームリストをもう1枚ぶん多く表示する
+  if(gameGrid) gameGrid.classList.toggle('timer-off', !enabled);
 }
 
 if(timerFeatureToggle){
