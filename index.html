@@ -414,14 +414,29 @@
     border-radius:2px;
   }
 
-  .collection-panel{
-    display:none;
+  /* パネル2枚を横に並べて、指の動きに合わせてトラックごとスライドさせるカルーセル方式。
+     wrap側ではみ出た分を隠し、track側を translateX で動かす（記録タブと同じ仕組み） */
+  .collection-track-wrap{
     width:100%;
+    overflow:hidden;
+    touch-action: pan-y; /* 縦スクロールは許可しつつ、横方向はJSでドラッグ検知する */
+  }
+  .collection-track{
+    display:flex;
+    width:200%;
+    transition: transform .32s cubic-bezier(.2,.8,.2,1);
+  }
+  .collection-track.dragging{
+    transition:none; /* ドラッグ中は追従させたいのでアニメーションを切る */
+  }
+
+  .collection-panel{
+    flex:0 0 50%;
+    width:50%;
+    box-sizing:border-box;
+    display:flex;
     flex-direction:column;
     gap:18px;
-  }
-  .collection-panel.active{
-    display:flex;
   }
 
   /* ゲームの歴史：2列×縦にどんどん伸びていくグリッド（内部だけスクロール） */
@@ -2125,14 +2140,21 @@ body.panel-open .setting-btn{
       <button class="collection-subtab-btn" id="collectionTabAchievement" data-panel="collectionPanelAchievement">アチーブメント</button>
     </div>
 
-    <!-- ゲームの歴史：カードをタップすると、サイズはそのままにモーダルが開いて文章を読める -->
-    <div class="collection-panel active" id="collectionPanelHistory">
-      <div class="history-grid" id="historyGrid"></div>
-    </div>
+    <!-- パネル2枚を横に並べたトラック。wrap側で枠外を隠し、track側をJSでスライドさせる -->
+    <div class="collection-track-wrap" id="collectionTrackWrap">
+      <div class="collection-track" id="collectionTrack">
 
-    <!-- アチーブメント：バッジのグリッド表示。中身は JS の ACHIEVEMENTS から生成する -->
-    <div class="collection-panel" id="collectionPanelAchievement">
-      <div class="achievement-grid" id="achievementGrid"></div>
+        <!-- ゲームの歴史：カードをタップすると、サイズはそのままにモーダルが開いて文章を読める -->
+        <div class="collection-panel" id="collectionPanelHistory">
+          <div class="history-grid" id="historyGrid"></div>
+        </div>
+
+        <!-- アチーブメント：バッジのグリッド表示。中身は JS の ACHIEVEMENTS から生成する -->
+        <div class="collection-panel" id="collectionPanelAchievement">
+          <div class="achievement-grid" id="achievementGrid"></div>
+        </div>
+
+      </div>
     </div>
   </div>
 
@@ -3040,6 +3062,7 @@ function switchView(viewId){
     updateAllHistoryCardTiers();
     renderAchievementGrid();
     checkAndNotifyAchievements();
+    collectionCarousel.recalc();
   }
 }
 
@@ -3145,16 +3168,107 @@ const recordsCarousel = (function initRecordsCarousel(){
   };
 })();
 
-// --- コレクションタブのサブタブ（ゲームの歴史／アチーブメント）切り替え ---
+// --- コレクションタブ：ゲームの歴史／アチーブメントを、指の動きに追従するカルーセルで切り替える
+//     （記録タブと同じ仕組み。パネル2枚を横に並べたトラックをドラッグ量に応じて動かし、
+//     指を離した時に一定量を超えていれば隣のタブへ、超えていなければ元の位置へスナップバックする） ---
 const collectionSubtabBtns = document.querySelectorAll('.collection-subtab-btn');
-collectionSubtabBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    collectionSubtabBtns.forEach(b => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('.collection-panel').forEach(p => {
-      p.classList.toggle('active', p.id === btn.dataset.panel);
-    });
+
+const collectionCarousel = (function initCollectionCarousel(){
+  const wrap = document.getElementById('collectionTrackWrap');
+  const track = document.getElementById('collectionTrack');
+  if(!wrap || !track) return { recalc(){}, goToIndex(){} };
+
+  const tabOrder = Array.from(collectionSubtabBtns).map(btn => btn.dataset.panel);
+  let currentIndex = 0;
+  let wrapWidth = 0;
+  let dragging = false;
+  let axisLocked = null; // 'x'（横スワイプ確定） | 'y'（縦スクロールなので何もしない） | null（未確定）
+  let startX = 0, startY = 0, dragDeltaPx = 0;
+
+  function applyTransform(px, animate){
+    track.classList.toggle('dragging', !animate);
+    track.style.transform = `translateX(${px}px)`;
+  }
+
+  function goToIndex(idx){
+    idx = Math.max(0, Math.min(tabOrder.length - 1, idx));
+    currentIndex = idx;
+    wrapWidth = wrap.clientWidth;
+    applyTransform(-idx * wrapWidth, true);
+    const targetPanel = tabOrder[idx];
+    collectionSubtabBtns.forEach(b => b.classList.toggle('active', b.dataset.panel === targetPanel));
+  }
+
+  // タブボタンをタップした時も同じ関数でスライドさせる
+  collectionSubtabBtns.forEach((btn, i) => {
+    btn.addEventListener('click', () => goToIndex(i));
   });
-});
+
+  function onStart(e){
+    if(e.touches && e.touches.length !== 1) return;
+    dragging = true;
+    axisLocked = null;
+    dragDeltaPx = 0;
+    wrapWidth = wrap.clientWidth;
+    const t = e.touches ? e.touches[0] : e;
+    startX = t.clientX;
+    startY = t.clientY;
+  }
+
+  function onMove(e){
+    if(!dragging) return;
+    const t = e.touches ? e.touches[0] : e;
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if(axisLocked === null){
+      if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return; // 判定するにはまだ動きが小さすぎる
+      axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+    if(axisLocked !== 'x') return; // 縦方向の動きは通常のスクロール（ゲームの歴史の内部スクロール等）に任せる
+
+    // 端のタブでさらに外側へ引っ張った場合は、少ししか動かないよう抵抗をつける
+    let limitedDx = dx;
+    if((currentIndex === 0 && dx > 0) || (currentIndex === tabOrder.length - 1 && dx < 0)){
+      limitedDx = dx * 0.35;
+    }
+    dragDeltaPx = limitedDx;
+    applyTransform(-currentIndex * wrapWidth + limitedDx, false);
+  }
+
+  function onEnd(){
+    if(!dragging) return;
+    dragging = false;
+
+    if(axisLocked === 'x'){
+      const threshold = wrapWidth * 0.22; // これ以上動かせば切り替え確定。届かなければ元の位置へ戻す
+      if(dragDeltaPx <= -threshold && currentIndex < tabOrder.length - 1){
+        goToIndex(currentIndex + 1);
+      } else if(dragDeltaPx >= threshold && currentIndex > 0){
+        goToIndex(currentIndex - 1);
+      } else {
+        goToIndex(currentIndex);
+      }
+    }
+    axisLocked = null;
+  }
+
+  wrap.addEventListener('touchstart', onStart, { passive:true });
+  wrap.addEventListener('touchmove', onMove, { passive:true });
+  wrap.addEventListener('touchend', onEnd, { passive:true });
+  wrap.addEventListener('touchcancel', onEnd, { passive:true });
+
+  window.addEventListener('resize', () => {
+    if(dragging) return;
+    goToIndex(currentIndex);
+  });
+
+  return {
+    // コレクションタブが非表示（width:0）の間に読み込まれるため、表示された直後に幅を測り直す
+    recalc(){ goToIndex(currentIndex); },
+    goToIndex,
+  };
+})();
 
 // --- 記録タブの描画：stats-tracker.js が蓄積した「個々のプレイ履歴」から、
 //     表示に必要な集計値（今月のプレイ数・連勝記録・お気に入りゲームなど）を
