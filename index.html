@@ -447,6 +447,7 @@
      中身（番号＋タイトル）は上詰めではなく縦方向に中央寄せにする（＝番号も自然に下がる） */
   .history-card{
     cursor:pointer;
+    justify-content:center;
   }
   .history-grid .game-card{
     height:118px;
@@ -532,10 +533,11 @@
      位置はタイトル文字と重ならないよう、少し下げてある。 */
   .history-card .tier-badges{
     position:absolute;
-    top:5px; right:6px;
+    top:10px; left:0; right:0;
     z-index:5;
     display:flex;
-    gap:5px;
+    justify-content:center;
+    gap:8px; /* 将来、紋章画像がはまった時に隣とぶつからないよう少し広めに確保 */
   }
   .history-card .badge-slot{
     position:relative;
@@ -2410,7 +2412,8 @@ body.panel-open .setting-btn{
 
   function buildHistoryCardEl(game){
     const card = document.createElement('div');
-    card.className = 'game-card history-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
+    // 「ゲームの歴史」カードは常に画像なし(テキストのみ)のレイアウトにする
+    card.className = 'game-card history-card';
     card.dataset.gameId = game.href.replace('.html', '');
 
     const info = document.createElement('div');
@@ -2431,23 +2434,11 @@ body.panel-open .setting-btn{
     }
     info.appendChild(num);
     info.appendChild(title);
+    card.appendChild(info);
 
-    if(game.img){
-      const imageDiv = document.createElement('div');
-      imageDiv.className = 'card-image';
-      imageDiv.style.backgroundImage = `url('${game.img}')`;
-
-      const body = document.createElement('div');
-      body.className = 'card-body';
-      body.appendChild(info);
-
-      card.appendChild(imageDiv);
-      card.appendChild(body);
-    } else {
-      card.appendChild(info);
-    }
-
-    // プレイ回数バッジ：黒い丸の「穴」を常に2つ並べておき、達成した方だけ画像が差し込まれる
+    // プレイ回数バッジ：カード上部に「穴」を5つ横並びで用意しておく。
+    // 今のところ実際に画像が入るのは 1番目=シルバー、2番目=ゴールド のみ。
+    // 3〜5番目は将来追加する紋章用の空き穴（今は何も入らない黒い穴のまま）
     const gameId = game.href.replace('.html', '');
     const badgeWrap = document.createElement('div');
     badgeWrap.className = 'tier-badges';
@@ -2470,6 +2461,14 @@ body.panel-open .setting-btn{
 
     badgeWrap.appendChild(silverSlot);
     badgeWrap.appendChild(goldSlot);
+
+    // 3〜5番目：将来の紋章用に空けておくだけの穴
+    for(let i = 0; i < 3; i++){
+      const emptySlot = document.createElement('div');
+      emptySlot.className = 'badge-slot';
+      badgeWrap.appendChild(emptySlot);
+    }
+
     card.appendChild(badgeWrap);
 
     card.addEventListener('click', () => openHistoryModal(game));
