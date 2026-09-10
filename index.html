@@ -223,24 +223,34 @@
     border-color:#fff;
   }
 
-  /* カバー本体：幅は半分固定。左端(設定を覆う)⇔右端(表示を覆う)の間をドラッグで往復する */
+  /* カバー本体：幅は半分固定。左端(設定を覆う)⇔右端(表示を覆う)の間をドラッグで往復する。
+     枠線(縁)は常にはっきり見せたいので、開いてもここ自体は透明にしない。
+     写真＋グリップは .timer-cover-fade 側にまとめて、そちらだけを開くほど透過させる。 */
   .timer-cover{
     position:absolute;
     left:0; top:0; bottom:0;
     width:50%;
+    border-right: 1px solid var(--hairline);
+    cursor:grab;
+    touch-action: pan-y; /* 縦スクロールは邪魔しない。横方向はJSでドラッグ検知 */
+    user-select:none;
+    transition: transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  .timer-cover.dragging{
+    transition:none;
+  }
+  .timer-cover-fade{
+    position:absolute;
+    inset:0;
     display:flex;
     align-items:center;
     justify-content:center;
     background: url('assets/timer/timer_cover.jpg');
     background-size: cover;
     background-position: center;
-    border-right: 1px solid var(--hairline);
-    cursor:grab;
-    touch-action: pan-y; /* 縦スクロールは邪魔しない。横方向はJSでドラッグ検知 */
-    user-select:none;
-    transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .28s ease;
+    transition: opacity .28s ease;
   }
-  .timer-cover.dragging{
+  .timer-cover.dragging .timer-cover-fade{
     transition:none;
   }
   .timer-cover .grip{
@@ -1982,7 +1992,9 @@ body.panel-open .setting-btn{
       </div>
 
       <div class="timer-cover" id="timerCover">
-        <div class="grip"><span></span><span></span><span></span></div>
+        <div class="timer-cover-fade">
+          <div class="grip"><span></span><span></span><span></span></div>
+        </div>
       </div>
     </div>
 
@@ -3289,6 +3301,7 @@ navButtons.forEach(btn => {
   const stepMinusBtn = document.getElementById('timerStepMinus');
   const stepPlusBtn = document.getElementById('timerStepPlus');
   const resetBtn = document.getElementById('timerResetBtn');
+  const coverFade = cover.querySelector('.timer-cover-fade');
   if(!card || !cover) return;
 
   const MIN_MINUTES = 0;
@@ -3317,9 +3330,10 @@ navButtons.forEach(btn => {
 
   function setCoverX(px){
     cover.style.transform = `translateX(${px}px)`;
-    // 右へスライドするほどカバー画像を透明にしていき、下の時計/設定表示を見せる
+    // 右へスライドするほど写真＋グリップ（中身）だけを透明にしていく。
+    // 右端の縁線(border-right)は .timer-cover 側にあるので、常にはっきり見えたまま
     const t = maxOffset > 0 ? Math.min(1, Math.max(0, px / maxOffset)) : 0;
-    cover.style.opacity = String(1 - t);
+    if(coverFade) coverFade.style.opacity = String(1 - t);
   }
 
   function formatClock(){
@@ -3505,13 +3519,6 @@ navButtons.forEach(btn => {
     dragOffset = isOpenPos ? maxOffset : 0;
     cover.classList.add('dragging');
     cover.setPointerCapture && e.pointerId != null && cover.setPointerCapture(e.pointerId);
-
-    // 「clock」状態からドラッグを始めた時点で、右側の文言を先に切り替えておく
-    // （カバーの透明化と同時に、下の表示が「設定中の分数＋戻すとスタート」になる）
-    if(stateAtDragStart === 'clock'){
-      setState('open');
-      formatOpen();
-    }
   }
 
   function onPointerMove(e){
