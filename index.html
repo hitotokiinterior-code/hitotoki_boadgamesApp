@@ -1905,6 +1905,13 @@ body.panel-open .setting-btn{
     <div class="setting-menu-item placeholder-item">
       <span>プレイヤー名</span><span class="arrow">›</span>
     </div>
+    <div class="setting-menu-item">
+      <span>タイマー機能</span>
+      <label class="switch">
+        <input type="checkbox" id="timerFeatureToggle">
+        <span class="switch-slider"></span>
+      </label>
+    </div>
   </div>
 
   <div class="panel-section-label">アプリ</div>
@@ -2974,6 +2981,32 @@ function bindSoundToggle(id, key){
 bindSoundToggle('bgmToggle', 'bgm');
 bindSoundToggle('seToggle', 'se');
 bindSoundToggle('vibToggle', 'vibration');
+
+// --- タイマー機能のON/OFF（⚙→ゲーム→タイマー機能）：
+//     OFFにするとホーム画面のタイマーカード自体を非表示にする ---
+const TIMER_FEATURE_KEY = 'pref_timer_enabled';
+const timerFeatureToggle = document.getElementById('timerFeatureToggle');
+const timerCardEl = document.getElementById('timerCard');
+
+function isTimerFeatureEnabled(){
+  const saved = localStorage.getItem(TIMER_FEATURE_KEY);
+  return saved === null ? true : saved === 'on'; // 未設定の場合は今まで通りON扱い
+}
+
+function applyTimerFeatureVisibility(enabled){
+  if(timerCardEl) timerCardEl.style.display = enabled ? '' : 'none';
+}
+
+if(timerFeatureToggle){
+  const enabled = isTimerFeatureEnabled();
+  timerFeatureToggle.checked = enabled;
+  applyTimerFeatureVisibility(enabled);
+  timerFeatureToggle.addEventListener('change', () => {
+    const nowEnabled = timerFeatureToggle.checked;
+    localStorage.setItem(TIMER_FEATURE_KEY, nowEnabled ? 'on' : 'off');
+    applyTimerFeatureVisibility(nowEnabled);
+  });
+}
 
 
 // --- 下部ナビ：ホーム／記録／コレクションの画面切り替え ---
