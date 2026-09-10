@@ -358,6 +358,12 @@
   }
   .start-btn:hover{ background:#eee; border-color:#eee; }
 
+  .how-to-btn{
+    width:100%;
+    padding: 12px 16px;
+    font-size:0.72rem;
+  }
+
   .game-screen{ display:flex; flex-direction:column; align-items:center; gap:10px; width:100%; }
   .controls{ display:flex; gap:12px; margin-top:0; }
 
@@ -420,6 +426,41 @@
   .confirm-ok{ background:#fff; color:#141414; border-color:#fff; }
   .confirm-ok:hover{ background:#eee; border-color:#eee; }
 
+  /* --- how to play modal --- */
+  .howto-box{ max-width:400px; }
+  .howto-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.05rem;
+    letter-spacing:0.08em;
+    color:#fff;
+    margin:0 0 14px;
+    text-align:center;
+  }
+  .howto-list{
+    margin:0 0 20px;
+    padding:0;
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .howto-list li{
+    font-size:0.78rem;
+    line-height:1.7;
+    color: var(--silver);
+    letter-spacing:0.02em;
+    padding-left:1.1em;
+    position:relative;
+  }
+  .howto-list li::before{
+    content:"・";
+    position:absolute;
+    left:0;
+    color:#fff;
+  }
+  .howto-close-btn{ width:100%; padding:11px 10px; }
+
   /* ============================================================
      横画面向けの最低限のレイアウト調整（縦画面が基本の作り）
      ============================================================ */
@@ -474,6 +515,7 @@
       </div>
 
       <button id="startGameBtn" class="main-btn start-btn">はじめる</button>
+      <button id="howToPlayBtn" class="main-btn how-to-btn">遊び方</button>
     </div>
   </div>
 
@@ -499,10 +541,6 @@
       </div>
     </div>
 
-    <div class="controls">
-      <button id="changeModeBtn" class="main-btn">モード変更</button>
-    </div>
-
   </div>
 
 </div>
@@ -514,6 +552,20 @@
       <button id="confirmCancelBtn" class="main-btn">キャンセル</button>
       <button id="confirmOkBtn" class="main-btn confirm-ok">終了する</button>
     </div>
+  </div>
+</div>
+
+<div id="howToPlayModal" class="modal-overlay hidden">
+  <div class="modal-box howto-box">
+    <div class="howto-title">遊び方</div>
+    <ul class="howto-list">
+      <li>裏向きのカードを1度に2枚めくり、同じ絵柄が出たらペア成立です。</li>
+      <li>ペアが揃った人はそのまま続けてもう一度めくれます。揃わなければ相手の番になります。</li>
+      <li>すべてのペアが揃ったら対局終了。ペアの数が多い方の勝ちです（同数なら引き分け）。</li>
+      <li>盤面の大きさは3×4・4×5・5×6の3種類から選べます。大きいほど枚数が増えて難しくなります。</li>
+      <li>「CPU対戦」を選ぶとコンピューターと対戦できます。CPUは自分がめくって見たカードを頼りに手を選びます。</li>
+    </ul>
+    <button id="howToPlayCloseBtn" class="main-btn howto-close-btn">閉じる</button>
   </div>
 </div>
 
@@ -579,6 +631,18 @@
     document.getElementById('bgSwitchBtn').classList.add('hidden');
     document.getElementById('bgSwitchPanel').classList.add('hidden');
     startNewGame();
+  });
+
+  // --- how to play modal ---
+  const howToPlayModal = document.getElementById('howToPlayModal');
+  document.getElementById('howToPlayBtn').addEventListener('click', () => {
+    howToPlayModal.classList.remove('hidden');
+  });
+  document.getElementById('howToPlayCloseBtn').addEventListener('click', () => {
+    howToPlayModal.classList.add('hidden');
+  });
+  howToPlayModal.addEventListener('click', (e) => {
+    if(e.target === howToPlayModal){ howToPlayModal.classList.add('hidden'); }
   });
 
   // --- game setup ---
@@ -884,16 +948,12 @@
     if(e.target === confirmModal){ confirmModal.classList.add('hidden'); pendingConfirmAction = null; }
   });
 
-  // --- モード変更：ゲーム画面からモード選択画面へ戻る（ミニ将棋・コネクトフォーと同じ挙動） ---
+  // --- モード変更から戻る画面遷移（ホームボタンから利用） ---
   function goToSetupScreen(){
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('setupScreen').classList.remove('hidden');
     document.getElementById('bgSwitchBtn').classList.remove('hidden');
   }
-
-  document.getElementById('changeModeBtn').addEventListener('click', () => {
-    runOrConfirm(goToSetupScreen);
-  });
 
   document.getElementById('homeBtn').addEventListener('click', () => {
     const onSetupScreen = !document.getElementById('setupScreen').classList.contains('hidden');
