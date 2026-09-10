@@ -448,6 +448,25 @@
   .history-card{
     cursor:pointer;
     justify-content:center;
+    overflow:hidden; /* 背景画像がカードの角丸からはみ出さないように */
+  }
+  /* カード背景にうっすら(20%)ゲームの登録画像を敷く。画像URLはJS側で
+     --history-bg-img としてカードごとに指定する */
+  .history-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image: var(--history-bg-img, none);
+    background-size: cover;
+    background-position: center;
+    opacity: 0.2;
+    pointer-events:none;
+  }
+  /* 文字・バッジは背景画像より必ず手前に来るようにする */
+  .history-card-info,
+  .history-card .tier-badges{
+    position:relative;
+    z-index:1;
   }
   .history-grid .game-card{
     height:118px;
@@ -460,31 +479,16 @@
   .history-card .num{
     margin-top:10px;
   }
-  /* 右上に固定のバッジの穴と重ならないよう、タイトルは中央揃え＆一回り小さくする */
+  /* 右上に固定のバッジの穴と重ならないよう、タイトルは中央揃え。
+     文字サイズはゲーム間で統一（ヒット＆ブローと同じ0.74rem） */
   .history-card .title{
     margin-top:6px;
     font-size:0.74rem;
     text-align:center;
   }
-  /* 神経衰弱など、改行させたくないタイトル用（画像が50%になり幅が狭いため少し縮める） */
+  /* 神経衰弱など、改行させたくないタイトル用。サイズは変えず、折り返しだけ止める */
   .history-card .title.nowrap-small{
-    font-size:0.7rem;
     white-space:nowrap;
-  }
-  /* 神経衰弱だけ他より少し大きめに調整（好みで数値を変えてOK） */
-  .history-grid .history-card[data-game-id="memory_match"] .title{
-    font-size:0.83rem;
-  }
-  /* ミニ将棋／コネクトフォー／ドット＆ボックス／五目並べは、他より少し小さめに調整 */
-  .history-grid .history-card[data-game-id="mini_shogi"] .title,
-  .history-grid .history-card[data-game-id="connect_four"] .title,
-  .history-grid .history-card[data-game-id="dots_and_boxes"] .title,
-  .history-grid .history-card[data-game-id="gomoku"] .title{
-    font-size:0.68rem;
-  }
-  /* ウサギと猟犬は「ウサギ／猟犬」の2行にして、その分少し大きめに調整 */
-  .history-grid .history-card[data-game-id="rabbit_and_hounds"] .title{
-    font-size:0.85rem;
   }
 
   /* --- プレイ回数によるカードの「進化」演出 ---
@@ -2415,8 +2419,12 @@ body.panel-open .setting-btn{
     // 「ゲームの歴史」カードは常に画像なし(テキストのみ)のレイアウトにする
     card.className = 'game-card history-card';
     card.dataset.gameId = game.href.replace('.html', '');
+    if(game.img){
+      card.style.setProperty('--history-bg-img', `url('${game.img}')`);
+    }
 
     const info = document.createElement('div');
+    info.className = 'history-card-info';
     const num = document.createElement('div');
     num.className = 'num';
     num.textContent = game.num;
