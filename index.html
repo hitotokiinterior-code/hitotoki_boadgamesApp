@@ -448,25 +448,6 @@
   .history-card{
     cursor:pointer;
     justify-content:center;
-    overflow:hidden; /* 背景画像がカードの角丸からはみ出さないように */
-  }
-  /* カード背景にうっすら(20%)ゲームの登録画像を敷く。画像URLはJS側で
-     --history-bg-img としてカードごとに指定する */
-  .history-card::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background-image: var(--history-bg-img, none);
-    background-size: cover;
-    background-position: center;
-    opacity: 0.2;
-    pointer-events:none;
-  }
-  /* 文字・バッジは背景画像より必ず手前に来るようにする */
-  .history-card-info,
-  .history-card .tier-badges{
-    position:relative;
-    z-index:1;
   }
   .history-grid .game-card{
     height:118px;
@@ -541,7 +522,12 @@
     z-index:5;
     display:flex;
     justify-content:center;
-    gap:8px; /* 将来、紋章画像がはまった時に隣とぶつからないよう少し広めに確保 */
+    gap:6px;
+  }
+  /* 画像が左1/5を占めるカードでは、穴の並びをその分だけ右にずらし、
+     文字側(残り4/5)の幅の中だけに収める */
+  .history-grid .history-card.has-image .tier-badges{
+    left:20%;
   }
   .history-card .badge-slot{
     position:relative;
@@ -1206,9 +1192,9 @@
     background-size:cover;
     background-position:center;
   }
-  /* コレクション「ゲームの歴史」の画像付きカードだけ、画像:文字を半々にする */
+  /* コレクション「ゲームの歴史」の画像付きカードは、画像を1/5幅の帯にする */
   .history-grid .game-card .card-image{
-    width:50%;
+    width:20%;
   }
   .game-card .card-image::after{
     content:"";
@@ -2416,15 +2402,11 @@ body.panel-open .setting-btn{
 
   function buildHistoryCardEl(game){
     const card = document.createElement('div');
-    // 「ゲームの歴史」カードは常に画像なし(テキストのみ)のレイアウトにする
-    card.className = 'game-card history-card';
+    // 画像を左1/5の帯として表示するレイアウト
+    card.className = 'game-card history-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
     card.dataset.gameId = game.href.replace('.html', '');
-    if(game.img){
-      card.style.setProperty('--history-bg-img', `url('${game.img}')`);
-    }
 
     const info = document.createElement('div');
-    info.className = 'history-card-info';
     const num = document.createElement('div');
     num.className = 'num';
     num.textContent = game.num;
@@ -2442,7 +2424,21 @@ body.panel-open .setting-btn{
     }
     info.appendChild(num);
     info.appendChild(title);
-    card.appendChild(info);
+
+    if(game.img){
+      const imageDiv = document.createElement('div');
+      imageDiv.className = 'card-image';
+      imageDiv.style.backgroundImage = `url('${game.img}')`;
+
+      const body = document.createElement('div');
+      body.className = 'card-body';
+      body.appendChild(info);
+
+      card.appendChild(imageDiv);
+      card.appendChild(body);
+    } else {
+      card.appendChild(info);
+    }
 
     // プレイ回数バッジ：カード上部に「穴」を5つ横並びで用意しておく。
     // 今のところ実際に画像が入るのは 1番目=シルバー、2番目=ゴールド のみ。
