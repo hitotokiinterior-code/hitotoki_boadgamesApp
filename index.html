@@ -971,6 +971,15 @@
     width:100%;
     display:flex;
     flex-direction:column;
+    max-height: calc(100vh - 320px);
+    max-height: calc(100dvh - 320px); /* スマホのアドレスバー分のズレを補正（対応ブラウザではこちらが優先される） */
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    touch-action: pan-y; /* このエリアだけ縦スワイプを許可（横スワイプのタブ切り替えとは競合しない） */
+  }
+  .records-history-list::-webkit-scrollbar{
+    display:none;
   }
   .records-history-item{
     display:flex;
@@ -3447,7 +3456,7 @@ function renderRecordsByGame(history){
 }
 
 function renderRecordsHistory(history){
-  // 直近で遊んだゲームを10件、新しい順に表示
+  // 直近で遊んだゲームを50件、新しい順に表示（リストは縦スクロールできるので多めに表示）
   const listEl = document.getElementById('recordsHistoryList');
   listEl.innerHTML = '';
 
@@ -3459,7 +3468,7 @@ function renderRecordsHistory(history){
     return;
   }
 
-  const recent = history.slice(-10).reverse();
+  const recent = history.slice(-50).reverse();
   recent.forEach(h => {
     const row = document.createElement('div');
     row.className = 'records-history-item';
