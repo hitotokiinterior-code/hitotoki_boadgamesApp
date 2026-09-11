@@ -2615,7 +2615,16 @@ body.panel-open .setting-btn{
 
     const info = document.createElement('div');
     info.className = 'history-card-info';
-    info.textContent = `${game.num}　${game.title}`;
+    info.appendChild(document.createTextNode(`${game.num}　`));
+    if(game.historyTitleLines){
+      // 指定された位置で改行（例：コネクト / フォー）
+      game.historyTitleLines.forEach((line, i) => {
+        if(i > 0) info.appendChild(document.createElement('br'));
+        info.appendChild(document.createTextNode(line));
+      });
+    } else {
+      info.appendChild(document.createTextNode(game.title));
+    }
 
     if(game.img){
       const imageDiv = document.createElement('div');
