@@ -558,6 +558,7 @@
   const STAR_POINTS = [[3,3],[3,11],[7,7],[11,3],[11,11]];
 
   let grid, turn, gameOver, filledCount;
+  let gameStartedAt = null;
   let vsCPU = false;
   let cpuDifficulty = 'normal';
   let humanSide = 'white';
@@ -682,6 +683,7 @@
     turn = 'white';
     gameOver = false;
     filledCount = 0;
+    gameStartedAt = Date.now();
     document.getElementById('winnerOverlay').classList.remove('show');
     renderBoard();
     updateTurnUI(false);
@@ -806,6 +808,7 @@
       window.hitotokiStats.recordGameEnd('gomoku', '五目並べ', {
         vsCPU: vsCPU,
         won: vsCPU && !draw ? (winner === humanSide) : undefined,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
       });
     }
   }
