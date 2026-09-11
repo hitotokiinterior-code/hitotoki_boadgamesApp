@@ -3398,9 +3398,10 @@ function renderRecordsOverall(stats, history){
 
 function renderRecordsByGame(history){
   // ゲーム別 対CPU勝率（GAMES配列の並び順で、全ゲーム分を表示。記録が無いものは「記録なし」）
+  // COMING SOON（href を持たないダミーカード）はここでも除外しておく
   const listEl = document.getElementById('recordsWinrateList');
   listEl.innerHTML = '';
-  GAMES.forEach(game => {
+  GAMES.filter(game => !game.comingSoon).forEach(game => {
     const gameId = game.href.replace('.html', '');
     const cpuResults = history
       .filter(h => h.gameId === gameId && h.vsCPU && h.won !== null)
