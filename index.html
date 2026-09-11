@@ -469,24 +469,34 @@
     min-height:118px;
   }
   .history-grid .history-card .card-body{
-    justify-content:flex-end;
-  }
-  /* 番号とタイトルを横並びにして、同じ高さに揃える */
-  .history-card-info{
     display:flex;
-    align-items:baseline;
+    flex-direction:column;
+    padding: 0 10px 8px;
+  }
+  /* 上側の余白（カードの半分よりちょっと下まで空ける） */
+  .history-card-spacer{
+    flex: 3;
+  }
+  /* 余白の下に引く区切り線 */
+  .history-card-divider{
+    flex: 0 0 auto;
+    height:1px;
+    background: var(--hairline);
+    width:100%;
+  }
+  /* 番号とタイトルを1つの文章として、線の下に中央揃えで表示 */
+  .history-card-info{
+    flex: 2;
+    display:flex;
+    align-items:center;
     justify-content:center;
-    gap:6px;
-  }
-  .history-card .num{
-    margin-top:0;
-  }
-  /* 右上に固定のバッジの穴と重ならないよう、タイトルは中央揃え。
-     文字サイズはゲーム間で統一（ヒット＆ブローと同じ0.74rem） */
-  .history-card .title{
-    margin-top:0;
-    font-size:0.74rem;
     text-align:center;
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.74rem;
+    letter-spacing:0.03em;
+    color:#ece4d1;
+    line-height:1.4;
   }
   /* 神経衰弱など、改行させたくないタイトル用。サイズは変えず、折り返しだけ止める */
   .history-card .title.nowrap-small{
@@ -2605,23 +2615,7 @@ body.panel-open .setting-btn{
 
     const info = document.createElement('div');
     info.className = 'history-card-info';
-    const num = document.createElement('div');
-    num.className = 'num';
-    num.textContent = game.num;
-    const title = document.createElement('div');
-    title.className = 'title';
-    if(game.historyTitleLines){
-      // 指定された位置で改行（例：ヒット＆ / ブロー）
-      game.historyTitleLines.forEach((line, i) => {
-        if(i > 0) title.appendChild(document.createElement('br'));
-        title.appendChild(document.createTextNode(line));
-      });
-    } else {
-      if(game.historyTitleNoWrap) title.classList.add('nowrap-small');
-      title.textContent = game.title;
-    }
-    info.appendChild(num);
-    info.appendChild(title);
+    info.textContent = `${game.num}　${game.title}`;
 
     if(game.img){
       const imageDiv = document.createElement('div');
@@ -2631,6 +2625,14 @@ body.panel-open .setting-btn{
 
       const body = document.createElement('div');
       body.className = 'card-body';
+
+      const spacer = document.createElement('div');
+      spacer.className = 'history-card-spacer';
+      const divider = document.createElement('div');
+      divider.className = 'history-card-divider';
+
+      body.appendChild(spacer);
+      body.appendChild(divider);
       body.appendChild(info);
 
       card.appendChild(imageDiv);
