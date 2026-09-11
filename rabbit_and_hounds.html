@@ -326,6 +326,7 @@
   /* ---------------- game state ---------------- */
   let state, config, selected=null, animating=false, randomHareStart=false;
   let hintTimer=null, hintActive=false, suppressHintArm=false;
+  let gameStartedAt = null;
   const HINT_IDLE_MS = 5000;
 
   function initState(){
@@ -693,6 +694,26 @@
     else if(winner==='hound') txt.textContent='猟犬の 勝ち';
     else txt.textContent='引き分け';
     document.getElementById('screen-result').classList.add('active');
+
+    // ホーム画面の「記録」タブ用に対局結果を記録しておく
+    if(window.hitotokiStats){
+      const vsCPU = config.mode !== 'pvp';
+      let won;
+      if(!vsCPU){
+        won = undefined;
+      } else if(winner === 'hare' || winner === 'hare_special'){
+        won = config.playerRole === 'hare';
+      } else if(winner === 'hound'){
+        won = config.playerRole === 'hound';
+      } else {
+        won = undefined;
+      }
+      window.hitotokiStats.recordGameEnd('rabbit_and_hounds', 'ウサギと猟犬', {
+        vsCPU: vsCPU,
+        won: won,
+        durationSec: gameStartedAt ? Math.round((Date.now() - gameStartedAt) / 1000) : null,
+      });
+    }
   }
 
   /* ---------------- screen navigation ---------------- */
@@ -746,6 +767,7 @@
 
   function startGame(){
     initState();
+    gameStartedAt = Date.now();
     showScreen('screen-game');
     render();
     proceedTurn();
@@ -849,5 +871,6 @@
 
 })();
 </script>
+<script src="stats-tracker.js"></script>
 </body>
 </html>
