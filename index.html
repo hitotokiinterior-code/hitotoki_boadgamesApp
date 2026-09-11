@@ -468,17 +468,23 @@
     height:118px;
     min-height:118px;
   }
-  .history-card .card-body{
-    justify-content:center;
+  .history-grid .history-card .card-body{
+    justify-content:flex-end;
   }
-  /* 番号をもう少し下げる */
+  /* 番号とタイトルを横並びにして、同じ高さに揃える */
+  .history-card-info{
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:6px;
+  }
   .history-card .num{
-    margin-top:26px;
+    margin-top:0;
   }
   /* 右上に固定のバッジの穴と重ならないよう、タイトルは中央揃え。
      文字サイズはゲーム間で統一（ヒット＆ブローと同じ0.74rem） */
   .history-card .title{
-    margin-top:5px;
+    margin-top:0;
     font-size:0.74rem;
     text-align:center;
   }
@@ -645,6 +651,73 @@
   .history-modal-text.placeholder{
     color: var(--silver-dim);
     font-style:italic;
+  }
+
+  /* --- モーダル内：紋章の詳細リスト --- */
+  .modal-badge-list{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    margin-top:18px;
+  }
+  .modal-badge-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 10px;
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    background: rgba(255,255,255,0.02);
+  }
+  .modal-badge-row.unlocked{
+    border-color: rgba(255,214,140,0.35);
+    background: rgba(200,168,90,0.06);
+  }
+  .modal-badge-row.locked-future{
+    opacity:0.5;
+  }
+  .modal-badge-icon-wrap{
+    position:relative;
+    flex-shrink:0;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:#000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .modal-badge-icon-wrap img{
+    width:44px;
+    height:auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+  .modal-badge-name{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.8rem;
+    letter-spacing:0.03em;
+    color:#fff;
+    margin-bottom:3px;
+  }
+  .modal-badge-row.unlocked .modal-badge-name{
+    color:#ece4d1;
+  }
+  .modal-badge-status{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.68rem;
+    letter-spacing:0.02em;
+    color: var(--silver-dim);
+    line-height:1.5;
+  }
+  .modal-badge-comingsoon{
+    text-align:center;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.68rem;
+    letter-spacing:0.03em;
+    color: var(--silver-dim);
+    font-style:italic;
+    padding-top:4px;
   }
 
   /* --- お知らせポップアップ --- */
@@ -1957,8 +2030,12 @@ body.panel-open .setting-btn{
     <div class="setting-menu-item placeholder-item">
       <span>購入を復元</span><span class="arrow">›</span>
     </div>
-    <div class="setting-menu-item placeholder-item">
-      <span>通知設定</span><span class="arrow">›</span>
+    <div class="setting-menu-item">
+      <span>通知設定</span>
+      <label class="switch">
+        <input type="checkbox" id="notificationToggle">
+        <span class="switch-slider"></span>
+      </label>
     </div>
     <div class="setting-menu-item placeholder-item">
       <span>言語</span><span class="arrow">›</span>
@@ -2161,7 +2238,7 @@ body.panel-open .setting-btn{
 
   <div class="view-content" id="collectionView" style="display:none;">
     <div class="collection-subtabs">
-      <button class="collection-subtab-btn active" id="collectionTabHistory" data-panel="collectionPanelHistory">ゲームの歴史</button>
+      <button class="collection-subtab-btn active" id="collectionTabHistory" data-panel="collectionPanelHistory">紋章</button>
       <button class="collection-subtab-btn" id="collectionTabAchievement" data-panel="collectionPanelAchievement">アチーブメント</button>
     </div>
 
@@ -2192,6 +2269,7 @@ body.panel-open .setting-btn{
     <div class="history-modal-num" id="historyModalNum"></div>
     <div class="history-modal-title" id="historyModalTitle"></div>
     <div class="history-modal-text" id="historyModalText"></div>
+    <div class="modal-badge-list" id="historyModalBadges"></div>
   </div>
 </div>
 
@@ -2356,7 +2434,7 @@ body.panel-open .setting-btn{
     { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ヒット＆','ブロー'] },
     { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', img:'assets/cards/dots_and_boxes.jpg', noFade:true, tags:[{t:'2人'}], history:'', historyTitleLines:['ドット＆','ボックス'] },
     { num:'06', title:'五目並べ', href:'gomoku.html', img:'assets/cards/gomoku.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' }, // 将来的に名称変更の可能性あり
-    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ウサギ','猟犬'] },
+    { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', imgPosition:'center 75%', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ウサギ','猟犬'] },
     { num:'08', title:'COMING SOON', comingSoon:true, tags:[], history:'' },
   ];
 
@@ -2391,6 +2469,7 @@ body.panel-open .setting-btn{
       const imageDiv = document.createElement('div');
       imageDiv.className = 'card-image';
       imageDiv.style.backgroundImage = `url('${game.img}')`;
+      if(game.imgPosition) imageDiv.style.backgroundPosition = game.imgPosition;
 
       const body = document.createElement('div');
       body.className = 'card-body';
@@ -2430,10 +2509,81 @@ body.panel-open .setting-btn{
   function openHistoryModal(game){
     historyModalNum.textContent = game.num;
     historyModalTitle.textContent = game.title;
-    const hasHistory = !!(game.history && game.history.trim());
-    historyModalText.textContent = hasHistory ? game.history : HISTORY_PLACEHOLDER;
-    historyModalText.classList.toggle('placeholder', !hasHistory);
+    historyModalText.textContent = 'プレイ回数に応じて、紋章が解放されます。';
+    historyModalText.classList.remove('placeholder');
+    renderHistoryModalBadges(game);
     historyModal.classList.add('open');
+  }
+
+  // モーダル内の紋章詳細（シルバー／ゴールドの2つ。残り3枠は今後追加予定として注記のみ）
+  const BADGE_TIERS = [
+    { tier: 'silver', label: 'シルバー紋章', getThreshold: () => SILVER_THRESHOLD },
+    { tier: 'gold',   label: 'ゴールド紋章', getThreshold: () => GOLD_THRESHOLD },
+  ];
+
+  function renderHistoryModalBadges(game){
+    const wrap = document.getElementById('historyModalBadges');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+
+    const gameId = game.href.replace('.html', '');
+    const count = getGamePlayCount(gameId);
+
+    BADGE_TIERS.forEach(t => {
+      const threshold = t.getThreshold();
+      const unlocked = count >= threshold;
+
+      const row = document.createElement('div');
+      row.className = 'modal-badge-row' + (unlocked ? ' unlocked' : '');
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'modal-badge-icon-wrap';
+      if(unlocked){
+        const icon = document.createElement('img');
+        icon.alt = '';
+        icon.src = `assets/badges/${gameId}_${t.tier}.png`;
+        iconWrap.appendChild(icon);
+      }
+      row.appendChild(iconWrap);
+
+      const info = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'modal-badge-name';
+      name.textContent = t.label;
+      const status = document.createElement('div');
+      status.className = 'modal-badge-status';
+      status.textContent = unlocked
+        ? `獲得済み（${threshold}回プレイで解放）`
+        : `未獲得（${threshold}回プレイで解放・現在${count}回）`;
+      info.appendChild(name);
+      info.appendChild(status);
+      row.appendChild(info);
+
+      wrap.appendChild(row);
+    });
+
+    // 3〜5番目：まだ実装していない紋章枠も、項目として一覧に出しておく
+    for(let i = 3; i <= 5; i++){
+      const row = document.createElement('div');
+      row.className = 'modal-badge-row locked-future';
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'modal-badge-icon-wrap';
+      row.appendChild(iconWrap);
+
+      const info = document.createElement('div');
+      const name = document.createElement('div');
+      name.className = 'modal-badge-name';
+      name.textContent = `紋章 ${i}`;
+      const status = document.createElement('div');
+      status.className = 'modal-badge-status';
+      status.textContent = '近日公開予定';
+      info.appendChild(name);
+      info.appendChild(status);
+      row.appendChild(info);
+
+      wrap.appendChild(row);
+    }
   }
 
   function closeHistoryModal(){
@@ -2454,6 +2604,7 @@ body.panel-open .setting-btn{
     card.dataset.gameId = game.href.replace('.html', '');
 
     const info = document.createElement('div');
+    info.className = 'history-card-info';
     const num = document.createElement('div');
     num.className = 'num';
     num.textContent = game.num;
@@ -2476,6 +2627,7 @@ body.panel-open .setting-btn{
       const imageDiv = document.createElement('div');
       imageDiv.className = 'card-image';
       imageDiv.style.backgroundImage = `url('${game.img}')`;
+      if(game.imgPosition) imageDiv.style.backgroundPosition = game.imgPosition;
 
       const body = document.createElement('div');
       body.className = 'card-body';
@@ -2531,7 +2683,7 @@ body.panel-open .setting-btn{
   // 10回でシルバー、20回でゴールド。ゲームごとの回数は stats-tracker.js の履歴を
   // gameId（ファイル名から.htmlを除いたもの）で数えるだけ。record タブの「ゲーム別」と同じ数え方。
   const SILVER_THRESHOLD = 10;
-  const GOLD_THRESHOLD = 20;
+  const GOLD_THRESHOLD = 30;
 
   function getGamePlayCount(gameId){
     if(!window.hitotokiStats) return 0;
@@ -2881,13 +3033,16 @@ const HOW_TO_PLAY = [
     ],
   },
   {
-    title: '積み木カウント',
+    title: 'ウサギと猟犬',
     rules: [
-      'ゲーム開始時に12〜15のいずれかが目標としてランダムに決まります',
-      '白と黒が交互に1・2・3のいずれかを選び、合計に積み上げていきます',
-      '自分の番で合計が目標を超えてしまったら、その人の負けです',
-      '目標は「見える」設定にすると常に表示され、「隠す」設定にすると超えるまでわかりません',
-      '隠していても、対局が終わると目標の数字が公開されます',
+      '盤は特殊な形をしていて、<b>猟犬3頭</b>と<b>ウサギ1頭</b>が対戦します',
+      '猟犬たちは盤の片側の端から、ウサギは反対側の端からスタートします（「ウサギランダム」を選ぶと、ウサギの開始位置がランダムになります）',
+      '<b>猟犬</b>は前進（ウサギがいた側へ進む方向）にしか動けません。後退はできず、他の猟犬やウサギがいるマスにも進めません',
+      '<b>ウサギ</b>は隣接するマスであれば、前後どちらの方向にも自由に動けます',
+      'ウサギが猟犬たちのスタート地点側の列（一番奥の列）まで逃げ切ったら、<b>ウサギの勝ち</b>です',
+      '猟犬がウサギの逃げ道をすべて塞いで、ウサギが動けるマスを一つも残さなければ、<b>猟犬の勝ち</b>です',
+      '30手以内に決着がつかない場合は、<b>ウサギの特殊勝利（千日手）</b>となります',
+      '「CPU対戦」「達人CPU」を選ぶと、選んだ役割（ウサギ／猟犬）以外をCPUが担当します',
     ],
   },
 ];
@@ -3065,6 +3220,19 @@ function bindSoundToggle(id, key){
 bindSoundToggle('bgmToggle', 'bgm');
 bindSoundToggle('seToggle', 'se');
 bindSoundToggle('vibToggle', 'vibration');
+
+// --- 通知設定（⚙→アプリ→通知設定）：
+//     今のところ、実際に外部からプッシュ通知を送る仕組みは無いため、
+//     このスイッチはON/OFFの状態を端末に保存しておくだけの「設定の入れ物」。
+//     将来プッシュ通知（Web Push／ネイティブ通知）を実装する時に、
+//     ここで保存された設定値を参照する想定。
+const notificationToggle = document.getElementById('notificationToggle');
+if(notificationToggle){
+  notificationToggle.checked = localStorage.getItem('pref_notifications') === 'on';
+  notificationToggle.addEventListener('change', () => {
+    localStorage.setItem('pref_notifications', notificationToggle.checked ? 'on' : 'off');
+  });
+}
 
 // --- タイマー機能のON/OFF（⚙→ゲーム→タイマー機能）：
 //     OFFにするとホーム画面のタイマーカード自体を非表示にする ---
