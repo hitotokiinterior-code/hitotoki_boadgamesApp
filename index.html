@@ -498,6 +498,31 @@
     color:#ece4d1;
     line-height:1.4;
   }
+  /* タイトルの下：紋章の進捗（獲得数/全体数）と、タップを示す矢印 */
+  .history-card-progress-divider{
+    flex: 0 0 auto;
+    height:1px;
+    background: var(--hairline);
+    width:100%;
+  }
+  .history-card-progress-row{
+    flex: 0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-top:5px;
+  }
+  .history-card-progress-row .progress-count{
+    font-family:'Jost', sans-serif;
+    font-size:0.62rem;
+    letter-spacing:0.02em;
+    color: var(--silver-dim);
+  }
+  .history-card-progress-row .chevron{
+    font-size:0.7rem;
+    color: var(--silver-dim);
+    line-height:1;
+  }
   /* 神経衰弱など、改行させたくないタイトル用。サイズは変えず、折り返しだけ止める */
   .history-card .title.nowrap-small{
     white-space:nowrap;
@@ -553,7 +578,7 @@
     z-index:5;
     display:flex;
     justify-content:center;
-    gap:6px;
+    gap:4px;
   }
   /* 画像が左1/5を占めるカードでは、穴の並びをその分だけ右にずらし、
      文字側(残り4/5)の幅の中だけに収める */
@@ -562,15 +587,16 @@
   }
   .history-card .badge-slot{
     position:relative;
-    width:20px;
-    height:20px;
+    width:10px;
+    height:10px;
     border-radius:50%;
-    background: #000;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.28);
   }
   .history-card .tier-badge{
     position:absolute;
     left:50%; top:50%;
-    width:26px;
+    width:16px;
     height:auto;
     transform: translate(-50%, -50%) scale(0.55);
     opacity:0;
@@ -2441,7 +2467,7 @@ body.panel-open .setting-btn{
     { num:'01', title:'ミニ将棋', href:'mini_shogi.html', img:'assets/cards/mini_shogi.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' },
     { num:'02', title:'コネクトフォー', href:'connect_four.html', img:'assets/cards/connect_four.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['コネクト','フォー'] },
     { num:'03', title:'神経衰弱', href:'memory_match.html', img:'assets/cards/memory_match.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'}], history:'', historyTitleNoWrap:true },
-    { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ヒット＆','ブロー'] },
+    { num:'04', title:'ヒット＆ブロー', href:'hit_and_blow.html', img:'assets/cards/hit_and_blow.jpg', historyImg:'assets/cards/hit_and_blow_collection.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ヒット＆','ブロー'] },
     { num:'05', title:'ドット＆ボックス', href:'dots_and_boxes.html', img:'assets/cards/dots_and_boxes.jpg', noFade:true, tags:[{t:'2人'}], history:'', historyTitleLines:['ドット＆','ボックス'] },
     { num:'06', title:'五目並べ', href:'gomoku.html', img:'assets/cards/gomoku.jpg', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'' }, // 将来的に名称変更の可能性あり
     { num:'07', title:'ウサギと猟犬', href:'rabbit_and_hounds.html', img:'assets/cards/rabbit_and_hounds.jpg', imgPosition:'center 75%', noFade:true, tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}], history:'', historyTitleLines:['ウサギ','猟犬'] },
@@ -2609,8 +2635,10 @@ body.panel-open .setting-btn{
 
   function buildHistoryCardEl(game){
     const card = document.createElement('div');
+    // コレクション専用の画像(historyImg)があればそちらを優先し、無ければ通常の画像を使う
+    const cardImg = game.historyImg || game.img;
     // 画像を左1/5の帯として表示するレイアウト
-    card.className = 'game-card history-card' + (game.img ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
+    card.className = 'game-card history-card' + (cardImg ? ' has-image' : '') + (game.noFade ? ' no-fade' : '');
     card.dataset.gameId = game.href.replace('.html', '');
 
     const info = document.createElement('div');
@@ -2626,11 +2654,11 @@ body.panel-open .setting-btn{
       info.appendChild(document.createTextNode(game.title));
     }
 
-    if(game.img){
+    if(cardImg){
       const imageDiv = document.createElement('div');
       imageDiv.className = 'card-image';
-      imageDiv.style.backgroundImage = `url('${game.img}')`;
-      if(game.imgPosition) imageDiv.style.backgroundPosition = game.imgPosition;
+      imageDiv.style.backgroundImage = `url('${cardImg}')`;
+      if(!game.historyImg && game.imgPosition) imageDiv.style.backgroundPosition = game.imgPosition;
 
       const body = document.createElement('div');
       body.className = 'card-body';
@@ -2640,9 +2668,24 @@ body.panel-open .setting-btn{
       const divider = document.createElement('div');
       divider.className = 'history-card-divider';
 
+      const progressDivider = document.createElement('div');
+      progressDivider.className = 'history-card-progress-divider';
+      const progressRow = document.createElement('div');
+      progressRow.className = 'history-card-progress-row';
+      const progressCount = document.createElement('span');
+      progressCount.className = 'progress-count';
+      progressCount.textContent = `0/${TOTAL_BADGE_SLOTS}`;
+      const progressChevron = document.createElement('span');
+      progressChevron.className = 'chevron';
+      progressChevron.textContent = '›';
+      progressRow.appendChild(progressCount);
+      progressRow.appendChild(progressChevron);
+
       body.appendChild(spacer);
       body.appendChild(divider);
       body.appendChild(info);
+      body.appendChild(progressDivider);
+      body.appendChild(progressRow);
 
       card.appendChild(imageDiv);
       card.appendChild(body);
@@ -2695,6 +2738,7 @@ body.panel-open .setting-btn{
   // gameId（ファイル名から.htmlを除いたもの）で数えるだけ。record タブの「ゲーム別」と同じ数え方。
   const SILVER_THRESHOLD = 10;
   const GOLD_THRESHOLD = 30;
+  const TOTAL_BADGE_SLOTS = 5; // シルバー・ゴールド(実装済み) + 将来の3枠
 
   function getGamePlayCount(gameId){
     if(!window.hitotokiStats) return 0;
@@ -2718,6 +2762,13 @@ body.panel-open .setting-btn{
     const goldBadge = card.querySelector('.tier-gold-badge');
     if(silverBadge) silverBadge.classList.toggle('unlocked', silverUnlocked);
     if(goldBadge) goldBadge.classList.toggle('unlocked', goldUnlocked);
+
+    // カード下部の進捗表示（獲得数/全体数）も合わせて更新する
+    const progressCountEl = card.querySelector('.progress-count');
+    if(progressCountEl){
+      const unlockedCount = (silverUnlocked ? 1 : 0) + (goldUnlocked ? 1 : 0);
+      progressCountEl.textContent = `${unlockedCount}/${TOTAL_BADGE_SLOTS}`;
+    }
   }
 
   // コレクション画面を開くたびに呼ばれる。カード自体は使い回し、縁取りの見た目だけ更新する
