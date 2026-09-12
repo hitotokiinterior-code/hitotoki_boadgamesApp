@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>五目並べ — 15×15 連珠盤</title>
+<title>五目並べ — 10×10 連珠盤</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
 
@@ -271,35 +271,41 @@
 
   .board{
     position:relative;
-    display:grid;
-    grid-template-columns: repeat(15, 1fr);
-    grid-template-rows: repeat(15, 1fr);
-    width: min(380px, 78vw);
-    height: min(380px, 78vw);
+    width: min(420px, 84vw);
+    height: min(420px, 84vw);
     background: var(--board-bg);
     border-radius: 3px;
+    border: 4px solid var(--grid-line);
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6);
+    box-sizing: border-box;
+    padding: 18px;
     overflow:hidden;
   }
+  .grid-lines{
+    position:absolute;
+    inset: 18px;
+    pointer-events:none;
+  }
+  .grid-line-h{
+    position:absolute;
+    left:0; width:100%; height:1px;
+    background: var(--grid-line);
+  }
+  .grid-line-v{
+    position:absolute;
+    top:0; height:100%; width:1px;
+    background: var(--grid-line);
+  }
+  .points-layer{
+    position:absolute;
+    inset: 18px;
+  }
   .point{
-    position:relative;
+    position:absolute;
+    width: calc(100% / 9);
+    height: calc(100% / 9);
+    transform: translate(-50%,-50%);
     cursor:pointer;
-  }
-  .point::before{
-    content:'';
-    position:absolute;
-    top:50%; left:0;
-    width:100%; height:1px;
-    background: var(--grid-line);
-    transform: translateY(-50%);
-  }
-  .point::after{
-    content:'';
-    position:absolute;
-    left:50%; top:0;
-    height:100%; width:1px;
-    background: var(--grid-line);
-    transform: translateX(-50%);
   }
   .point .star{
     position:absolute;
@@ -331,6 +337,7 @@
     transform: translate(-50%,-50%) scale(0.3);
     animation: place .18s ease forwards;
     pointer-events:none;
+    z-index:1;
   }
   .stone.white{
     background: radial-gradient(circle at 35% 28%, var(--ivory-hi), var(--ivory-mid) 55%, var(--ivory-low));
@@ -476,7 +483,7 @@
 <div class="app">
 
   <header>
-    <h1>五目並べ<span class="small">GOMOKU · 15 × 15</span></h1>
+    <h1>五目並べ<span class="small">GOMOKU · 10 × 10</span></h1>
   </header>
 
   <div id="setupScreen" class="setup-screen">
@@ -495,6 +502,18 @@
         <button class="mode-toggle-btn" id="sideBlackBtn">後攻で対戦</button>
       </div>
       <button id="startGameBtn" class="main-btn start-btn">はじめる</button>
+      <button id="rulesBtn" class="main-btn">遊び方</button>
+    </div>
+
+    <div id="rules" class="rules">
+      <h2>遊び方</h2>
+      <ul>
+        <li>10×10の盤に、白と黒が交互に石を置いていきます</li>
+        <li>縦・横・斜め、いずれかの向きで5つ以上石を並べたら勝利です</li>
+        <li>一度置いた石は動かせません</li>
+        <li>全マスが埋まって誰も揃わなければ引き分けです</li>
+        <li>「CPU対戦」を選ぶと黒をCPUが担当します。1人でも遊べます</li>
+      </ul>
     </div>
   </div>
 
@@ -510,23 +529,6 @@
 
     <div class="board-frame">
       <div id="board" class="board"></div>
-    </div>
-
-    <div class="controls">
-      <button id="newGameBtn" class="main-btn">はじめから</button>
-      <button id="rulesBtn" class="main-btn">遊び方</button>
-      <button id="changeModeBtn" class="main-btn">モード変更</button>
-    </div>
-
-    <div id="rules" class="rules">
-      <h2>遊び方</h2>
-      <ul>
-        <li>15×15の盤に、白と黒が交互に石を置いていきます</li>
-        <li>縦・横・斜め、いずれかの向きで5つ以上石を並べたら勝利です</li>
-        <li>一度置いた石は動かせません</li>
-        <li>全マスが埋まって誰も揃わなければ引き分けです</li>
-        <li>「CPU対戦」を選ぶと黒をCPUが担当します。1人でも遊べます</li>
-      </ul>
     </div>
 
   </div>
@@ -553,9 +555,9 @@
 
 <script>
 (function(){
-  const SIZE = 15;
+  const SIZE = 10;
   const WIN_LEN = 5;
-  const STAR_POINTS = [[3,3],[3,11],[7,7],[11,3],[11,11]];
+  const STAR_POINTS = [[2,2],[2,7],[7,2],[7,7]];
 
   let grid, turn, gameOver, filledCount;
   let gameStartedAt = null;
@@ -626,6 +628,14 @@
     return total;
   }
 
+  function forcingThreatCount(r, c, player){
+    let count = 0;
+    for(const [dr,dc] of DIRS4){
+      if(evaluateDirectionScore(r, c, dr, dc, player) >= 5000) count++;
+    }
+    return count;
+  }
+
   function scoreMove(r, c){
     const offense = evaluatePlacement(r, c, cpuSide());
     const defense = evaluatePlacement(r, c, humanSide);
@@ -642,6 +652,17 @@
       if(wouldWin(r, c, humanSide)) return [r,c];
     }
 
+    if(cpuDifficulty === 'master'){
+      // 自分が一手で二重脅威(ダブルスリー・ダブルフォーなど)を作れるなら、ほぼ勝ち確定なので即実行
+      for(const [r,c] of candidates){
+        if(forcingThreatCount(r, c, cpuSide()) >= 2) return [r,c];
+      }
+      // 相手が次に二重脅威を作れる急所があれば、先に埋めて封じる
+      for(const [r,c] of candidates){
+        if(forcingThreatCount(r, c, humanSide) >= 2) return [r,c];
+      }
+    }
+
     const scored = candidates.map(([r,c]) => ({ r, c, score: scoreMove(r,c) }));
     scored.sort((a,b) => b.score - a.score);
 
@@ -649,19 +670,32 @@
       return [scored[0].r, scored[0].c];
     }
 
-    const topN = scored.slice(0, Math.min(8, scored.length));
+    const topN = scored.slice(0, Math.min(10, scored.length));
     let best = topN[0], bestNet = -Infinity;
     for(const cand of topN){
       grid[cand.r][cand.c] = cpuSide();
+
       const oppCandidates = generateCandidates();
-      let oppBest = 0;
-      for(const [r2,c2] of oppCandidates){
-        const s = scoreMove2(r2, c2);
-        if(s > oppBest) oppBest = s;
+      const oppScored = oppCandidates.map(([r2,c2]) => ({ r:r2, c:c2, score: scoreMove2(r2,c2) }));
+      oppScored.sort((a,b) => b.score - a.score);
+      const oppTop = oppScored.slice(0, Math.min(5, oppScored.length));
+
+      let worstForUs = Infinity;
+      for(const opp of oppTop){
+        grid[opp.r][opp.c] = humanSide;
+        const ourCandidates2 = generateCandidates();
+        let ourBest2 = 0;
+        for(const [r3,c3] of ourCandidates2){
+          const s3 = scoreMove(r3, c3);
+          if(s3 > ourBest2) ourBest2 = s3;
+        }
+        grid[opp.r][opp.c] = null;
+        const netForThisOpp = cand.score - opp.score * 0.9 + ourBest2 * 0.5;
+        if(netForThisOpp < worstForUs) worstForUs = netForThisOpp;
       }
+
       grid[cand.r][cand.c] = null;
-      const net = cand.score - oppBest * 0.5;
-      if(net > bestNet){ bestNet = net; best = cand; }
+      if(worstForUs > bestNet){ bestNet = worstForUs; best = cand; }
     }
     return [best.r, best.c];
   }
@@ -692,10 +726,31 @@
   function renderBoard(){
     const boardEl = document.getElementById('board');
     boardEl.innerHTML = '';
+
+    const gridLines = document.createElement('div');
+    gridLines.className = 'grid-lines';
+    for(let i=0;i<SIZE;i++){
+      const pct = (i / (SIZE - 1)) * 100;
+      const hLine = document.createElement('div');
+      hLine.className = 'grid-line-h';
+      hLine.style.top = pct + '%';
+      gridLines.appendChild(hLine);
+      const vLine = document.createElement('div');
+      vLine.className = 'grid-line-v';
+      vLine.style.left = pct + '%';
+      gridLines.appendChild(vLine);
+    }
+    boardEl.appendChild(gridLines);
+
+    const pointsLayer = document.createElement('div');
+    pointsLayer.className = 'points-layer';
+    pointsLayer.id = 'pointsLayer';
     for(let r=0;r<SIZE;r++){
       for(let c=0;c<SIZE;c++){
         const point = document.createElement('div');
         point.className = 'point';
+        point.style.left = ((c / (SIZE - 1)) * 100) + '%';
+        point.style.top = ((r / (SIZE - 1)) * 100) + '%';
         if(STAR_POINTS.some(([sr,sc]) => sr===r && sc===c)){
           const star = document.createElement('div');
           star.className = 'star';
@@ -708,9 +763,10 @@
           if(vsCPU && turn === cpuSide()) return;
           placeStone(r,c);
         });
-        boardEl.appendChild(point);
+        pointsLayer.appendChild(point);
       }
     }
+    boardEl.appendChild(pointsLayer);
   }
 
   function updateTurnUI(pulse){
@@ -738,7 +794,7 @@
     grid[r][c] = turn;
     filledCount++;
 
-    const points = document.getElementById('board').children;
+    const points = document.getElementById('pointsLayer').children;
     const point = points[r * SIZE + c];
     point.classList.add('occupied');
     const stoneEl = document.createElement('div');
@@ -903,12 +959,10 @@
     if(e.target === confirmModal){ confirmModal.classList.add('hidden'); pendingConfirmAction = null; }
   });
 
-  document.getElementById('newGameBtn').addEventListener('click', () => runOrConfirm(resetAll));
   document.getElementById('againBtn').addEventListener('click', resetAll);
   document.getElementById('rulesBtn').addEventListener('click', () => {
     document.getElementById('rules').classList.toggle('open');
   });
-  document.getElementById('changeModeBtn').addEventListener('click', () => runOrConfirm(openSetupScreen));
 
   document.getElementById('homeBtn').addEventListener('click', () => {
     const onSetupScreen = !document.getElementById('setupScreen').classList.contains('hidden');
