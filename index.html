@@ -14,6 +14,7 @@
     --nav-h: 60px;
     --card-h: 94px;   /* ゲームカードの高さ。.game-card クラスを使う場所すべてで共通 */
     --card-gap: 6px;
+    --ad-h: 60px;     /* バナー広告枠の高さ。実際のバナー表示後にads.jsが実寸へ更新する */
   }
 
   *{ box-sizing:border-box; }
@@ -50,6 +51,23 @@
   gap:28px;
   padding-bottom: calc(var(--nav-h) + 14px);
 }
+
+  /* 広告表示中は、内部スクロールするリストもバナーの高さ分だけ短くして、広告にかからないようにする */
+  body.ads-on .history-grid{
+    max-height: calc(100vh - 300px - var(--ad-h));
+    max-height: calc(100dvh - 300px - var(--ad-h));
+  }
+  body.ads-on .records-history-list{
+    max-height: calc(100vh - 320px - var(--ad-h));
+    max-height: calc(100dvh - 320px - var(--ad-h));
+  }
+  /* お知らせ画面の「広告を消す」は、リストの下に少し間を空ける */
+  .notice-remove-ads{ margin-top:18px; }
+
+  /* 広告表示中は、固定表示の広告枠に隠れないよう下に余白を足す */
+  body.ads-on .app{
+    padding-bottom: calc(var(--nav-h) + var(--ad-h) + 14px);
+  }
 
   /* --- 切り替わる画面（ホーム／記録／コレクション） --- */
   .view-content{
@@ -855,11 +873,47 @@
   }
 
   /* --- アチーブメント：バッジのグリッド表示 --- */
+  /* 横スクロールで1ページずつ切り替わるページャー。1ページ = 横2 × 縦3（6個） */
   .achievement-grid{
     width:100%;
+    display:flex;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    touch-action: pan-x pan-y;
+    padding: 4px 4px 6px;
+    box-sizing:border-box;
+    scrollbar-width:none;
+  }
+  .achievement-grid::-webkit-scrollbar{ display:none; }
+  .achievement-page{
+    flex:0 0 100%;
+    box-sizing:border-box;
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
     display:grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(3, 1fr);
     gap:10px;
+    padding: 0 2px;
+  }
+  .achievement-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    padding-top:2px;
+  }
+  .achievement-dots span{
+    width:6px; height:6px;
+    border-radius:50%;
+    background: var(--silver-dim);
+    opacity:0.45;
+    transition: opacity .2s ease, background .2s ease;
+  }
+  .achievement-dots span.active{
+    background:#ece4d1;
+    opacity:1;
   }
   .achievement-badge{
     display:flex;
@@ -1284,6 +1338,15 @@
     height: calc(var(--card-h) * 5 + var(--card-gap) * 4 + 4px);
   }
 
+  /* 「広告を消す」未購入の間：カード3枚ぶんの高さに縮めて、
+     下部の広告枠(.ad-banner-card)の分だけ縦スペースを空ける */
+  .game-grid.ads-active{
+    height: calc(var(--card-h) * 3 + var(--card-gap) * 2 + 4px);
+  }
+  .game-grid.timer-off.ads-active{
+    height: calc(var(--card-h) * 4 + var(--card-gap) * 3 + 4px);
+  }
+
   .game-grid::-webkit-scrollbar{
     display:none;
   }
@@ -1343,6 +1406,19 @@
   .game-card .tag.cpu{ color:#dcd6c0; border-color: rgba(220,214,192,0.35); }
   .game-card .tag.master{ color:#fff; border-color: rgba(255,255,255,0.5); }
 
+  /* カード右端の「›」マーク */
+  .game-card .card-chevron{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#fff;
+    font-size:1.15rem;
+    line-height:1;
+    pointer-events:none;
+    z-index:2;
+  }
+
   /* 画像付きカード：左30%に写真、右70%に本文（番号・タイトル） */
   .game-card.has-image{
     flex-direction:row;
@@ -1401,6 +1477,76 @@
     color: var(--silver-dim);
   }
 
+  /* 広告枠：下部ナビの真上に固定（ゲームカード → 広告 → ナビ の順）。
+     実際の広告(ネイティブバナー)はこの枠の上にAdMobが重ねて描画する。
+     広告の読み込み前・失敗時は、透明な余白になる */
+  .ad-banner-card{
+    position:fixed;
+    left:0; right:0;
+    bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+    z-index:590; /* ナビ(600)のすぐ下 */
+    height: var(--ad-h);
+    background: transparent; /* 広告が出ない間は、ただの余白に見えるようにする */
+    pointer-events:none;
+  }
+  .ad-banner-card.hidden{ display:none; }
+
+  /* 「広告を消す」：☰メニューパネルの一番下に表示する購入導線 */
+  .menu-remove-ads{
+    margin-top:auto;           /* メニューパネルの下端に寄せる */
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding: 14px 16px;
+    background: linear-gradient(160deg, #1c1a12, #100e08 55%, #030302);
+    border: 1px solid rgba(232,185,63,0.35);
+    border-radius: 8px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+  }
+  .menu-remove-ads.hidden{ display:none; }
+  /* メニューパネルは縦flexにして、購入導線を下端に固定できるようにする */
+  .setting-panel.menu-panel{
+    display:flex;
+    flex-direction:column;
+    padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px));
+  }
+  .setting-panel.menu-panel > *{ flex-shrink:0; }
+  #menuGameList{ margin-bottom:24px; } /* 購入導線との間に最低限の余白 */
+
+  .menu-remove-ads .ad-banner-copy{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+  }
+  .menu-remove-ads .ad-banner-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.86rem;
+    color:#ece4d1;
+  }
+  .menu-remove-ads .ad-banner-sub{
+    font-size:0.62rem;
+    color: var(--silver-dim);
+    letter-spacing:0.02em;
+  }
+  .menu-remove-ads .ad-banner-buy-btn{
+    flex-shrink:0;
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:0.72rem;
+    letter-spacing:0.04em;
+    color:#0e0d09;
+    background: #e8b93f;
+    border:none;
+    border-radius:999px;
+    padding:9px 16px;
+    cursor:pointer;
+  }
+  .menu-remove-ads .ad-banner-buy-btn:active{ opacity:0.85; }
+
 
 
   footer{
@@ -1409,52 +1555,93 @@
     letter-spacing:0.06em;
     text-align:center;
   }
+
+/* --- opening movie: 起動直後に再生し、終わったら（または視聴者がタップしたら）
+     intro（写真＋ロゴ＋Tap to Start）画面へ自然にフェードして引き継ぐ --- */
 #opening{
   position:fixed;
   inset:0;
   width:100vw;
   height:100vh;
   background:#000;
-  z-index:9999;
+  z-index:10001;
   display:flex;
   justify-content:center;
   align-items:center;
   overflow:hidden;
+  cursor:pointer;
+  transition:opacity 1.4s ease;
 }
-
 #openingVideo{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-/* --- tap to start screen (OP動画の後に表示) --- */
-#startScreen{
+/* --- intro screen: 写真＋ロゴ＋Tap to Start（動画無し・自己完結版） --- */
+#introScreen{
   position:fixed;
   inset:0;
-  width:100vw;
-  height:100vh;
-  background:#000;
   z-index:10000;
-  display:none;
-  justify-content:center;
+  overflow:hidden;
+  background:#050403;
+  display:flex;
   align-items:center;
+  justify-content:center;
   cursor:pointer;
+  transition:opacity 1.4s ease;
 }
-#startScreen .tap-text{
-  font-family:'Kaisei Decol', serif;
+#introScreen .intro-bg-photo{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 30%;
+  filter:brightness(1.32) contrast(1.02);
+}
+#introScreen .intro-scrim{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    linear-gradient(180deg, rgba(3,2,1,0.30) 0%, rgba(3,2,1,0.02) 22%, rgba(3,2,1,0.12) 55%, rgba(3,2,1,0.60) 100%);
+}
+#introScreen .intro-content{
+  position:absolute;
+  top:38%;
+  left:50%;
+  transform:translate(calc(-50% + 10px), -50%);
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 32px;
+  width:100%;
+}
+#introScreen .intro-logo{
+  width:min(78%, 300px);
+  height:auto;
+  filter:drop-shadow(0 4px 24px rgba(0,0,0,0.55));
+}
+#introScreen .intro-tap{
+  margin-top:22px;
+  white-space:nowrap;
+}
+#introScreen .intro-tap span{
+  font-family:'Jost', sans-serif;
   font-weight:500;
-  color:#fff;
-  font-size: clamp(0.9rem, 4.5vw, 1.15rem);
-  letter-spacing:0.35em;
-  text-transform:uppercase;
-  animation: tapBlink 1.8s ease-in-out infinite;
-  transform: translateY(-15vh);
+  font-size:0.95rem;
+  letter-spacing:0.12em;
+  color:#efe8da;
+  text-shadow:0 2px 20px rgba(0,0,0,0.6);
+  animation: introTapBlink 2s ease-in-out infinite;
 }
-@keyframes tapBlink{
-  0%, 100%{ opacity:1; }
-  50%{ opacity:0.2; }
+@keyframes introTapBlink{
+  0%, 100%{ opacity:0.15; }
+  50%{ opacity:1; }
 }
+/* 「動きを減らす」設定が有効な端末でも、Tap to Startの点滅は意図した演出として維持する */
 
   /* --- bonus tools（設定メニュー内、リンク一覧の下に配置） --- */
   .extras{
@@ -1839,6 +2026,29 @@ body.panel-open .setting-btn{
   margin-top:6px;
 }
 
+/* プレイヤー名入力欄（最大5文字） */
+.player-name-input{
+  width:74px;
+  flex-shrink:0;
+  text-align:right;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-size:0.82rem;
+  letter-spacing:0.04em;
+  color:#fff;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--silver-dim);
+  padding:2px 2px 4px;
+  outline:none;
+  transition: border-color .15s ease;
+}
+.player-name-input::placeholder{
+  color: var(--silver-dim);
+}
+.player-name-input:focus{
+  border-bottom-color:#fff;
+}
+
 /* ON/OFFスイッチ */
 .switch{
   position:relative;
@@ -1985,6 +2195,10 @@ body.panel-open .setting-btn{
   border-color:#fff;
   box-shadow: 0 0 0 2px rgba(255,255,255,0.35);
 }
+.theme-swatch.photo-swatch{
+  background-size:cover;
+  background-position:center;
+}
 
 
 </style>
@@ -1997,8 +2211,13 @@ body.panel-open .setting-btn{
   </video>
 </div>
 
-<div id="startScreen">
-  <div class="tap-text">タップしてスタート</div>
+<div id="introScreen" style="display:none;">
+  <img class="intro-bg-photo" src="assets/intro/intro_bg.jpg" alt="">
+  <div class="intro-scrim"></div>
+  <div class="intro-content">
+    <img class="intro-logo" src="assets/intro/hitotoki_logo.png" alt="hitotoki">
+    <div class="intro-tap"><span>Tap to Start</span></div>
+  </div>
 </div>
   
 <div class="app">
@@ -2029,7 +2248,7 @@ body.panel-open .setting-btn{
 <div class="panel-backdrop" id="panelBackdrop"></div>
 
 <div class="app-title">
-  <img class="logo-title" src="assets/logo/hitotoki_logo.png" alt="hitotoki">
+  <img class="logo-title" src="assets/intro/hitotoki_logo.png" alt="hitotoki">
   <p class="app-subtitle">ふたりで過ごす、ひとときのゲーム。</p>
 </div>
 
@@ -2078,15 +2297,17 @@ body.panel-open .setting-btn{
     </div>
     <div class="bg-theme-body" id="bgThemeBody">
       <div class="bg-theme-swatches" id="bgThemeSwatches">
-        <button class="theme-swatch active" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
+        <button class="theme-swatch photo-swatch active" data-photo="true" style="background-image:url('assets/backgrounds/home_default.jpg')" aria-label="デフォルト（写真）"></button>
+        <button class="theme-swatch" data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%" style="--sw:#0a0a0a" aria-label="クラシック"></button>
         <button class="theme-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
         <button class="theme-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
         <button class="theme-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
         <button class="theme-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
       </div>
     </div>
-    <div class="setting-menu-item placeholder-item">
-      <span>プレイヤー名</span><span class="arrow">›</span>
+    <div class="setting-menu-item">
+      <span>プレイヤー名</span>
+      <input type="text" id="playerNameInput" class="player-name-input" maxlength="5" placeholder="1P" autocomplete="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="setting-menu-item">
       <span>タイマー機能</span>
@@ -2099,7 +2320,7 @@ body.panel-open .setting-btn{
 
   <div class="panel-section-label">アプリ</div>
   <div class="setting-menu">
-    <div class="setting-menu-item placeholder-item">
+    <div class="setting-menu-item placeholder-item" id="restorePurchaseBtn">
       <span>購入を復元</span><span class="arrow">›</span>
     </div>
     <div class="setting-menu-item">
@@ -2181,6 +2402,14 @@ body.panel-open .setting-btn{
 
   <div class="setting-menu" id="menuGameList"></div>
 
+  <div class="menu-remove-ads hidden" id="menuRemoveAds">
+    <div class="ad-banner-copy">
+      <div class="ad-banner-title">広告を消す</div>
+      <div class="ad-banner-sub" id="adBannerSub">買い切り・アプリ内課金</div>
+    </div>
+    <button class="ad-banner-buy-btn" id="adBannerBuyBtn" type="button">購入する</button>
+  </div>
+
 </div>
   
   <div class="view-content" id="homeView">
@@ -2216,6 +2445,8 @@ body.panel-open .setting-btn{
     <div class="section-label">GAME</div>
 
     <nav class="game-grid" id="gameGrid"></nav>
+
+    <div class="ad-banner-card hidden" id="adBannerCard"></div>
   </div>
 
   <div class="view-content" id="recordsView" style="display:none;">
@@ -2326,6 +2557,7 @@ body.panel-open .setting-btn{
         <!-- アチーブメント：バッジのグリッド表示。中身は JS の ACHIEVEMENTS から生成する -->
         <div class="collection-panel" id="collectionPanelAchievement">
           <div class="achievement-grid" id="achievementGrid"></div>
+          <div class="achievement-dots" id="achievementDots"></div>
         </div>
 
       </div>
@@ -2351,6 +2583,13 @@ body.panel-open .setting-btn{
     <button class="notice-modal-close" id="noticeModalClose">×</button>
     <div class="notice-modal-title">お知らせ</div>
     <div class="notice-list" id="noticeList"></div>
+    <div class="menu-remove-ads notice-remove-ads hidden" id="noticeRemoveAds">
+      <div class="ad-banner-copy">
+        <div class="ad-banner-title">広告を消す</div>
+        <div class="ad-banner-sub">買い切り・アプリ内課金</div>
+      </div>
+      <button class="ad-banner-buy-btn" type="button">購入する</button>
+    </div>
   </div>
 </div>
 
@@ -2377,7 +2616,12 @@ body.panel-open .setting-btn{
 
 <script src="notices.js"></script>
 <script src="stats-tracker.js"></script>
+<script src="capacitor-bridge.js"></script>
+<script src="purchases.js"></script>
 <script src="bgm-player.js?v=2"></script>
+<script src="push-notifications.js"></script>
+<script src="ads.js"></script>
+<script src="se-player.js"></script>
 <script>
 (function(){
   // ピンチズームの保険（Safari対策）
@@ -2556,6 +2800,11 @@ body.panel-open .setting-btn{
       a.appendChild(info);
     }
 
+    const chevron = document.createElement('div');
+    chevron.className = 'card-chevron';
+    chevron.textContent = '›';
+    a.appendChild(chevron);
+
     return a;
   }
 
@@ -2569,6 +2818,74 @@ body.panel-open .setting-btn{
   }
 
   renderGamePages();
+
+  // --- 「広告を消す」課金(purchases.js)の状態に合わせて、ゲームリストの
+  //     見え方を切り替える：広告あり＝カード3枚+広告カード／広告なし＝カード4枚 ---
+  const adBannerCard = document.getElementById('adBannerCard');
+  const menuRemoveAds = document.getElementById('menuRemoveAds');
+  const noticeRemoveAds = document.getElementById('noticeRemoveAds');
+  // 「広告を消す」ボタンは複数の場所（☰メニュー／お知らせ）にあるので、まとめて扱う
+  const adBuyBtns = document.querySelectorAll('.ad-banner-buy-btn');
+  const adSubs = document.querySelectorAll('.ad-banner-sub');
+
+  function applyAdsVisibility(adsRemoved){
+    if(gameGrid) gameGrid.classList.toggle('ads-active', !adsRemoved);
+    if(adBannerCard) adBannerCard.classList.toggle('hidden', adsRemoved);
+    document.body.classList.toggle('ads-on', !adsRemoved);
+    if(menuRemoveAds) menuRemoveAds.classList.toggle('hidden', adsRemoved);
+    if(noticeRemoveAds) noticeRemoveAds.classList.toggle('hidden', adsRemoved);
+  }
+
+  if(window.hitotokiPurchases){
+    // 起動時：購入状態のチェックが終わるまでは広告ありの見た目のまま待つ
+    window.hitotokiPurchases.ready.then(() => {
+      applyAdsVisibility(window.hitotokiPurchases.isAdsRemoved());
+    });
+    // 購入 / 復元で状態が変わった時にも追従する
+    window.hitotokiPurchases.onChange(applyAdsVisibility);
+  } else {
+    // purchases.jsが読み込まれていない場合は、従来通り広告ありの見た目のまま
+    applyAdsVisibility(false);
+  }
+
+  adBuyBtns.forEach(adBannerBuyBtn => {
+    adBannerBuyBtn.addEventListener('click', async () => {
+      if(!window.hitotokiPurchases){ return; }
+      adBannerBuyBtn.disabled = true;
+      const originalLabel = adBannerBuyBtn.textContent;
+      adBannerBuyBtn.textContent = '処理中…';
+      try{
+        const adsRemoved = await window.hitotokiPurchases.buyRemoveAds();
+        if(!adsRemoved){
+          // ユーザーがキャンセルした場合などはボタンを元に戻すだけ
+          adBannerBuyBtn.textContent = originalLabel;
+        }
+        // 成功時はonChangeが発火してapplyAdsVisibilityが自動で呼ばれる
+      }catch(e){
+        console.warn('[index] buyRemoveAds failed', e);
+        adBannerBuyBtn.textContent = originalLabel;
+        adSubs.forEach(el => { el.textContent = '購入できませんでした。時間をおいて再度お試しください'; });
+      }finally{
+        adBannerBuyBtn.disabled = false;
+      }
+    });
+  });
+
+  // 設定パネル内「購入を復元」ボタン
+  const restorePurchaseBtn = document.getElementById('restorePurchaseBtn');
+  if(restorePurchaseBtn){
+    restorePurchaseBtn.addEventListener('click', async () => {
+      if(!window.hitotokiPurchases){ showSimpleToast('準備中です'); return; }
+      showSimpleToast('復元しています…');
+      try{
+        const adsRemoved = await window.hitotokiPurchases.restore();
+        showSimpleToast(adsRemoved ? '購入を復元しました' : '復元できる購入が見つかりませんでした');
+      }catch(e){
+        console.warn('[index] restore failed', e);
+        showSimpleToast('復元に失敗しました');
+      }
+    });
+  }
 
   // --- コレクション「ゲームの歴史」：カードをタップすると、カードサイズはそのままに
   //     半透明のウィンドウ風モーダルが開いて文章を読める ---
@@ -2869,23 +3186,52 @@ body.panel-open .setting-btn{
 
   function renderAchievementGrid(){
     const grid = document.getElementById('achievementGrid');
+    const dots = document.getElementById('achievementDots');
     if(!grid) return;
     const unlockedIds = getUnlockedAchievementIds();
+    const PER_PAGE = 6; // 横2 × 縦3
+    const prevScroll = grid.scrollLeft;
     grid.innerHTML = '';
-    ACHIEVEMENTS.forEach(a => {
-      const unlocked = unlockedIds.includes(a.id);
-      const badge = document.createElement('div');
-      badge.className = 'achievement-badge ' + (unlocked ? 'unlocked' : 'locked');
-      const icon = document.createElement('div');
-      icon.className = 'badge-icon';
-      icon.textContent = unlocked ? '🏆' : '🔒';
-      const title = document.createElement('div');
-      title.className = 'badge-title';
-      title.textContent = a.title;
-      badge.appendChild(icon);
-      badge.appendChild(title);
-      grid.appendChild(badge);
-    });
+    const pageCount = Math.max(1, Math.ceil(ACHIEVEMENTS.length / PER_PAGE));
+    for(let p = 0; p < pageCount; p++){
+      const page = document.createElement('div');
+      page.className = 'achievement-page';
+      ACHIEVEMENTS.slice(p * PER_PAGE, (p + 1) * PER_PAGE).forEach(a => {
+        const unlocked = unlockedIds.includes(a.id);
+        const badge = document.createElement('div');
+        badge.className = 'achievement-badge ' + (unlocked ? 'unlocked' : 'locked');
+        const icon = document.createElement('div');
+        icon.className = 'badge-icon';
+        icon.textContent = unlocked ? '🏆' : '🔒';
+        const title = document.createElement('div');
+        title.className = 'badge-title';
+        title.textContent = a.title;
+        badge.appendChild(icon);
+        badge.appendChild(title);
+        page.appendChild(badge);
+      });
+      grid.appendChild(page);
+    }
+    grid.scrollLeft = prevScroll;
+
+    // ページ位置を示すドット（ページが2枚以上のときだけ表示）
+    if(dots){
+      dots.innerHTML = '';
+      if(pageCount > 1){
+        for(let i = 0; i < pageCount; i++) dots.appendChild(document.createElement('span'));
+      }
+      const updateDots = () => {
+        const idx = Math.round(grid.scrollLeft / Math.max(1, grid.clientWidth));
+        Array.from(dots.children).forEach((d, i) => d.classList.toggle('active', i === idx));
+      };
+      updateDots();
+      if(!grid.dataset.bound){
+        grid.dataset.bound = '1';
+        grid.addEventListener('scroll', updateDots, { passive:true });
+        // このエリア内の横スワイプはページ送り専用にして、外側の「紋章／アチーブメント」タブ切り替えとは競合させない
+        ['touchstart','mousedown'].forEach(ev => grid.addEventListener(ev, e => e.stopPropagation(), { passive:true }));
+      }
+    }
   }
 
   // 右からシュッと入って、約3秒後に消えるトーストを1つ表示する
@@ -2927,37 +3273,65 @@ body.panel-open .setting-btn{
   }
 
 
-    const opening = document.getElementById("opening");
+  const opening = document.getElementById("opening");
   const openingVideo = document.getElementById("openingVideo");
-  const startScreen = document.getElementById("startScreen");
+  const introScreen = document.getElementById("introScreen");
   const app = document.querySelector(".app");
 
   if(sessionStorage.getItem("hitotokiStarted")){
-
-  opening.style.display = "none";
-  startScreen.style.display = "none";
-  app.style.display = "flex";
-
-}
-  
- function showStartScreen(){
-  sessionStorage.setItem("hitotokiStarted", "true");
-
-  opening.style.display = "none";
-  startScreen.style.display = "flex";
-}
-
-  openingVideo.addEventListener("ended", showStartScreen);
-
-  opening.addEventListener("click", () => {
-    openingVideo.pause();
-    showStartScreen();
-  });
-
-  startScreen.addEventListener("click", () => {
-    startScreen.style.display = "none";
+    // 今回のセッションで既に一度見ている場合：オープニング演出は全部スキップしてホームへ
+    opening.style.display = "none";
+    introScreen.style.display = "none";
     app.style.display = "flex";
-  });
+  } else {
+    let advanced = false;
+    function showIntroScreen(){
+      if(advanced) return; // 二重発火防止
+      advanced = true;
+      // ゆっくりクロスフェード：intro側を先に描画してから、
+      // オープニング動画をフェードアウトしつつintro側をフェードインする
+      introScreen.style.display = "flex";
+      introScreen.style.opacity = "0";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          opening.style.opacity = "0";
+          introScreen.style.opacity = "1";
+        });
+      });
+      setTimeout(() => {
+        opening.style.display = "none";
+      }, 1400);
+    }
+
+    openingVideo.addEventListener("ended", showIntroScreen);
+    // 動画が読み込めない・再生できない場合も、そこで止まらずintro画面へ進む
+    openingVideo.addEventListener("error", showIntroScreen);
+    // 一部のブラウザ／WebViewでは 'ended' が発火しないことがあるための保険
+    openingVideo.addEventListener("timeupdate", () => {
+      if(openingVideo.duration && openingVideo.currentTime >= openingVideo.duration - 0.15){
+        showIntroScreen();
+      }
+    });
+    opening.addEventListener("click", () => {
+      openingVideo.pause();
+      showIntroScreen();
+    });
+    // 保険その1：動画の長さが分かり次第、それに応じた妥当なタイムアウトを設定する
+    openingVideo.addEventListener("loadedmetadata", () => {
+      if(isFinite(openingVideo.duration)){
+        setTimeout(showIntroScreen, openingVideo.duration * 1000 + 800);
+      }
+    });
+    // 保険その2：動画そのものが読み込めない等、何をしても進まない場合の最終フォールバック
+    setTimeout(showIntroScreen, 6000);
+
+    introScreen.addEventListener("click", () => {
+      sessionStorage.setItem("hitotokiStarted", "true");
+      app.style.display = "flex";
+      introScreen.style.display = "none";
+    });
+  }
+
 // 設定パネル（⚙：右からスライドイン。プライバシーポリシー等＋おまけ機能）
 const gearBtn = document.getElementById("gearBtn");
   const closeBtn = document.getElementById("closeBtn");
@@ -3201,15 +3575,29 @@ howToPlayBackBtn.addEventListener('click', () => {
 
 // --- 背景テーマ（⚙→ゲーム→背景）：ミニ将棋にすでに実装されている5色パレットと
 //     同じ色を、ここで選ぶと全ページに反映される（bg-theme.js が各ゲームページで
-//     この保存内容を読み取って適用する） ---
+//     この保存内容を読み取って適用する）。
+//     加えてホーム画面だけ、何も選んでいない「初期状態」では写真をデフォルト背景として使う。
+//     写真はホーム画面専用（pref_bg_gradient には保存しない＝他のゲームページには影響しない） ---
 const BG_STORAGE_KEY = 'pref_bg_gradient';
+const HOME_DEFAULT_BG_IMAGE = 'assets/backgrounds/home_default.jpg';
 const bgThemeToggle = document.getElementById('bgThemeToggle');
 const bgThemeBody = document.getElementById('bgThemeBody');
 const bgThemeArrow = document.getElementById('bgThemeArrow');
 const bgThemeSwatches = document.getElementById('bgThemeSwatches');
 
 function applyBgTheme(grad){
+  // 他のゲーム画面の背景スイッチャーが「フォト」を選んだ時に保存する特別な値。
+  // 通常のグラデーション色ではないため、ホーム画面では「未選択（デフォルト）」と同じ扱いにする
+  if(!grad || grad === 'IMAGE'){
+    applyHomeDefaultImage();
+    return;
+  }
   document.body.style.background = 'radial-gradient(ellipse at 50% -10%, ' + grad + ')';
+}
+
+function applyHomeDefaultImage(){
+  document.body.style.background =
+    `linear-gradient(rgba(5,5,5,0.5), rgba(5,5,5,0.65)), url('${HOME_DEFAULT_BG_IMAGE}') center / cover no-repeat`;
 }
 
 bgThemeToggle.addEventListener('click', () => {
@@ -3219,23 +3607,38 @@ bgThemeToggle.addEventListener('click', () => {
 
 bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(sw => {
   sw.addEventListener('click', () => {
+    bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+
+    if(sw.dataset.photo === 'true'){
+      // 写真（デフォルト）を選んだ場合：色テーマの保存値を消して、写真をホーム画面に反映する
+      try{ localStorage.removeItem(BG_STORAGE_KEY); }catch(e){}
+      applyHomeDefaultImage();
+      return;
+    }
+
     const grad = sw.getAttribute('data-grad');
     applyBgTheme(grad);
     try{ localStorage.setItem(BG_STORAGE_KEY, grad); }catch(e){}
-    bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
-    sw.classList.add('active');
   });
 });
 
-// 保存済みのテーマがあれば、開いた瞬間に反映＋該当スウォッチをactiveにしておく
+// 色テーマが保存されていればそれを反映。保存されていなければ、写真をデフォルトとして表示する
 (function initBgTheme(){
   let saved = null;
   try{ saved = localStorage.getItem(BG_STORAGE_KEY); }catch(e){}
-  if(!saved) return;
-  applyBgTheme(saved);
-  bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => {
-    s.classList.toggle('active', s.getAttribute('data-grad') === saved);
-  });
+  const isRecognizedGradient = saved && saved !== 'IMAGE';
+  if(isRecognizedGradient){
+    applyBgTheme(saved);
+    bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => {
+      s.classList.toggle('active', s.getAttribute('data-grad') === saved);
+    });
+  } else {
+    applyHomeDefaultImage();
+    bgThemeSwatches.querySelectorAll('.theme-swatch').forEach(s => {
+      s.classList.toggle('active', s.dataset.photo === 'true');
+    });
+  }
 })();
 
 // GAMES はこの関数スコープの後方で定義されるが、クリック時（初回オープン時）には
@@ -3297,11 +3700,13 @@ panelBackdrop.addEventListener("click", closeAllPanels);
 
 // --- サウンド設定（BGM／効果音／振動）：状態を端末に保存して次回起動時も引き継ぐ ---
 // BGMは bgm-player.js（共通スクリプト）が実際の再生を担当している。
-// 効果音は再生の仕組み自体がまだ無いため、今はON/OFFの状態を保持するのみ。
+// 効果音は se-player.js（共通スクリプト、各ゲームページで読み込み）が
+// 'pref_se' の値を見て再生するかどうかを決めるので、ここでは値を保存するだけでよい。
 // 振動は既存のタイマー機能と連動させ、OFFなら鳴動しないようにする。
+// BGM・効果音は未設定時（初回起動時）はONがデフォルト。振動のみ引き続きOFFがデフォルト。
 const soundPrefs = {
-  bgm: localStorage.getItem('pref_bgm') === 'on',
-  se: localStorage.getItem('pref_se') === 'on',
+  bgm: localStorage.getItem('pref_bgm') !== 'off',
+  se: localStorage.getItem('pref_se') !== 'off',
   vibration: localStorage.getItem('pref_vibration') === 'on',
 };
 
@@ -3315,6 +3720,10 @@ function bindSoundToggle(id, key){
     if(key === 'bgm' && window.hitotokiBGM){
       if(el.checked){ window.hitotokiBGM.play(); }
       else{ window.hitotokiBGM.stop(); }
+    }
+    if(key === 'se' && window.sePlayer){
+      window.sePlayer.setEnabled(el.checked);
+      if(el.checked) window.sePlayer.play('click'); // ONにした瞬間に鳴らして、切り替わったことが分かるようにする
     }
   });
 }
@@ -3352,6 +3761,36 @@ const languageMenuItem = document.getElementById('languageMenuItem');
 if(languageMenuItem){
   languageMenuItem.addEventListener('click', () => {
     showSimpleToast('準備中です');
+  });
+}
+
+// --- プレイヤー名（⚙→ゲーム→プレイヤー名）：最大5文字。
+//     stats-tracker.js 側に保存されるので、各ゲームページからも
+//     window.hitotokiStats.getPlayerName() で共通して参照できる ---
+const playerNameInput = document.getElementById('playerNameInput');
+if(playerNameInput && window.hitotokiStats){
+  playerNameInput.value = window.hitotokiStats.getPlayerName();
+
+  // iOSでは、入力欄にフォーカスするとキーボード表示のために画面全体が
+  // 強制的に少し上へスクロールされてしまうことがある（overflow:hiddenでも起きる）。
+  // フォーカスが外れたタイミングで、ページの表示位置を確実に元へ戻しておく。
+  function resetPageScroll(){
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  function savePlayerName(){
+    const saved = window.hitotokiStats.setPlayerName(playerNameInput.value);
+    playerNameInput.value = saved; // 前後の空白を取り除いた後の値に揃えておく
+  }
+  playerNameInput.addEventListener('change', savePlayerName);
+  playerNameInput.addEventListener('blur', () => {
+    savePlayerName();
+    // キーボードが閉じるアニメーションの後にもズレ直すことがあるため、
+    // 即時と少し遅らせた分の両方でリセットしておく
+    resetPageScroll();
+    setTimeout(resetPageScroll, 300);
   });
 }
 
@@ -3783,6 +4222,15 @@ function renderRecordsHistory(history){
       result.classList.add('win');
     } else if(h.vsCPU && h.won === false){
       result.textContent = '負け';
+    } else if(!h.vsCPU && (h.winner === 1 || h.winner === 2)){
+      // 2人対戦で勝者が記録されている場合：1Pは登録したプレイヤー名（未登録なら「1P」）で表示する
+      const playerName = (window.hitotokiStats && window.hitotokiStats.getPlayerName && window.hitotokiStats.getPlayerName()) || '';
+      if(h.winner === 1){
+        result.textContent = `${playerName || '1P'}の勝ち`;
+        result.classList.add('win');
+      } else {
+        result.textContent = '2Pの勝ち';
+      }
     } else {
       result.textContent = '2人対戦';
     }
@@ -4001,6 +4449,7 @@ navButtons.forEach(btn => {
     displayEl.classList.add('finished');
     formatFinished();
     clearTimerFromStorage();
+    if(window.sePlayer) window.sePlayer.play('alarm');
     if(soundPrefs.vibration && navigator.vibrate){ navigator.vibrate([200,100,200,100,200]); }
     showTimerPopup();
     // 少し余韻を置いてから、時計表示に戻す
@@ -4050,6 +4499,10 @@ navButtons.forEach(btn => {
     next = Math.min(maxOffset, Math.max(0, next));
     dragOffset = next;
     setCoverX(next);
+
+    // 右端（開いた状態）から少しでも左へ動かしたら、その場で穴を閉じる。
+    // 完全に右端まで戻せば、離す前でも穴が再び開く（見た目がその場でリアルタイムに追従する）
+    if(coverFade) coverFade.classList.toggle('hole-open', next >= maxOffset && maxOffset > 0);
   }
 
   function onPointerUp(){
